@@ -1,0 +1,31 @@
+# byte
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE settings
+.vscode/
+.idea/
+
+# distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# data
+./data_exploration/data
+
