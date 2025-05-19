@@ -15,5 +15,5 @@ with DandiAPIClient() as client:
         print(asset_nwb.path)
         if str(asset_nwb.path) != 'sub-fly-087/sub-fly-087_ses-20200228161226_behavior+image+ophys.nwb': continue
         print(f"Downloading: {asset_nwb.path}")
-        os.makedirs(os.path.dirname(asset_nwb.path), exist_ok=True)
-        asset_nwb.download(asset_nwb.path)
+        os.makedirs(os.path.join('../data/fly-2024', os.path.dirname(asset_nwb.path)), exist_ok=True)
+        asset_nwb.download(os.path.join('../data/fly-2024', asset_nwb.path))
