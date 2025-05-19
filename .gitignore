@@ -27,5 +27,5 @@ dist/
 MANIFEST
 
 # data
-./data_exploration/data
+data_exploration/data
 
