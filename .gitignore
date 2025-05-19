@@ -29,3 +29,5 @@ MANIFEST
 # data
 data_exploration/data
 
+# logs
+*.log
