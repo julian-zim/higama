@@ -58,32 +58,12 @@ def get_neuronal_traces(file_handle):
 	return data
 
 
-def get_variance_explained(X, X_rec):
-	X_res = X - X_rec
-
-	X_var = X.var().sum()
-	X_res_var = X_res.var().sum()
-
-	X_var_ratio = 1 - X_res_var / X_var
-
-	return X_var_ratio
-
-
-def get_good_neuron_labels():
-	return [
-		"VB02",
-		"DB01",
-		"DD01",
-		"RMDDR",
-		"RMDDL",
-		"SMDDR",
-		"SMDDL",
-		"RMED",
-		"RMEV",
-		"RMDVR",
-		"DB02",
-		"SIADR",
-		"URXL",
-		"URYVR",
-		"RID",
-	]
+def get_data(path):
+	hdf5files = get_hdf5_files(path)
+	filenames = [get_filename(file) for file in hdf5files]
+	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
+	discrete_states = [get_discrete_states(file) for file in hdf5files]
+	eigenworms = [get_eigenworms(file) for file in hdf5files]
+	kymographs = [get_kymograph(file) for file in hdf5files]
+	traces = [get_neuronal_traces(file) for file in hdf5files]
+	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
