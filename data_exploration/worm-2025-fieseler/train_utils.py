@@ -23,7 +23,7 @@ def get_manifolds(traces, behaviors_hl, n_cc=2, n_pc=5):
 		trace_reduced, ds_reduced = cca.fit_transform(trace_reconstructed_pca, behavior.values)
 		trace_reconstructed, ds_reconstructed = cca.inverse_transform(trace_reduced, ds_reduced)
 
-		modes_manifold.append(pd.DataFrame(data=trace_reduced, columns=[f'CC{n + 1}' for n in range(2)]))
+		modes_manifold.append(pd.DataFrame(data=trace_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
 		traces_manifold.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
 
 		loadings.append((cca.x_loadings_, cca.y_loadings_))

@@ -3,7 +3,11 @@ import jax.numpy as jnp
 import optax
 
 
-def init_params(seed, shape_U, shape_V, shape_X, _):
+def get_type():
+	return False
+
+
+def init_params(seed, shape_U, shape_V, shape_X):
 	return {
 	    'U': 1E-2 * jax.random.normal(seed, shape_U),
 	    'V': 1E-2 * jax.random.normal(seed, shape_V),
@@ -11,8 +15,7 @@ def init_params(seed, shape_U, shape_V, shape_X, _):
 	}
 
 
-def predict(B_ll, _, params):
-	W = params['W']
+def predict(B_ll, W):
 	return B_ll @ W
 
 
@@ -31,32 +34,39 @@ def cca_loss(X_proj, Y_proj):
 
 	return jnp.mean(1 - corrs)
 
-def loss_fn(params, X, B_ll, B_hl, loss_weights):
-	lambda_1, lambda_2 = loss_weights
+def loss_fn(params, X, B_ll, B_hl, loss_lambdas, reg_lambda):
+	l1, l2 = loss_lambdas
+	reg_l = reg_lambda
 
 	U, V, W = params['U'], params['V'], params['W']
 
+	# manifold ================================
 	X_man = X @ U
 	X_man_bhl = B_hl @ V
 
-	man_loss = cca_loss(X_man, X_man_bhl)
-	# man_loss = jnp.mean((X_man - X_man_bhl) ** 2)
-
-	Y_pred = predict(B_ll, X_man, params)
-
 	X_rec = X_man @ jax.numpy.linalg.pinv(U)
 	X_res = X - X_rec
-	hgm_loss = jnp.mean((Y_pred - X_res) ** 2)
 
-	return lambda_1 * man_loss + lambda_2 * hgm_loss
+	man_loss = cca_loss(X_man, X_man_bhl)
+	# =========================================
 
-loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4,))
+	# residuals ===============================
+	Y_pred = predict(B_ll, W)
+	mse_loss = jnp.mean((Y_pred - X_res) ** 2)
+	w_loss = reg_l * jnp.linalg.norm(W) ** 2
+
+	res_loss = mse_loss + w_loss
+	# =========================================
+
+	return l1 * man_loss + l2 * res_loss
+
+loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4, 5))
 
 
-def update(opt_update, opt_state, params, X, B_ll, B_hl, loss_weights):
-	grads = loss_fn_grad(params, X, B_ll, B_hl, loss_weights)
+def update(opt_update, opt_state, params, X, B_ll, B_hl, loss_weights, reg_lambda):
+	grads = loss_fn_grad(params, X, B_ll, B_hl, loss_weights, reg_lambda)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
-	return params_new, opt_state
+	return params_new, opt_state, grads  # return grads for weight interpretation
 
-update = jax.jit(update, static_argnums=(0, 6))
+update = jax.jit(update, static_argnums=(0, 6, 7))
