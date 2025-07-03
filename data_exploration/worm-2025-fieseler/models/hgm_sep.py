@@ -9,7 +9,7 @@ def get_type():
 
 def init_params(seed, shape_X, shape_X_man):
 	return {
-		'W1': 1E-2 * jax.random.normal(seed, shape_X),	# randomly initialize weights
+		'W1': 1E-2 * jax.random.normal(seed, shape_X),  # randomly initialize weights
 		'W2': 1E-2 * jax.random.normal(seed, shape_X_man)
 	}
 
@@ -26,7 +26,7 @@ def loss_fn(params, X, X_man, Y, reg_lambdas):
 
 	mse_loss = jnp.mean((Y_pred - Y) ** 2)  # MSE
 	w1_loss = reg_l1 * jnp.linalg.norm(W1) ** 2
-	w2_loss = reg_l2 * jnp.linalg.norm(W2) ** 2
+	w2_loss = reg_l2 * jnp.linalg.norm(W2) ** 2  # todo: correct norm and squaring?
 
 	res_loss = mse_loss + w1_loss + w2_loss
 
