@@ -9,13 +9,24 @@ def get_type():
 
 def init_params(seed, shape_X, shape_X_man):
 	return {
-		'W1': 1E-2 * jax.random.normal(seed, shape_X),  # randomly initialize weights
-		'W2': 1E-2 * jax.random.normal(seed, shape_X_man)
+		'W1': 1E-1 * jax.random.normal(jax.random.PRNGKey(0), shape_X),  # randomly initialize weights
+		'W2': 2 * jax.random.normal(jax.random.PRNGKey(1), shape_X_man)
 	}
 
 
 def predict(X, X_man, W1, W2):
 	return X @ W1 * jax.nn.sigmoid(X_man @ W2)	# (n, p) @ (p, k) → (n, k)
+
+
+# temp
+def mse_loss_fn(params, X, X_man, Y):
+	W1, W2 = params['W1'], params['W2']
+
+	Y_pred = predict(X, X_man, W1, W2)
+
+	mse_loss = jnp.mean((Y_pred - Y) ** 2)  # MSE
+
+	return mse_loss
 
 
 def loss_fn(params, X, X_man, Y, reg_lambdas):

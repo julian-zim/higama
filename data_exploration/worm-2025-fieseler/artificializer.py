@@ -1,14 +1,16 @@
 import numpy as np
 import pandas as pd
 import jax
+import jax.numpy as jnp
+
+import models.hgm_sep as hgm
 
 
 def generate_params(shape_X, shape_X_man):
-	w1_offsets = np.tile(jax.random.normal(jax.random.PRNGKey(0), shape_X[1]), (5, 1))
-	w2_offsets = np.tile(jax.random.normal(jax.random.PRNGKey(1), shape_X[1]), (1, 1))
+	# return hgm.init_params(None, shape_X, shape_X_man)
 	params = {
-		'W1': np.ones(shape_X) + w1_offsets,
-		'W2': np.ones(shape_X_man) + w2_offsets
+		'W1': 1E-1 * jnp.tile(jax.random.normal(jax.random.PRNGKey(2), shape_X[1]), (shape_X[0], 1)),
+		'W2': 10 * jnp.tile(jnp.abs(jax.random.normal(jax.random.PRNGKey(3), shape_X[1])), (shape_X_man[0], 1))
 	}
 	return params
 
@@ -23,7 +25,7 @@ def generate_manifold(cyber_discrete_states, shape):
 	# 	result[start:end] = values[i]
 	# dim1 = result.reshape(N,)
 
-	weight = -1
+	weight = -0.5
 	dim1 = (cyber_discrete_states * 2 - 1) * weight
 	if shape[1] <= 1: return dim1
 
@@ -35,7 +37,8 @@ def generate_manifold(cyber_discrete_states, shape):
 	return np.vstack((dim1, dims_n)).T
 
 def generate_redisual_traces(X, X_man, W1, W2):
-	traces = X @ W1 * jax.nn.sigmoid(X_man @ W2)
+	traces = hgm.predict(X, X_man, W1, W2)
+	# traces = X @ W1 * jax.nn.sigmoid(X_man @ W2)
 	return traces #- np.quantile(traces, 0.1, axis=0)
 
 def generate_traces(X_man, X_residual, variance=1):
@@ -55,18 +58,15 @@ def artificialize(filename, neurons, eigenworms, discrete_states):
 	dim = 1
 
 	cybername = '_'.join(['ZIMMERMANN_artificial'] + filename.split('_')[2:])
-	cyber_eigenworms = eigenworms * 0.2
-	cyber_discrete_states = discrete_states['REV'].values
 
-	X = cyber_eigenworms
-	X_man = pd.DataFrame(data=generate_manifold(cyber_discrete_states, (len(neurons), dim)), columns=[f'PC{i+1}' for i in range(dim)])
+	X_man = pd.DataFrame(data=generate_manifold(discrete_states['REV'].values, (len(neurons), dim)), columns=[f'PC{i+1}' for i in range(dim)])
 
 	n_neurons = len(neurons)
-	n_behaviors_ll = X.shape[1]
+	n_behaviors_ll = eigenworms.shape[1]
 	n_dimensions = X_man.shape[1]
 
 	params = generate_params((n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
-	cyber_traces_residual = pd.DataFrame(data=generate_redisual_traces(cyber_eigenworms.values, X_man.values, params['W1'], params['W2']),
+	cyber_traces_residual = pd.DataFrame(data=generate_redisual_traces(eigenworms.values, X_man.values, params['W1'], params['W2']),
 										 columns=neurons)
 
 	cyber_traces = pd.DataFrame(data=generate_traces(X_man, cyber_traces_residual), columns=neurons)

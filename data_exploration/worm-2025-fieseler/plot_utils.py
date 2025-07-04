@@ -43,7 +43,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_gfp=None, limits=None, sa
 	plt.xlim(min_x, max_x)
 	plt.ylim(min_y, max_y)
 
-	plt.plot([-1, 1], [-1, 1], color='black', linestyle='--')
+	plt.plot([-10, 10], [-10, 10], color='black', linestyle='--')
 
 	# GFP =============================================================================================================
 	gfp_boxplot_xticks, gfp_boxplot_xtick_labels = list(), list()
