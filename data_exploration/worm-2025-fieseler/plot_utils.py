@@ -2,6 +2,8 @@ import math
 import numpy as np
 import pandas as pd
 from matplotlib import patches, pyplot as plt
+from matplotlib.colors import to_rgb
+from matplotlib import cm
 
 
 def plot_performance_plot(neuron_scores, neuron_scores_gfp=None, limits=None, save=False):
@@ -254,103 +256,192 @@ def plot_improvement_plot(neuron_scores, neuron_scores_gfp=None, limits=None, sa
 	if save: plt.savefig('out/sep-hgm-vs-glm-scores-rel', dpi=300)
 
 
-def plot_losses(filenames, losses_m1, losses_m2, title, n_plots=None, save_name=None):
+def plot_losses(filenames, losses_m1, losses_m2, title, n_plots=None, ylimits=None, save_name=None):
 	if n_plots is None:
 		n_plots = len(filenames)
 
-	dim = math.ceil(math.sqrt(n_plots))
-	fig, axes = plt.subplots(dim, dim, figsize=(24, 20))
+	top_space = 1
+	plots_per_row = 4
+	plots_per_col = math.ceil(n_plots / plots_per_row)
+	figheight = 4 * plots_per_col + top_space
+	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(4 * plots_per_row, figheight))
+	if len(axes.shape) < 2: axes = axes.reshape((1, -1))
 	for i in range(n_plots):
-		# axes[i // dim, i % dim].set_xticklabels([])
-		# axes[i // dim, i % dim].set_yticklabels([])
-		axes[i // dim, i % dim].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		if ylimits is not None: axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits)
 
 	for i, (losses_per_split_m1, losses_per_split_m2) in enumerate(zip(losses_m1[:n_plots], losses_m2[:n_plots])):
 		colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 		for j, (losses_m1, losses_m2) in enumerate(zip(losses_per_split_m1, losses_per_split_m2)):
-			axes[i // dim, i % dim].plot(losses_m1, color=colors[j])
-			axes[i // dim, i % dim].plot(losses_m2, color=colors[j], alpha=0.5)
-		axes[i // dim, i % dim].grid(True)
-		axes[i // dim, i % dim].set_title(f'{filenames[i][:-14]}\n'
+			axes[i // plots_per_row, i % plots_per_row].plot(losses_m1, color=colors[j])
+			axes[i // plots_per_row, i % plots_per_row].plot(losses_m2, color=colors[j], alpha=0.5)
+		axes[i // plots_per_row, i % plots_per_row].grid(True)
+		axes[i // plots_per_row, i % plots_per_row].set_title(f'{filenames[i][:-14]}\n'
 										  f'(model: {np.average(losses_per_split_m1[:, -1], axis=0) * 100:.2f}E-2, '
 										  f'comp: {np.average(losses_per_split_m2[:, -1], axis=0) * 100:.2f}E-2)',
 										  fontsize=10)
 
-		yticks = axes[i // dim, i % dim].get_yticks()
-		axes[i // dim, i % dim].set_yticks(yticks)
-	# axes[i // dim, i % dim].set_yticklabels([f'{tick * 100:.2f}E-2' for tick in yticks])
+		yticks = axes[i // plots_per_row, i % plots_per_row].get_yticks()
+		axes[i // plots_per_row, i % plots_per_row].set_yticks(yticks)
 
-	fig.subplots_adjust(hspace=0.4, wspace=0.5)
-	fig.suptitle(title, fontsize=20, y=0.95)
+	top_space_rel = top_space / figheight
+	fig.text(0.5, 1. - top_space_rel * 1 / 2, title, ha='center', fontsize=20)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	# fig.subplots_adjust(
+	# 	hspace=0.5,
+	# )
+
 	if save_name is not None: plt.savefig(f'./out/{save_name}')
 
 
-def plot_manifolds(filenames, modes, vars_expl, vars_expl_rs=None):
-	n_plots = len(modes)
-	dim = math.ceil(math.sqrt(n_plots))
-	fig, axes = plt.subplots(dim, dim, figsize=(20, 24))
+def plot_manifolds(filenames, modes, vars_expl, vars_expl_rs=None, n_plots=None):
+	if n_plots is None:
+		n_plots = len(filenames)
+
+	top_space = 1
+	plots_per_row = 6
+	plots_per_col = math.ceil(n_plots / plots_per_row)
+	figheight = 4 * plots_per_col + top_space
+	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(4 * plots_per_row, figheight))
+	if len(axes.shape) < 2: axes = axes.reshape((1, -1))
 	for i in range(n_plots):
-		axes[i // dim, i % dim].set_xticklabels([])
-		axes[i // dim, i % dim].set_yticklabels([])
-		axes[i // dim, i % dim].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].set_xticklabels([])
+		axes[i // plots_per_row, i % plots_per_row].set_yticklabels([])
+		axes[i // plots_per_row, i % plots_per_row].grid(False)
 
 	scale = [-1, 0, 1]
-	for i, modes_ in enumerate(modes):
-		axes[i // dim, i % dim].plot(modes_['CC1'] if 'CC1' in modes_.columns else modes_['PC1'],
+	for i, modes_ in enumerate(modes[:n_plots]):
+		axes[i // plots_per_row, i % plots_per_row].plot(modes_['CC1'] if 'CC1' in modes_.columns else modes_['PC1'],
 									 modes_['CC2'] if 'CC2' in modes_.columns else modes_['PC2'])
-		axes[i // dim, i % dim].set_xticks(scale)
-		axes[i // dim, i % dim].set_xticklabels(scale)
-		axes[i // dim, i % dim].set_yticks(scale)
-		axes[i // dim, i % dim].set_yticklabels(scale)
-		axes[i // dim, i % dim].grid(True)
-		axes[i // dim, i % dim].set_title(f'{filenames[i][:-14]}\n{i}: {vars_expl[i]:.2f}' +
+		axes[i // plots_per_row, i % plots_per_row].set_xticks(scale)
+		axes[i // plots_per_row, i % plots_per_row].set_xticklabels(scale)
+		axes[i // plots_per_row, i % plots_per_row].set_yticks(scale)
+		axes[i // plots_per_row, i % plots_per_row].set_yticklabels(scale)
+		axes[i // plots_per_row, i % plots_per_row].grid(True)
+		axes[i // plots_per_row, i % plots_per_row].set_title(f'{filenames[i][:-14]}\n{i}: {vars_expl[i]:.2f}' +
 										  (f', ({vars_expl_rs[i]:.2f})' if vars_expl_rs is not None else ''),
 										  fontsize=8)
 
-	plt.subplots_adjust(hspace=0.5)
+	top_space_rel = top_space / figheight
+	fig.text(0.5, 1. - top_space_rel * 1 / 2, 'manifolds', ha='center', fontsize=20)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	# fig.subplots_adjust(
+	# 	hspace=0.5,
+	# )
+
 	if vars_expl_rs is not None:
 		print(np.mean(np.array(vars_expl)), np.mean(np.array(vars_expl_rs)))
 	else:
 		print(np.mean(np.array(vars_expl)))
 
 
-def plot_traces(traces, states, title, max_plots=4, label='reversal', limits=None, save=False):
-	if max_plots < 0:
-		max_plots = len(traces.columns)
+def plot_traces(traces, states, title, traces_predicted=None, n_plots=None, limits=None, label='reversal', save_name=None):
+	keys = [key for key in traces.columns if key != '']
+	if n_plots is None:
+		n_plots = len(keys)
 	if limits == None: limits = (traces.values.min(), traces.values.max())
 
-	heatmap = states.values.reshape(-1, 1) * 0.1
+	top_space = 2
+	plots_per_row = 2
+	plots_per_col = math.ceil(n_plots / plots_per_row)
+	figheight = 2 * plots_per_col + top_space
+	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(10 * plots_per_row, figheight))
+	if len(axes.shape) < 2: axes = axes.reshape((1, -1))
+	for i in range(n_plots):
+		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].set_ylim(limits[0], limits[1])
 
-	dim1, dim2 = math.ceil(max_plots / 2), 2
-	fig, axes = plt.subplots(dim1, dim2, figsize=(10 * dim2, 2 * (dim1 + 0.25)), constrained_layout=True)
-	for i in range(dim1 * dim2):
-		#axes[i // dim2, i % dim2].set_xticklabels([])
-		#axes[i // dim2, i % dim2].set_yticklabels([])
-		axes[i // dim2, i % dim2].grid(False)
-		axes[i // dim2, i % dim2].set_ylim(limits[0], limits[1])
-
-	keys = [key for key in traces.columns if key != ''][:max_plots]
-	i = 0
-	for key in keys:
-		if key != '':
-			# min_val, max_val = min(traces[key]), max(traces[key])
-			min_val, max_val = limits
-			axes[i // dim2, i % dim2].imshow(
-				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
-			)
-			axes[i // dim2, i % dim2].plot(traces[key], color='black', linewidth=1.0)
-			axes[i // dim2, i % dim2].grid(False)
-			axes[i // dim2, i % dim2].set_title(f'{key}', fontsize=12)
-			i += 1
-
-	fig.text(0.5, 1.15, title, ha='center', fontsize=20)
+	top_space_rel = top_space / figheight
+	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
 	fig.legend(
 		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label=label)],
-		loc='upper center',
-		bbox_to_anchor=(0.5, 1.1),
+		loc='lower center',
+		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
 		fontsize='large'
 	)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	fig.subplots_adjust(
+		hspace=0.5,
+	)
 
-	if save:
-		plt.savefig('out/traces.png', dpi=300)
+	heatmap = states.values.reshape(-1, 1) * 0.1
+
+	i = 0
+	for key in keys[:n_plots]:
+		if key != '':
+			min_val, max_val = limits
+			axes[i // plots_per_row, i % plots_per_row].imshow(
+				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+			)
+			if traces_predicted is not None:
+				for traces_per_split in traces_predicted:
+					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split[key], linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].grid(False)
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			i += 1
+
+	if save_name is not None: plt.savefig(f'./out/{save_name}', dpi=300)
+
+
+def plot_mcos(bars, bar_labels, labels, order):
+	index_orders = [
+		['m', 'c', 'o'].index(order[0]),
+		['m', 'c', 'o'].index(order[1]),
+		['m', 'c', 'o'].index(order[2])
+	]
+	rocket_cmap = cm.get_cmap('rocket')
+	color_pool = [rocket_cmap(0.4), rocket_cmap(0.9), rocket_cmap(0.1)]
+	mono_cmap = cm.get_cmap('Greys')
+	bar_labels_color_pool = [mono_cmap(0.1), mono_cmap(0.9), mono_cmap(0.1)]
+
+	colors = [color_pool[idx] for idx in index_orders]
+	bar_labels_colors = [bar_labels_color_pool[idx] for idx in index_orders]
+	bar_labels_positions = [
+		# [np.mean(bars.loc[order[0]] / 2) for _ in bars.loc[order[0]]],
+		# [(np.mean(bars.loc[order[0]] / 2) + 1 - np.mean(bars.loc[order[2]] / 2)) / 2 for _ in bars.loc[order[1]]],
+		# [1 - np.mean(bars.loc[order[2]] / 2) for _ in bars.loc[order[2]]],
+
+		# [y1 / 2 for y1 in bars.loc[order[0]]],
+		# [y1 + y2 + y3 / 2 for y1, y2, y3 in zip(bars.loc[order[0]], bars.loc[order[1]], bars.loc[order[2]])]
+		# [0.975 for _ in bars.loc[order[2]]],
+
+		[0.025 for _ in bars.loc[order[0]]],
+		[y1 + y2 - 0.025 * y2 for y1, y2 in zip(bars.loc[order[0]], bars.loc[order[1]])],
+		[0.975 for _ in bars.loc[order[2]]]
+	]
+	x_positions = list((idx + 0.5) * 10. for idx in range(len(labels)))
+	y_positions = [
+		[0 for _ in bars.loc[order[0]]],
+		[y1 for y1 in bars.loc[order[0]]],
+		[y1 + y2 for y1, y2 in zip(bars.loc[order[0]], bars.loc[order[1]])]
+	]
+
+	plt.figure(figsize=(39, 13))
+
+	for idx in range(3):
+		plt.bar(x_positions, bars.loc[order[idx]], width=10, bottom=y_positions[idx], color=colors[idx], edgecolor='none')
+
+	idx = 0
+	for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
+		# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
+		plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center', fontsize=10)
+	idx = 1
+	for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
+		# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
+		plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='top', fontsize=10)
+	idx = 2
+	for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
+		# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
+		plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center', fontsize=10)
+
+	plt.yticks(np.arange(0, 1.05, 0.05), labels=[f'{val}%' for val in np.arange(0, 105, 5)])
+	plt.xticks(x_positions, labels)
+	plt.xlim(0, x_positions[-1] + 5)
+	plt.ylim(0, 1)
+
+	plt.gca().set_axisbelow(False)
+	plt.grid(False)
+	plt.grid(axis='y', linestyle='--', linewidth=0.5, color=(0.0, 0.0, 0.0))
+	plt.show()

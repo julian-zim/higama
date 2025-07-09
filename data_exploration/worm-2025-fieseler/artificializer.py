@@ -3,72 +3,65 @@ import pandas as pd
 import jax
 import jax.numpy as jnp
 
-import models.hgm_sep as hgm
 
+def generate_params(model, seeds, shape_X_bll, shape_X_man):
+	if model.get_type():
+		# return {
+		# 	'W1': 0.25 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1)),
+		# 	'W2': 6 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
+		# }
+		return {
+			'W1': 0.5 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1)),
+			'W2': 0.5 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
+		}
+	else:
+		return {
+			'W': 0.4 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1))
+		}
 
-def generate_params(shape_X, shape_X_man):
-	# return hgm.init_params(None, shape_X, shape_X_man)
-	params = {
-		'W1': 1E-1 * jnp.tile(jax.random.normal(jax.random.PRNGKey(2), shape_X[1]), (shape_X[0], 1)),
-		'W2': 10 * jnp.tile(jnp.abs(jax.random.normal(jax.random.PRNGKey(3), shape_X[1])), (shape_X_man[0], 1))
-	}
-	return params
+def generate_manifold(discrete_states, shape):
+	assert shape[1] == 1
+	weight = 1
+	manifold = np.array((discrete_states * 2 - 1) * weight, dtype=float)
+	return manifold
 
-def generate_manifold(cyber_discrete_states, shape):
-	# N = shape[0]
-	# change_points = np.linspace(0, N, num=11, dtype=int)
-	# values = (np.arange(11) % 2 - 0.5) * 2
-	# result = np.zeros(N, dtype=int)
-	# for i in range(len(change_points) - 1):
-	# 	start = change_points[i]
-	# 	end = change_points[i + 1]
-	# 	result[start:end] = values[i]
-	# dim1 = result.reshape(N,)
+def generate_redisual_traces(model, X_bll, X_man, W1, W2):
+	if model.get_type():
+		traces = model.predict(X_bll, X_man, W1, W2)
+	else:
+		traces = model.predict(X_bll, W1)
+	return traces
 
-	weight = -0.5
-	dim1 = (cyber_discrete_states * 2 - 1) * weight
-	if shape[1] <= 1: return dim1
+def generate_traces(X_residual, X_man):
+	assert X_man.values.shape[1] == 1
 
-	dims_n = list()
-	for i in range(shape[1] - 1):
-		dims_n.append(np.zeros((shape[0],)))
-	dims_n = np.vstack(dims_n)
-
-	return np.vstack((dim1, dims_n)).T
-
-def generate_redisual_traces(X, X_man, W1, W2):
-	traces = hgm.predict(X, X_man, W1, W2)
-	# traces = X @ W1 * jax.nn.sigmoid(X_man @ W2)
-	return traces #- np.quantile(traces, 0.1, axis=0)
-
-def generate_traces(X_man, X_residual, variance=1):
-	if X_man.values.shape[1] != 1:
-		print('warning! no idea what to do with a multi-dim manifold')
-
-	X_values = X_residual.values
-	X_man_expanded = np.tile(X_man.values, (1, X_values.shape[1]))
-	X_man_expanded *= variance
-	X_man_expanded = X_man_expanded #+ variance * 2 * 0.75
-
-	X = pd.DataFrame(data=X_values + X_man_expanded, columns=X_residual.columns)
-
+	weight = 1
+	X_man_reconstructed = np.tile(X_man.values * weight, (1, X_residual.values.shape[1]))  # TODO: better way (inverse CCA)
+	X = pd.DataFrame(data=X_residual.values + X_man_reconstructed, columns=X_residual.columns)
 	return X
 
-def artificialize(filename, neurons, eigenworms, discrete_states):
-	dim = 1
+def artificialize(model, filename, neurons, eigenworms, discrete_states):
+	seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1)
 
-	cybername = '_'.join(['ZIMMERMANN_artificial'] + filename.split('_')[2:])
-
-	X_man = pd.DataFrame(data=generate_manifold(discrete_states['REV'].values, (len(neurons), dim)), columns=[f'PC{i+1}' for i in range(dim)])
-
+	n_dimensions = 1
 	n_neurons = len(neurons)
 	n_behaviors_ll = eigenworms.shape[1]
-	n_dimensions = X_man.shape[1]
 
-	params = generate_params((n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
-	cyber_traces_residual = pd.DataFrame(data=generate_redisual_traces(eigenworms.values, X_man.values, params['W1'], params['W2']),
-										 columns=neurons)
+	cyber_name = '_'.join(['ZIMMERMANN_artificial'] + filename.split('_')[2:])
 
-	cyber_traces = pd.DataFrame(data=generate_traces(X_man, cyber_traces_residual), columns=neurons)
+	cyber_manifold = pd.DataFrame(data=generate_manifold(discrete_states['FWD'].values, (discrete_states['FWD'].values.shape[0], n_dimensions)),
+								  columns=[f'CC{i+1}' for i in range(n_dimensions)])
 
-	return cybername, cyber_traces, cyber_traces_residual, X_man, params
+	params = generate_params(model, seeds, (n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
+
+	if model.get_type():
+		cyber_traces_residual = pd.DataFrame(data=generate_redisual_traces(model, eigenworms.values, cyber_manifold.values, params['W1'], params['W2']),
+											 columns=neurons)
+	else:
+		cyber_traces_residual = pd.DataFrame(data=generate_redisual_traces(model, eigenworms.values, cyber_manifold.values, params['W'], None),
+											 columns=neurons)
+
+	cyber_traces = pd.DataFrame(data=generate_traces(cyber_traces_residual, cyber_manifold),
+								columns=neurons)
+
+	return cyber_name, cyber_manifold, cyber_traces_residual, cyber_traces, params

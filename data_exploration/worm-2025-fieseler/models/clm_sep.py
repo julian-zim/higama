@@ -7,34 +7,34 @@ def get_type():
 	return False
 
 
-def init_params(seed, shape):
+def init_params(seeds, shape_X_bll):
+	# return {
+	# 	'W': 0.25 * jax.random.normal(seeds[0], shape_X_bll),
+	# }
 	return {
-		'W': 1E-1 * jax.random.normal(jax.random.PRNGKey(0), shape),
+		'W': 0.4 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1))
 	}
 
 
-def predict(X, W):
-	return X @ W	# (n, p) @ (p, k) → (n, k)
+def predict(X_bll, W):
+	return X_bll @ W
 
 
 # temp
-def mse_loss_fn(params, X, Y):
+def mse_loss_fn(params, X_bll, Y):
 	W = params['W']
-
-	Y_pred = predict(X, W)
-
-	mse_loss = jnp.mean((Y_pred - Y) ** 2)  # MSE
-
+	Y_pred = predict(X_bll, W)
+	mse_loss = jnp.mean((Y_pred - Y) ** 2)
 	return mse_loss
 
 
-def loss_fn(params, X, Y, reg_lambdas):
+def loss_fn(params, X_bll, Y, reg_lambdas):
 	W = params['W']
 	reg_l = reg_lambdas[0]
 
-	Y_pred = predict(X, W)
+	Y_pred = predict(X_bll, W)
 
-	mse_loss = jnp.mean((Y_pred - Y) ** 2)  # MSE
+	mse_loss = jnp.mean((Y_pred - Y) ** 2)
 	w_loss = reg_l * jnp.linalg.norm(W) ** 2
 
 	res_loss = mse_loss + w_loss
@@ -44,8 +44,8 @@ def loss_fn(params, X, Y, reg_lambdas):
 loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(3,))
 
 
-def update(opt_update, opt_state, params, X, Y, reg_lambdas):
-	grads = loss_fn_grad(params, X, Y, reg_lambdas)
+def update(opt_update, opt_state, params, X_bll, Y, reg_lambdas):
+	grads = loss_fn_grad(params, X_bll, Y, reg_lambdas)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
 	return params_new, opt_state, grads  # return grads for weight interpretation
