@@ -5,7 +5,7 @@ import h5py
 
 
 def get_hdf5_files(path):
-	return [h5py.File(path + filename, 'r') for filename in os.listdir(path)]
+	return [h5py.File(os.path.join(path, filename), 'r') for filename in os.listdir(path)]
 
 
 def get_filename(file_handle):
@@ -67,3 +67,7 @@ def get_data(path):
 	kymographs = [get_kymograph(file) for file in hdf5files]
 	traces = [get_neuronal_traces(file) for file in hdf5files]
 	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
+
+
+def get_data_path():
+	return os.path.join(os.path.expanduser('~'), 'Desktop/DATA', os.path.basename(os.getcwd()))

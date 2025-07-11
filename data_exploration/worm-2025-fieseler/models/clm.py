@@ -7,16 +7,29 @@ def get_type():
 	return False
 
 
-def init_params(seed, shape_U, shape_V, shape_X):
+def init_params(seeds, shape_U, shape_V, shape_X):
 	return {
-	    'U': 1E-2 * jax.random.normal(seed, shape_U),
-	    'V': 1E-2 * jax.random.normal(seed, shape_V),
-	    'W': 1E-2 * jax.random.normal(seed, shape_X)
+	    'U': 1E-2 * jax.random.normal(seeds[1], shape_U),
+	    'V': 1E-2 * jax.random.normal(seeds[2], shape_V),
+	    'W': 1E-2 * jax.random.normal(seeds[0], shape_X)
 	}
 
 
 def predict(B_ll, W):
 	return B_ll @ W
+
+
+# temp
+def mse_loss_fn(params, X, B_ll):
+	U, V, W = params['U'], params['V'], params['W']
+
+	X_man = X @ U
+	X_rec = X_man @ jax.numpy.linalg.pinv(U)
+	X_res = X - X_rec
+	Y_pred = predict(B_ll, W)
+	mse_loss = jnp.mean((Y_pred - X_res) ** 2)
+
+	return mse_loss
 
 
 @jax.jit

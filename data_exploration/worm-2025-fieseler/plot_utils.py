@@ -392,7 +392,8 @@ def plot_mcos(bars, bar_labels, labels, order):
 		['m', 'c', 'o'].index(order[2])
 	]
 	rocket_cmap = cm.get_cmap('rocket')
-	color_pool = [rocket_cmap(0.4), rocket_cmap(0.9), rocket_cmap(0.1)]
+	# color_pool = [rocket_cmap(0.4), rocket_cmap(0.9), rocket_cmap(0.1)]
+	color_pool = [rocket_cmap(0.4), rocket_cmap(0.9), 'gray']
 	mono_cmap = cm.get_cmap('Greys')
 	bar_labels_color_pool = [mono_cmap(0.1), mono_cmap(0.9), mono_cmap(0.1)]
 

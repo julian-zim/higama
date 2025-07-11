@@ -9,10 +9,10 @@ def get_type():
 
 def init_params(seeds, shape_X_bll):
 	# return {
-	# 	'W': 0.25 * jax.random.normal(seeds[0], shape_X_bll),
+	# 	'W': 0.4 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1))
 	# }
 	return {
-		'W': 0.4 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1))
+		'W': jax.random.normal(jax.random.PRNGKey(42), shape_X_bll),
 	}
 
 

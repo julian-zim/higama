@@ -12,7 +12,8 @@ def generate_params(model, seeds, shape_X_bll, shape_X_man):
 		# }
 		return {
 			'W1': 0.5 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1)),
-			'W2': 0.5 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
+			# 'W2': 0.5 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
+			'W2': 2 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
 		}
 	else:
 		return {
