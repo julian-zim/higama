@@ -167,6 +167,7 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 
 
+
 # read
 print('reading...')
 
@@ -199,7 +200,7 @@ for i in range(len(filenames_gfp)):
 
 
 
-# artificialize gfp
+# artificialize
 print('artificializing...')
 
 filenames_art = list()
@@ -218,22 +219,22 @@ for i in range(len(filenames_gfp)):
 
 
 
-# clm sweep
+# sweep
 print('sweeping...')
 
 wandb.login()
-project_name = 'sep-clm-art'
 sweep_config = {
     'method': 'grid',
     'parameters': {
         'max_epochs': {'values': [1000]},
-        'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3]},
+        'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
         'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
         'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]}
     }
 }
 
-for i in range(len(filenames_art[:1])):
+for i in range(len(filenames_art)):
+	project_name = f'sep-clm-art_{i}_{filenames_art[i]}'
 	print(f'{i + 1}/{len(filenames_art)}: {filenames_art[i]}  ', end='')
 
 	splits = list(StratifiedKFold(n_splits=5).split(np.zeros(eigenworms_art[i].values.shape[0]), discrete_states_art[i]['REV'].values))
