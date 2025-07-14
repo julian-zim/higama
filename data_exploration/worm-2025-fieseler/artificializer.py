@@ -42,7 +42,7 @@ def generate_traces(X_residual, X_man):
 	return X
 
 def artificialize(model, filename, neurons, eigenworms, discrete_states):
-	seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1)
+	seeds = jax.random.PRNGKey(69), jax.random.PRNGKey(420)
 
 	n_dimensions = 1
 	n_neurons = len(neurons)

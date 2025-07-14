@@ -14,8 +14,8 @@ def init_params(seeds, shape_X_bll, shape_X_man):
 	# 	'W2': 0.5 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1)) + 1.5 * jax.random.normal(jax.random.PRNGKey(420), shape_X_man)
 	# }
 	return {
-		'W1': jax.random.normal(jax.random.PRNGKey(69), shape_X_bll),
-		'W2': jax.random.normal(jax.random.PRNGKey(420), shape_X_man)
+		'W1': jax.random.normal(seeds[0], shape_X_bll),
+		'W2': jax.random.normal(seeds[1], shape_X_man)
 	}
 
 

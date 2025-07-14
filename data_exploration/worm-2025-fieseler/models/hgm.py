@@ -7,28 +7,28 @@ def get_type():
 	return True
 
 
-def init_params(seeds, shape_U, shape_V, shape_X, shape_X_man):
+def init_params(seeds, shape_U, shape_V, shape_N, shape_N_man):
 	return {
+	    'W1': 1E-2 * jax.random.normal(seeds[0], shape_N),
+	    'W2': 1E-2 * jax.random.normal(seeds[1], shape_N_man),
 	    'U': 1E-2 * jax.random.normal(seeds[2], shape_U),
-	    'V': 1E-2 * jax.random.normal(seeds[3], shape_V),
-	    'W1': 1E-2 * jax.random.normal(seeds[0], shape_X),
-	    'W2': 1E-2 * jax.random.normal(seeds[1], shape_X_man)
+	    'V': 1E-2 * jax.random.normal(seeds[3], shape_V)
 	}
 
 
-def predict(B_ll, X_man, W1, W2):
-	return B_ll @ W1 * jax.nn.sigmoid(X_man @ W2)
+def predict(B_ll, N_man, W1, W2):
+	return B_ll @ W1 * jax.nn.sigmoid(N_man @ W2)
 
 
 # temp
-def mse_loss_fn(params, X, B_ll):
+def mse_loss_fn(params, N, B_ll):
 	U, V, W1, W2 = params['U'], params['V'], params['W1'], params['W2']
 
-	X_man = X @ U
-	X_rec = X_man @ jax.numpy.linalg.pinv(U)
-	X_res = X - X_rec
-	Y_pred = predict(B_ll, X_man, W1, W2)
-	mse_loss = jnp.mean((Y_pred - X_res) ** 2)
+	N_man = N @ U
+	N_rec = N_man @ jax.numpy.linalg.pinv(U)
+	N_res = N - N_rec
+	Y_pred = predict(B_ll, N_man, W1, W2)
+	mse_loss = jnp.mean((Y_pred - N_res) ** 2)
 
 	return mse_loss
 
@@ -48,25 +48,25 @@ def cca_loss(X_proj, Y_proj):
 
 	return jnp.mean(1 - corrs)
 
-def loss_fn(params, X, B_ll, B_hl, loss_lambdas, reg_lambdas):
+def loss_fn(params, N, B_ll, B_hl, loss_lambdas, reg_lambdas):
 	l1, l2 = loss_lambdas
 	reg_l1, reg_l2 = reg_lambdas[0], reg_lambdas[1]
 
 	U, V, W1, W2 = params['U'], params['V'], params['W1'], params['W2']
 
 	# manifold ================================
-	X_man = X @ U
-	X_man_bhl = B_hl @ V
+	N_man = N @ U
+	B_hl_man = B_hl @ V
 
-	X_rec = X_man @ jax.numpy.linalg.pinv(U)
-	X_res = X - X_rec
+	N_rec = N_man @ jax.numpy.linalg.pinv(U)
+	N_res = N - N_rec  # TOOD: another operation to enable sensory information removal?
 
-	man_loss = cca_loss(X_man, X_man_bhl)
+	man_loss = cca_loss(N_man, B_hl_man)
 	# =========================================
 
 	# residuals ===============================
-	Y_pred = predict(B_ll, X_man, W1, W2)
-	mse_loss = jnp.mean((Y_pred - X_res) ** 2)
+	Y_pred = predict(B_ll, N_man, W1, W2)
+	mse_loss = jnp.mean((Y_pred - N_res) ** 2)
 	w1_loss = reg_l1 * jnp.linalg.norm(W1) ** 2
 	w2_loss = reg_l2 * jnp.linalg.norm(W2) ** 2
 
@@ -78,8 +78,8 @@ def loss_fn(params, X, B_ll, B_hl, loss_lambdas, reg_lambdas):
 loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4, 5))
 
 
-def update(opt_update, opt_state, params, X, B_ll, B_hl, loss_weights, reg_lambdas):
-	grads = loss_fn_grad(params, X, B_ll, B_hl, loss_weights, reg_lambdas)
+def update(opt_update, opt_state, params, N, B_ll, B_hl, loss_weights, reg_lambdas):
+	grads = loss_fn_grad(params, N, B_ll, B_hl, loss_weights, reg_lambdas)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
 	return params_new, opt_state, grads  # return grads for weight interpretation
