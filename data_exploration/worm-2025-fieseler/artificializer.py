@@ -11,13 +11,13 @@ def generate_params(model, seeds, shape_X_bll, shape_X_man):
 		# 	'W2': 6 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
 		# }
 		return {
-			'W1': 0.5 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1)),
+			'W1': 0.5 * jnp.tile(jax.random.normal(seeds[0], (shape_X_bll[1],)), (shape_X_bll[0], 1)),
 			# 'W2': 0.5 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
-			'W2': 2 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1))
+			'W2': 2 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], (shape_X_bll[1],))), (shape_X_man[0], 1))
 		}
 	else:
 		return {
-			'W': 0.4 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1))
+			'W': 0.4 * jnp.tile(jax.random.normal(seeds[0], (shape_X_bll[1],)), (shape_X_bll[0], 1))
 		}
 
 def generate_manifold(discrete_states, shape):
