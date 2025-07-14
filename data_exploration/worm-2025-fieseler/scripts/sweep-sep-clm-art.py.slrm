@@ -1,0 +1,15 @@
+#!/bin/sh
+#SBATCH -J sweep-sep-clm-art
+#SBATCH --partition=zen3_0512_a100x2
+#SBATCH --qos zen3_0512_a100x2
+#SBATCH --gres=gpu:2
+#SBATCH --mail-user=a12144285@unet.univie.ac.at
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --output=/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/data-exploration/out/slurm/sweep-sep-clm-art.%A.out
+#SBATCH --error=/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/data-exploration/out/slurm/sweep-sep-clm-art.%A.err
+
+source ~/.venv/hgm/bin/activate
+mkdir -p /scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/data-exploration/out/slurm/
+
+python --version
+#python ../sweep-sep-clm-art.py
