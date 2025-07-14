@@ -26,6 +26,9 @@ dist/
 .eggs/
 MANIFEST
 
+# weights & biases library
+**/wandb/
+
 # data
 data_exploration/data
 
