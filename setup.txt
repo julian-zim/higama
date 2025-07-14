@@ -1,2 +1,5 @@
-pip install notebook numpy matplotlib pandas seaborn h5py pynwb dandi fsspec openpyxl nwbwidgets hdmf==3.14.5 scikit-learn wandb
-jax
+python -m venv /lisc/home/user/zimmermann/.venv/hgm
+source /lisc/home/user/zimmermann/.venv/hgm/activate
+
+pip install jupyter numpy matplotlib pandas seaborn h5py pynwb dandi fsspec openpyxl scikit-learn wandb dandi optax
+pip install -U "jax[cuda12]"
