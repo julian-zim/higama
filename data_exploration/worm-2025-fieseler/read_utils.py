@@ -70,4 +70,5 @@ def get_data(path):
 
 
 def get_data_path():
-	return os.path.join(os.path.expanduser('~'), 'Desktop/DATA', os.path.basename(os.getcwd()))
+	# return os.path.join(os.path.expanduser('~'), 'Desktop/DATA', os.path.basename(os.getcwd()))
+	return os.path.join('/lisc/scratch/neurobiology/zimmer/zimmermann/DATA', os.path.basename(os.getcwd()))
