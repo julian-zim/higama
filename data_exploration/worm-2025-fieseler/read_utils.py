@@ -4,6 +4,22 @@ import pynwb
 import h5py
 
 
+def get_data_path():
+	return os.path.join(os.path.expanduser('~'), 'Desktop/DATA', os.path.basename(os.getcwd()))
+	# return os.path.join('/lisc/scratch/neurobiology/zimmer/zimmermann/DATA', os.path.basename(os.getcwd()))
+
+
+def get_data(path):
+	hdf5files = get_hdf5_files(path)
+	filenames = [get_filename(file) for file in hdf5files]
+	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
+	discrete_states = [get_discrete_states(file) for file in hdf5files]
+	eigenworms = [get_eigenworms(file) for file in hdf5files]
+	kymographs = [get_kymograph(file) for file in hdf5files]
+	traces = [get_neuronal_traces(file) for file in hdf5files]
+	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
+
+
 def get_hdf5_files(path):
 	return [h5py.File(os.path.join(path, filename), 'r') for filename in os.listdir(path)]
 
@@ -56,19 +72,3 @@ def get_neuronal_traces(file_handle):
 		print(f'No neuronal trace data for {os.path.basename(file_handle.filename)}')
 		data = None
 	return data
-
-
-def get_data(path):
-	hdf5files = get_hdf5_files(path)
-	filenames = [get_filename(file) for file in hdf5files]
-	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
-	discrete_states = [get_discrete_states(file) for file in hdf5files]
-	eigenworms = [get_eigenworms(file) for file in hdf5files]
-	kymographs = [get_kymograph(file) for file in hdf5files]
-	traces = [get_neuronal_traces(file) for file in hdf5files]
-	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
-
-
-def get_data_path():
-	# return os.path.join(os.path.expanduser('~'), 'Desktop/DATA', os.path.basename(os.getcwd()))
-	return os.path.join('/lisc/scratch/neurobiology/zimmer/zimmermann/DATA', os.path.basename(os.getcwd()))
