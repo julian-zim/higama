@@ -168,6 +168,7 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 
 # read
+print('reading...')
 
 path = os.path.join(read_utils.get_data_path(), 'exported_data_')
 filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path)
@@ -199,6 +200,7 @@ for i in range(len(filenames_gfp)):
 
 
 # artificialize gfp
+print('artificializing...')
 
 filenames_art = list()
 discrete_states_art = discrete_states_gfp.copy()
@@ -217,6 +219,7 @@ for i in range(len(filenames_gfp)):
 
 
 # clm sweep
+print('sweeping...')
 
 wandb.login()
 project_name = 'sep-clm-art'
