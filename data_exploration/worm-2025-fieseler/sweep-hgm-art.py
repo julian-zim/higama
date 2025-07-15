@@ -10,6 +10,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import jax
 import jax.numpy as jnp
 import optax
@@ -228,7 +229,7 @@ def sweep(config):
 	wandb.login()
 
 	for i in range(len(filenames_art)):
-		project_name = f'hgm_sep_{i}_{filenames_art[i]}'
+		project_name = f'hgm_art_{i}_{filenames_art[i]}'
 		print(f'{i + 1}/{len(filenames_art)}: {filenames_art[i]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces_art[i].values.shape[0]), discrete_states_art[i]['REV'].values))
@@ -244,7 +245,7 @@ def sweep(config):
 sweep_config = {
 	'method': 'grid',
 	'parameters': {
-		'max_epochs': {'values': [1000, 5000]},
+		'max_epochs': {'values': [1000, 5000, 10000]},
 		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},

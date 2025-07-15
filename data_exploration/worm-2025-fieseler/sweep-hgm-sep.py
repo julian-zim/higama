@@ -10,6 +10,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import jax
 import jax.numpy as jnp
 import optax
@@ -232,7 +233,7 @@ def sweep(config):
 sweep_config = {
 	'method': 'grid',
 	'parameters': {
-		'max_epochs': {'values': [1000, 5000]},
+		'max_epochs': {'values': [1000, 5000, 10000]},
 		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]}

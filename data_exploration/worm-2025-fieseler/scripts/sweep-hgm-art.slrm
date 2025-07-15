@@ -2,7 +2,7 @@
 #SBATCH --job-name sweep-hgm-art
 #SBATCH --gres=shard:1
 #SBATCH --mem=16G
-#SBATCH --time=2:00:00
+#SBATCH --time=5:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --output=/lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/data_exploration/worm-2025-fieseler/out/slurm/sweep-hgm-art.%A.out
