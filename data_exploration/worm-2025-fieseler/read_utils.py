@@ -9,8 +9,8 @@ def get_data_path():
 	return os.path.join('/lisc/scratch/neurobiology/zimmer/zimmermann/DATA', os.path.basename(os.getcwd()))
 
 
-def get_data(path):
-	hdf5files = get_hdf5_files(path)
+def get_data(path, n=None):
+	hdf5files = get_hdf5_files(path) if n is None else get_hdf5_files(path)[:n]
 	filenames = [get_filename(file) for file in hdf5files]
 	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
 	discrete_states = [get_discrete_states(file) for file in hdf5files]

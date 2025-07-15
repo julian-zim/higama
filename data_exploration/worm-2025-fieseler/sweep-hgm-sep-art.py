@@ -39,12 +39,12 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 		# Hyperparamters ============
 		hyperparams = {
-				'max_epochs': config.max_epochs,
-				'min_epochs': config.max_epochs,  # no early stopping
-				'max_patience': 0,
-				'learning_rate': config.learning_rate,
-				'reg_l1': config.reg_l1,
-				'reg_l2': config.reg_l2,
+			'max_epochs': config.max_epochs,
+			'min_epochs': config.max_epochs,  # no early stopping
+			'max_patience': 0,
+			'learning_rate': config.learning_rate,
+			'reg_l1': config.reg_l1,
+			'reg_l2': config.reg_l2,
 		}
 
 		max_epochs = hyperparams['max_epochs']
@@ -167,60 +167,79 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 
 
+def read():
+	# read
+	print('reading...')
 
-# read
-print('reading...')
+	path = os.path.join(read_utils.get_data_path(), 'exported_data_')
+	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, 9)
 
-path = os.path.join(read_utils.get_data_path(), 'exported_data_')
-filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path)
+	for i in range(len(filenames)):
+		mask = eigenworms[i].notna().all(axis=1)
+		#continuous_behaviors[i] = continuous_behaviors[i][mask]
+		discrete_states[i] = discrete_states[i][mask]
+		eigenworms[i] = eigenworms[i][mask]
+		traces[i] = traces[i][mask]
 
-for i in range(len(filenames)):
-	mask = eigenworms[i].notna().all(axis=1)
-	#continuous_behaviors[i] = continuous_behaviors[i][mask]
-	discrete_states[i] = discrete_states[i][mask]
-	eigenworms[i] = eigenworms[i][mask]
-	traces[i] = traces[i][mask]
+		#kymographs[i] = kymographs[i][mask]
+		#filenames[i] = filenames[i][mask]
 
-	#kymographs[i] = kymographs[i][mask]
-	#filenames[i] = filenames[i][mask]
-
-
-
-
-# manifold
-print('manifolding...')
-selection = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
-
-modes_manifold, traces_manifold, cca_loadings_man, vars_expl_man, vars_expl_man_rs = train_utils.get_manifolds(traces,
-																											   [ds[selection] for ds in discrete_states],
-																											   n_cc=2, n_pc=5)
-traces_residual = [pd.DataFrame(data=trace.values - trace_manifold.values, columns=trace.columns) for trace, trace_manifold in zip(traces, traces_manifold)]
+	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
 
 
 
+def artificialize(filenames, traces, eigenworms, discrete_states):
+	# artificialize
+	print('artificializing...')
 
-# sweep
-print('sweeping...')
+	filenames_art = list()
+	discrete_states_art = discrete_states.copy()
+	eigenworms_art = eigenworms.copy()
+	modes_manifold_art = list()
+	traces_residual_art = list()
+	traces_art = list()
+	for i in range(len(filenames)):
+		art_filename, art_mode_manifold, art_trace_residual, art_trace, art_params = artificializer.artificialize(hgm, filenames[i], traces[i].columns, eigenworms_art[i], discrete_states_art[i])
+		filenames_art.append(art_filename)
+		modes_manifold_art.append(art_mode_manifold)
+		traces_residual_art.append(art_trace_residual)
+		traces_art.append(art_trace)
 
-wandb.login()
+	return filenames_art, discrete_states_art, eigenworms_art, modes_manifold_art, traces_residual_art, traces_art
+
+
+
+def sweep(config):
+	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read()
+	filenames_art, discrete_states_art, eigenworms_art, modes_manifold_art, traces_residual_art, traces_art = artificialize(filenames, traces, eigenworms, discrete_states)
+
+
+	# sweep
+	print('sweeping...')
+
+	wandb.login()
+
+	for i in range(len(filenames_art)):
+		project_name = f'hgm_sep_{i}_{filenames_art[i]}'
+		print(f'{i + 1}/{len(filenames_art)}: {filenames_art[i]}  ', end='')
+
+		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(eigenworms_art[i].values.shape[0]), discrete_states_art[i]['REV'].values))
+
+		def train_numerical_model_wrapper():
+			return train_numerical_model(project_name, hgm, splits, jnp.array(eigenworms_art[i].values), jnp.array(traces_residual_art[i].values), jnp.array(modes_manifold_art[i].values))
+
+		sweep_id = wandb.sweep(config, project=project_name)
+		wandb.agent(sweep_id, function=train_numerical_model_wrapper)
+
+
+
 sweep_config = {
-    'method': 'grid',
-    'parameters': {
-        'max_epochs': {'values': [1000]},
-        'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
-        'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
-        'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]}
-    }
+	'method': 'grid',
+	'parameters': {
+		'max_epochs': {'values': [1000]},
+		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
+		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
+		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]}
+	}
 }
-
-for i in range(len(filenames)):
-	project_name = f'sep-hgm-gcamp_{i}_{filenames[i]}'
-	print(f'{i + 1}/{len(filenames)}: {filenames[i]}  ', end='')
-
-	splits = list(StratifiedKFold(n_splits=5).split(np.zeros(eigenworms[i].values.shape[0]), discrete_states[i]['REV'].values))
-
-	def train_numerical_model_wrapper():
-		return train_numerical_model(project_name, hgm, splits, np.array(eigenworms[i].values), jnp.array(traces_residual[i].values), jnp.array(modes_manifold[i].values))
-
-	sweep_id = wandb.sweep(sweep_config, project=project_name)
-	wandb.agent(sweep_id, function=train_numerical_model_wrapper)
+sweep(sweep_config)
