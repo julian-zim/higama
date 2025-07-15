@@ -20,8 +20,8 @@ import plot_utils
 import train_utils
 import artificializer
 
-from models import clm_sep as clm
-from models import hgm_sep as hgm
+from models import clm
+from models import hgm
 
 
 
@@ -211,11 +211,11 @@ def sweep(config):
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[i].values.shape[0]), discrete_states[i]['REV'].values))
 
-		def train_numerical_model_wrapper():
+		def train_model_wrapper():
 			return train_joint_model(project_name, hgm, splits, jnp.array(traces[i].values), jnp.array(eigenworms[i].values), jnp.array(discrete_states[i].values))
 
 		sweep_id = wandb.sweep(config, project=project_name)
-		wandb.agent(sweep_id, function=train_numerical_model_wrapper)
+		wandb.agent(sweep_id, function=train_model_wrapper)
 
 
 
