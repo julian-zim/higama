@@ -40,8 +40,8 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 		# Hyperparamters ============
 		hyperparams = {
 			'max_epochs': config.max_epochs,
-			'min_epochs': config.max_epochs,  # no early stopping
-			'max_patience': 0,
+			'min_epochs': 100,
+			'max_patience': 20,
 			'learning_rate': config.learning_rate,
 			'reg_l1': config.reg_l1,
 			'reg_l2': config.reg_l2,
@@ -232,7 +232,7 @@ def sweep(config):
 sweep_config = {
 	'method': 'grid',
 	'parameters': {
-		'max_epochs': {'values': [1000]},
+		'max_epochs': {'values': [1000, 5000]},
 		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]}
