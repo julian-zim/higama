@@ -16,6 +16,7 @@ def init_params(seeds, shape_X_bll):
 	}
 
 
+@jax.jit
 def predict(X_bll, W):
 	return X_bll @ W
 

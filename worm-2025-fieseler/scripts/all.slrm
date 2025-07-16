@@ -1,0 +1,4 @@
+sbatch sweep-hgm.slrm
+sbatch sweep-hgm-art.slrm
+sbatch sweep-hgm-sep.slrm
+sbatch sweep-hgm-sep-art.slrm

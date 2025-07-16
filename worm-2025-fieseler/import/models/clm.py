@@ -15,6 +15,7 @@ def init_params(seeds, shape_U, shape_V, shape_N):
 	}
 
 
+@jax.jit
 def predict(B_ll, W):
 	return B_ll @ W
 

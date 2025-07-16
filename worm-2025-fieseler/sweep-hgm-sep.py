@@ -10,6 +10,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
+import gc
+
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import jax
 import jax.numpy as jnp
@@ -40,7 +42,7 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 		# Hyperparamters ============
 		hyperparams = {
-			'max_epochs': config.max_epochs,
+			'max_epochs': 5000,
 			'min_epochs': 100,
 			'max_patience': 20,
 			'learning_rate': config.learning_rate,
@@ -65,11 +67,11 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 		mse_losses_per_split = list()
 		mse_losses_tr_per_split = list()
 		__grads_per_split = list()
-		for train, test in splits:
-			# splitting and initializing ===============================================================
-			X_train, X_test = X_bll[train], X_bll[test]
-			if is_hgm: X_man_train, X_man_test = X_man[train], X_man[test]
-			Y_train, Y_test = Y[train], Y[test]
+		for sid, (train, test) in enumerate(splits):
+			# splitting and initializing ========================= (this also moves the data to the GPU)
+			X_bll_train, X_bll_test = jnp.array(X_bll[train]), jnp.array(X_bll[test])
+			if is_hgm: X_man_train, X_man_test = jnp.array(X_man[train]), jnp.array(X_man[test])
+			Y_train, Y_test = jnp.array(Y[train]), jnp.array(Y[test])
 
 			if is_hgm:
 				params = model.init_params(seeds, (n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
@@ -79,15 +81,15 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 			# ==========================================================================================
 
 			if is_hgm:
-				losses = [model.loss_fn(params, X_test, X_man_test, Y_test, reg_lambdas).item()]
-				losses_tr = [model.loss_fn(params, X_train, X_man_train, Y_train, reg_lambdas).item()]
-				mse_losses = [model.mse_loss_fn(params, X_test, X_man_test, Y_test).item()]
-				mse_losses_tr = [model.mse_loss_fn(params, X_train, X_man_train, Y_train).item()]
+				losses = [model.loss_fn(params, X_bll_test, X_man_test, Y_test, reg_lambdas).item()]
+				losses_tr = [model.loss_fn(params, X_bll_train, X_man_train, Y_train, reg_lambdas).item()]
+				mse_losses = [model.mse_loss_fn(params, X_bll_test, X_man_test, Y_test).item()]
+				mse_losses_tr = [model.mse_loss_fn(params, X_bll_train, X_man_train, Y_train).item()]
 			else:
-				losses = [model.loss_fn(params, X_test, Y_test, reg_lambdas).item()]
-				losses_tr = [model.loss_fn(params, X_train, Y_train, reg_lambdas).item()]
-				mse_losses = [model.mse_loss_fn(params, X_test, Y_test).item()]
-				mse_losses_tr = [model.mse_loss_fn(params, X_train, Y_train).item()]
+				losses = [model.loss_fn(params, X_bll_test, Y_test, reg_lambdas).item()]
+				losses_tr = [model.loss_fn(params, X_bll_train, Y_train, reg_lambdas).item()]
+				mse_losses = [model.mse_loss_fn(params, X_bll_test, Y_test).item()]
+				mse_losses_tr = [model.mse_loss_fn(params, X_bll_train, Y_train).item()]
 			__grads = list()
 
 			best_params = params
@@ -99,31 +101,37 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 			patience = 0
 			for epoch in range(max_epochs):
 				if is_hgm:
-					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, X_train, X_man_train, Y_train, reg_lambdas)
-					loss = model.loss_fn(params, X_test, X_man_test, Y_test, reg_lambdas).item()
-					loss_tr = model.loss_fn(params, X_train, X_man_train, Y_train, reg_lambdas).item()
-					mse_loss = model.mse_loss_fn(params, X_test, X_man_test, Y_test).item()
-					mse_loss_tr = model.mse_loss_fn(params, X_train, X_man_train, Y_train).item()
+					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, X_bll_train, X_man_train, Y_train, reg_lambdas)
+					loss = model.loss_fn(params, X_bll_test, X_man_test, Y_test, reg_lambdas).item()
+					loss_tr = model.loss_fn(params, X_bll_train, X_man_train, Y_train, reg_lambdas).item()
+					mse_loss = model.mse_loss_fn(params, X_bll_test, X_man_test, Y_test).item()
+					mse_loss_tr = model.mse_loss_fn(params, X_bll_train, X_man_train, Y_train).item()
 				else:
-					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, X_train, Y_train, reg_lambdas)
-					loss = model.loss_fn(params, X_test, Y_test, reg_lambdas).item()
-					loss_tr = model.loss_fn(params, X_train, Y_train, reg_lambdas).item()
-					mse_loss = model.mse_loss_fn(params, X_test, Y_test).item()
-					mse_loss_tr = model.mse_loss_fn(params, X_train, Y_train).item()
+					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, X_bll_train, Y_train, reg_lambdas)
+					loss = model.loss_fn(params, X_bll_test, Y_test, reg_lambdas).item()
+					loss_tr = model.loss_fn(params, X_bll_train, Y_train, reg_lambdas).item()
+					mse_loss = model.mse_loss_fn(params, X_bll_test, Y_test).item()
+					mse_loss_tr = model.mse_loss_fn(params, X_bll_train, Y_train).item()
 
 				__grads.append(__grad)
 
-				# early stopping ================ (inactive)
+				# early stopping ================
 				if epoch > min_epochs:
 					if loss < best_loss:
-						losses.append(loss)
-						losses_tr.append(loss_tr)
+						patience = 0
+
 						best_loss = loss
 						best_loss_tr = loss_tr
 						best_mse_loss = mse_loss
 						best_mse_loss_tr = mse_loss_tr
 						best_params = params
-						patience = 0
+
+						losses.append(loss)
+						losses_tr.append(loss_tr)
+						mse_losses.append(mse_loss)
+						mse_losses_tr.append(mse_loss_tr)
+
+						wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
 					else:
 						patience += 1
 						if patience > max_patience:
@@ -132,15 +140,23 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 							mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - len(mse_losses) + 1)]
 							mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - len(mse_losses_tr) + 1)]
 							break
+
 						losses.append(loss)
 						losses_tr.append(loss_tr)
+						mse_losses.append(mse_loss)
+						mse_losses_tr.append(mse_loss_tr)
+
+						wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
 				# ===============================
 				else:
 					best_params = params
+
 					losses.append(loss)
 					losses_tr.append(loss_tr)
 					mse_losses.append(mse_loss)
 					mse_losses_tr.append(mse_loss_tr)
+
+					wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
 
 			params_per_split.append(best_params)
 			losses_per_split.append(losses)
@@ -152,9 +168,9 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 			# predicting and scoring ========================================================================
 			if is_hgm:
-				Y_pred = model.predict(X_test, X_man_test, best_params['W1'], best_params['W2'])
+				Y_pred = model.predict(X_bll_test, X_man_test, best_params['W1'], best_params['W2'])
 			else:
-				Y_pred = model.predict(X_test, best_params['W'])
+				Y_pred = model.predict(X_bll_test, best_params['W'])
 
 			score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(Y_test.T, Y_pred.T)]
 			neuron_scores_per_split.append(score_per_neuron)
@@ -223,19 +239,23 @@ def sweep(config):
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(eigenworms[i].values.shape[0]), discrete_states[i]['REV'].values))
 
 		def train_model_wrapper():
-			return train_numerical_model(project_name, hgm, splits, jnp.array(eigenworms[i].values), jnp.array(traces_residual[i].values), jnp.array(modes_manifold[i].values))
+			return train_numerical_model(project_name, hgm, splits, eigenworms[i].values, traces_residual[i].values, modes_manifold[i].values)
 
 		sweep_id = wandb.sweep(config, project=project_name)
 		wandb.agent(sweep_id, function=train_model_wrapper)
 
 
 
+print('Visible devices: ', jax.devices())  
 sweep_config = {
-	'method': 'grid',
+	'method': 'bayes',
+    'metric': {
+        'name': 'reg_loss',
+        'goal': 'minimize'
+    },
 	'parameters': {
-		'max_epochs': {'values': [1000, 5000, 10000]},
 		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
-		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
+		'reg_l1': {'values': [1E-2, 1E-3, 1E-4, 1E-5]},
 		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]}
 	}
 }

@@ -19,6 +19,7 @@ def init_params(seeds, shape_X_bll, shape_X_man):
 	}
 
 
+@jax.jit
 def predict(X_bll, X_man, W1, W2):
 	return X_bll @ W1 * jax.nn.sigmoid(X_man @ W2)
 

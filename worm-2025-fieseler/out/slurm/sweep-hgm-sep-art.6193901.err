@@ -1,0 +1,979 @@
+wandb: Currently logged in as: julian-zimmermann-tue (julian-zimmermann-tue-university-of-vienna) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Agent Starting Run: x649ti6r with config:
+wandb: 	learning_rate: 0.1
+wandb: 	reg_l1: 0.0001
+wandb: 	reg_l2: 1
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_171529-x649ti6r
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run wild-sweep-1
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/x649ti6r
+wandb: uploading history steps 0-879, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▅▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 █▅▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▆▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 █▆▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 █▇▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▇▆▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▇▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▆▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▆▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▇▄▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▇▆▆▅▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▅▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▇▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▇▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▄▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▆▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▅▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▇▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▆▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.08714
+wandb:        loss_s0 0.06423
+wandb:        loss_s1 0.11927
+wandb:        loss_s2 0.08914
+wandb:        loss_s3 0.06795
+wandb:        loss_s4 0.13546
+wandb:     loss_tr_s0 0.06423
+wandb:     loss_tr_s1 0.11927
+wandb:     loss_tr_s2 0.08914
+wandb:     loss_tr_s3 0.06795
+wandb:     loss_tr_s4 0.13546
+wandb:    mse_loss_s0 0.06423
+wandb:    mse_loss_s1 0.11927
+wandb:    mse_loss_s2 0.08914
+wandb:    mse_loss_s3 0.06795
+wandb:    mse_loss_s4 0.13546
+wandb: mse_loss_tr_s0 0.06423
+wandb: mse_loss_tr_s1 0.11927
+wandb: mse_loss_tr_s2 0.08914
+wandb: mse_loss_tr_s3 0.06795
+wandb: mse_loss_tr_s4 0.13546
+wandb:       reg_loss 0.20337
+wandb:          score 0.75527
+wandb: 
+wandb: 🚀 View run wild-sweep-1 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/x649ti6r
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_171529-x649ti6r/logs
+wandb: Agent Starting Run: 3at70f5j with config:
+wandb: 	learning_rate: 0.0001
+wandb: 	reg_l1: 0.0001
+wandb: 	reg_l2: 0.001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_171546-3at70f5j
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run chocolate-sweep-2
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/3at70f5j
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▇▇▇▆▆▆▆▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:        loss_s1 ███▇▇▇▇▇▇▇▆▆▆▅▅▅▄▄▄▄▄▄▄▄▄▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁
+wandb:        loss_s2 ███▇▇▇▇▆▆▆▆▆▅▅▅▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:        loss_s3 ██▇▇▇▆▆▆▆▆▆▆▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁
+wandb:        loss_s4 ████▇▇▇▇▇▇▆▆▆▆▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb:     loss_tr_s0 █▇▇▇▇▆▆▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁
+wandb:     loss_tr_s1 █████▇▇▇▇▆▆▆▅▅▅▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▁▁▁
+wandb:     loss_tr_s2 ███▇▇▇▆▆▆▆▆▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁
+wandb:     loss_tr_s3 ███▇▇▇▇▇▆▆▆▆▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁▁
+wandb:     loss_tr_s4 █████▇▇▆▆▆▅▅▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁
+wandb:    mse_loss_s0 ████▇▇▇▆▆▆▅▅▅▅▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁
+wandb:    mse_loss_s1 ██▇▇▇▆▆▆▆▆▅▅▅▅▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁
+wandb:    mse_loss_s2 ████▇▆▆▆▆▆▅▅▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:    mse_loss_s3 ██▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁
+wandb:    mse_loss_s4 ███▇▇▇▇▇▇▇▇▆▆▆▆▆▆▅▅▅▅▅▅▄▄▄▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb: mse_loss_tr_s0 ████▇▇▇▆▆▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb: mse_loss_tr_s1 █████▇▇▇▆▆▆▆▅▅▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▁▁▁▁
+wandb: mse_loss_tr_s2 █▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁
+wandb: mse_loss_tr_s3 █████▇▇▇▆▆▆▆▆▆▆▅▅▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █████▇▇▇▇▇▆▆▆▆▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 1.03699
+wandb:        loss_s0 0.62701
+wandb:        loss_s1 0.73227
+wandb:        loss_s2 0.73819
+wandb:        loss_s3 0.62384
+wandb:        loss_s4 0.91142
+wandb:     loss_tr_s0 0.62701
+wandb:     loss_tr_s1 0.73227
+wandb:     loss_tr_s2 0.73819
+wandb:     loss_tr_s3 0.62384
+wandb:     loss_tr_s4 0.91142
+wandb:    mse_loss_s0 0.62701
+wandb:    mse_loss_s1 0.73227
+wandb:    mse_loss_s2 0.73819
+wandb:    mse_loss_s3 0.62384
+wandb:    mse_loss_s4 0.91142
+wandb: mse_loss_tr_s0 0.62701
+wandb: mse_loss_tr_s1 0.73227
+wandb: mse_loss_tr_s2 0.73819
+wandb: mse_loss_tr_s3 0.62384
+wandb: mse_loss_tr_s4 0.91142
+wandb:       reg_loss 1.12744
+wandb:          score -50.82453
+wandb: 
+wandb: 🚀 View run chocolate-sweep-2 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/3at70f5j
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_171546-3at70f5j/logs
+wandb: Agent Starting Run: aaw27y90 with config:
+wandb: 	learning_rate: 0.0001
+wandb: 	reg_l1: 0.01
+wandb: 	reg_l2: 0.1
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_171756-aaw27y90
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run faithful-sweep-3
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/aaw27y90
+wandb: uploading history steps 22865-25000, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ████▇▇▇▇▇▇▆▆▆▆▆▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃▃▃▂▂▂▂▁▁
+wandb:        loss_s1 ███▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁
+wandb:        loss_s2 ███▇▇▇▇▇▇▆▆▆▆▆▆▅▅▅▅▅▅▅▄▄▄▄▄▄▃▃▃▂▂▂▂▁▁▁▁▁
+wandb:        loss_s3 ███▇▇▇▇▆▆▆▆▆▅▅▅▅▅▅▅▅▄▄▃▃▃▃▃▃▃▃▂▂▂▂▁▁▁▁▁▁
+wandb:        loss_s4 ████▇▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁
+wandb:     loss_tr_s0 ███▇▆▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:     loss_tr_s1 ████▇▇▇▇▆▆▆▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁
+wandb:     loss_tr_s2 ███▇▇▇▇▇▆▆▅▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:     loss_tr_s3 █████▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▁▁▁
+wandb:     loss_tr_s4 █▇▇▇▇▇▆▆▆▆▅▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:    mse_loss_s0 █████▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁
+wandb:    mse_loss_s1 ████▇▇▇▇▇▇▆▆▆▆▆▆▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁
+wandb:    mse_loss_s2 ████▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:    mse_loss_s3 ██▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:    mse_loss_s4 ███▇▇▇▇▆▆▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █████▇▇▇▇▇▇▇▇▆▆▆▆▆▆▅▅▄▄▃▃▃▃▃▃▃▃▂▂▂▂▁▁▁▁▁
+wandb: mse_loss_tr_s1 █████▇▇▇▆▆▆▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 ██▇▇▇▆▅▅▅▄▄▄▄▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁
+wandb: mse_loss_tr_s3 ███▆▆▆▅▅▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁
+wandb: mse_loss_tr_s4 ████▇▇▇▇▇▇▆▆▆▆▆▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 1.06531
+wandb:        loss_s0 6.04487
+wandb:        loss_s1 6.15231
+wandb:        loss_s2 6.14296
+wandb:        loss_s3 6.04252
+wandb:        loss_s4 6.32556
+wandb:     loss_tr_s0 6.04487
+wandb:     loss_tr_s1 6.15231
+wandb:     loss_tr_s2 6.14296
+wandb:     loss_tr_s3 6.04252
+wandb:     loss_tr_s4 6.32556
+wandb:    mse_loss_s0 6.04487
+wandb:    mse_loss_s1 6.15231
+wandb:    mse_loss_s2 6.14296
+wandb:    mse_loss_s3 6.04252
+wandb:    mse_loss_s4 6.32556
+wandb: mse_loss_tr_s0 6.04487
+wandb: mse_loss_tr_s1 6.15231
+wandb: mse_loss_tr_s2 6.14296
+wandb: mse_loss_tr_s3 6.04252
+wandb: mse_loss_tr_s4 6.32556
+wandb:       reg_loss 9.7349
+wandb:          score -49.85364
+wandb: 
+wandb: 🚀 View run faithful-sweep-3 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/aaw27y90
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_171756-aaw27y90/logs
+wandb: Agent Starting Run: zb8jftlv with config:
+wandb: 	learning_rate: 0.0001
+wandb: 	reg_l1: 0.0001
+wandb: 	reg_l2: 0.001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172016-zb8jftlv
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run splendid-sweep-4
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/zb8jftlv
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ███▇▇▇▇▆▆▆▆▆▆▅▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb:        loss_s1 ███▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▅▅▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁
+wandb:        loss_s2 ███▇▇▇▇▇▇▇▆▆▆▆▆▅▅▅▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:        loss_s3 ████▇▇▇▇▇▇▆▆▆▆▅▅▅▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁
+wandb:        loss_s4 ███▇▇▇▇▇▆▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▁▁▁▁
+wandb:     loss_tr_s0 █▇▇▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 ███▇▇▇▆▆▆▆▆▆▆▅▅▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:     loss_tr_s2 ████▇▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:     loss_tr_s3 █████▇▇▇▇▇▆▆▆▆▆▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▂▂▂▂▂▂▂▁▁▁
+wandb:     loss_tr_s4 ██▇▇▇▇▇▆▆▆▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁
+wandb:    mse_loss_s0 █████▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁
+wandb:    mse_loss_s1 ██▇▇▇▆▅▅▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:    mse_loss_s2 ███▇▇▇▇▇▇▆▆▆▆▆▆▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁
+wandb:    mse_loss_s3 ██▇▇▇▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb:    mse_loss_s4 ████▇▆▆▆▆▆▆▆▆▆▆▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁
+wandb: mse_loss_tr_s0 ██▇▇▇▆▆▆▆▆▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb: mse_loss_tr_s1 █████▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb: mse_loss_tr_s2 ███▇▇▇▇▇▆▆▆▅▅▅▄▄▄▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁
+wandb: mse_loss_tr_s3 ███▇▇▇▇▆▆▆▆▆▆▆▆▆▅▅▅▅▄▄▃▃▃▃▃▃▂▂▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 ██▇▇▇▇▇▇▆▆▆▅▅▅▅▅▅▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 1.03699
+wandb:        loss_s0 0.62701
+wandb:        loss_s1 0.73227
+wandb:        loss_s2 0.73819
+wandb:        loss_s3 0.62384
+wandb:        loss_s4 0.91142
+wandb:     loss_tr_s0 0.62701
+wandb:     loss_tr_s1 0.73227
+wandb:     loss_tr_s2 0.73819
+wandb:     loss_tr_s3 0.62384
+wandb:     loss_tr_s4 0.91142
+wandb:    mse_loss_s0 0.62701
+wandb:    mse_loss_s1 0.73227
+wandb:    mse_loss_s2 0.73819
+wandb:    mse_loss_s3 0.62384
+wandb:    mse_loss_s4 0.91142
+wandb: mse_loss_tr_s0 0.62701
+wandb: mse_loss_tr_s1 0.73227
+wandb: mse_loss_tr_s2 0.73819
+wandb: mse_loss_tr_s3 0.62384
+wandb: mse_loss_tr_s4 0.91142
+wandb:       reg_loss 1.12744
+wandb:          score -50.82453
+wandb: 
+wandb: 🚀 View run splendid-sweep-4 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/zb8jftlv
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172016-zb8jftlv/logs
+wandb: Agent Starting Run: 50rt1u1f with config:
+wandb: 	learning_rate: 0.001
+wandb: 	reg_l1: 0.01
+wandb: 	reg_l2: 1
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172226-50rt1u1f
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run rare-sweep-5
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/50rt1u1f
+wandb: uploading history steps 24451-25000, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▇▆▆▆▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 ██▆▅▄▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▇▅▅▅▄▃▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 █▆▅▄▄▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 ███▇▆▄▄▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 ██▅▄▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▇▄▄▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 ██▇▆▄▄▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▆▆▅▅▄▄▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 ███▇▆▃▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▆▅▅▅▄▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 ██▇▇▆▄▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▇▇▇▆▅▄▄▄▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 ██▆▆▄▄▃▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 ██▇▆▄▃▃▃▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▇▅▅▅▄▃▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 ███▆▅▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▇▇▇▆▆▆▅▄▄▃▃▃▃▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▆▆▅▅▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▆▆▆▅▄▄▃▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.3863
+wandb:        loss_s0 0.294
+wandb:        loss_s1 0.27998
+wandb:        loss_s2 0.25934
+wandb:        loss_s3 0.30038
+wandb:        loss_s4 0.3906
+wandb:     loss_tr_s0 0.294
+wandb:     loss_tr_s1 0.27998
+wandb:     loss_tr_s2 0.25934
+wandb:     loss_tr_s3 0.30038
+wandb:     loss_tr_s4 0.3906
+wandb:    mse_loss_s0 0.294
+wandb:    mse_loss_s1 0.27998
+wandb:    mse_loss_s2 0.25934
+wandb:    mse_loss_s3 0.30038
+wandb:    mse_loss_s4 0.3906
+wandb: mse_loss_tr_s0 0.294
+wandb: mse_loss_tr_s1 0.27998
+wandb: mse_loss_tr_s2 0.25934
+wandb: mse_loss_tr_s3 0.30038
+wandb: mse_loss_tr_s4 0.3906
+wandb:       reg_loss 11.03917
+wandb:          score 0.29217
+wandb: 
+wandb: 🚀 View run rare-sweep-5 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/50rt1u1f
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172226-50rt1u1f/logs
+wandb: Agent Starting Run: vid4s6ub with config:
+wandb: 	learning_rate: 0.1
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 0.1
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172436-vid4s6ub
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run fancy-sweep-6
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/vid4s6ub
+wandb: uploading history steps 0-776, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▆▅▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 █▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▇▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 █▆▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 █▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▅▄▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▆▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▇▆▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▅▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▇▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▆▅▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▇▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▇▅▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▄▃▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▆▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.08521
+wandb:        loss_s0 0.05393
+wandb:        loss_s1 0.11486
+wandb:        loss_s2 0.08025
+wandb:        loss_s3 0.05608
+wandb:        loss_s4 0.12298
+wandb:     loss_tr_s0 0.05393
+wandb:     loss_tr_s1 0.11486
+wandb:     loss_tr_s2 0.08025
+wandb:     loss_tr_s3 0.05608
+wandb:     loss_tr_s4 0.12298
+wandb:    mse_loss_s0 0.05393
+wandb:    mse_loss_s1 0.11486
+wandb:    mse_loss_s2 0.08025
+wandb:    mse_loss_s3 0.05608
+wandb:    mse_loss_s4 0.12298
+wandb: mse_loss_tr_s0 0.05393
+wandb: mse_loss_tr_s1 0.11486
+wandb: mse_loss_tr_s2 0.08025
+wandb: mse_loss_tr_s3 0.05608
+wandb: mse_loss_tr_s4 0.12298
+wandb:       reg_loss 0.09801
+wandb:          score 0.75501
+wandb: 
+wandb: 🚀 View run fancy-sweep-6 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/vid4s6ub
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172436-vid4s6ub/logs
+wandb: Agent Starting Run: 6hvz0nj0 with config:
+wandb: 	learning_rate: 1
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 1
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172447-6hvz0nj0
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run true-sweep-7
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/6hvz0nj0
+wandb: uploading history steps 0-848, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ▆█▆▄▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 ▇█▅▅▆▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 ▆█▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 ▇█▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 █▄▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▅▄▃▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▄▅▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▆█▄▄▃▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▄▄▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 ▇█▅▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▄▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▆▄▄▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▆▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 ██▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▆██▆▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 ▆██▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 ▆█▄▂▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▅▅▃▃▄▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▆▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.08716
+wandb:        loss_s0 0.05453
+wandb:        loss_s1 0.11614
+wandb:        loss_s2 0.0813
+wandb:        loss_s3 0.057
+wandb:        loss_s4 0.12532
+wandb:     loss_tr_s0 0.05453
+wandb:     loss_tr_s1 0.11614
+wandb:     loss_tr_s2 0.0813
+wandb:     loss_tr_s3 0.057
+wandb:     loss_tr_s4 0.12532
+wandb:    mse_loss_s0 0.05453
+wandb:    mse_loss_s1 0.11614
+wandb:    mse_loss_s2 0.0813
+wandb:    mse_loss_s3 0.057
+wandb:    mse_loss_s4 0.12532
+wandb: mse_loss_tr_s0 0.05453
+wandb: mse_loss_tr_s1 0.11614
+wandb: mse_loss_tr_s2 0.0813
+wandb: mse_loss_tr_s3 0.057
+wandb: mse_loss_tr_s4 0.12532
+wandb:       reg_loss 0.16754
+wandb:          score 0.75345
+wandb: 
+wandb: 🚀 View run true-sweep-7 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/6hvz0nj0
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172447-6hvz0nj0/logs
+wandb: Agent Starting Run: jgeqa6qx with config:
+wandb: 	learning_rate: 0.01
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 0.0001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172458-jgeqa6qx
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run helpful-sweep-8
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/jgeqa6qx
+wandb: uploading history steps 5876-7953, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ██▆▅▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 █▆▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 ██▅▅▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 █▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▇▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▅▄▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▇▅▅▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▆▅▅▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▇▆▅▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 ██▆▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▅▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▇▅▄▄▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▇▇▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▆▆▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▇▄▄▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▇▅▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.02384
+wandb:        loss_s0 0.0107
+wandb:        loss_s1 0.01589
+wandb:        loss_s2 0.01231
+wandb:        loss_s3 0.01019
+wandb:        loss_s4 0.01326
+wandb:     loss_tr_s0 0.0107
+wandb:     loss_tr_s1 0.01589
+wandb:     loss_tr_s2 0.01231
+wandb:     loss_tr_s3 0.01019
+wandb:     loss_tr_s4 0.01326
+wandb:    mse_loss_s0 0.0107
+wandb:    mse_loss_s1 0.01589
+wandb:    mse_loss_s2 0.01231
+wandb:    mse_loss_s3 0.01019
+wandb:    mse_loss_s4 0.01326
+wandb: mse_loss_tr_s0 0.0107
+wandb: mse_loss_tr_s1 0.01589
+wandb: mse_loss_tr_s2 0.01231
+wandb: mse_loss_tr_s3 0.01019
+wandb: mse_loss_tr_s4 0.01326
+wandb:       reg_loss 0.03144
+wandb:          score 0.92784
+wandb: 
+wandb: 🚀 View run helpful-sweep-8 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/jgeqa6qx
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172458-jgeqa6qx/logs
+wandb: Agent Starting Run: hv9jbz9l with config:
+wandb: 	learning_rate: 1
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 0.001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172545-hv9jbz9l
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run devoted-sweep-9
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/hv9jbz9l
+wandb: uploading history steps 0-695, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ██▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 █▄▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▆▄▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 ▇█▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 ▇█▇▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▇▆▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▇▅▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▆▅▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▄▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▇▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▆▆▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▅█▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▇▃▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▅▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 ▇█▅▃▄▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▅▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▅▇▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 ▆█▇▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▄▄▄▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 ▇█▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.02662
+wandb:        loss_s0 0.03045
+wandb:        loss_s1 0.05436
+wandb:        loss_s2 0.03901
+wandb:        loss_s3 0.02897
+wandb:        loss_s4 0.04832
+wandb:     loss_tr_s0 0.03045
+wandb:     loss_tr_s1 0.05436
+wandb:     loss_tr_s2 0.03901
+wandb:     loss_tr_s3 0.02897
+wandb:     loss_tr_s4 0.04832
+wandb:    mse_loss_s0 0.03045
+wandb:    mse_loss_s1 0.05436
+wandb:    mse_loss_s2 0.03901
+wandb:    mse_loss_s3 0.02897
+wandb:    mse_loss_s4 0.04832
+wandb: mse_loss_tr_s0 0.03045
+wandb: mse_loss_tr_s1 0.05436
+wandb: mse_loss_tr_s2 0.03901
+wandb: mse_loss_tr_s3 0.02897
+wandb: mse_loss_tr_s4 0.04832
+wandb:       reg_loss 0.04177
+wandb:          score 0.83804
+wandb: 
+wandb: 🚀 View run devoted-sweep-9 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/hv9jbz9l
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172545-hv9jbz9l/logs
+wandb: Agent Starting Run: i74217be with config:
+wandb: 	learning_rate: 1
+wandb: 	reg_l1: 0.0001
+wandb: 	reg_l2: 0.01
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172555-i74217be
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run pleasant-sweep-10
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/i74217be
+wandb: uploading history steps 0-653, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ▇█▆▅▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 █▆█▄▃▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 ▇█▃▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 █▇▇▆▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 ▆█▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▆▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▅▄▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▅▄▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▇▄▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▇█▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▅▇▅▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▇▅▅▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 ██▇▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▇▇▅▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▆▅▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▅▇▇▄▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▅▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▄▃▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▅▅▄▄▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 ▇█▅▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.06724
+wandb:        loss_s0 0.0588
+wandb:        loss_s1 0.10618
+wandb:        loss_s2 0.07935
+wandb:        loss_s3 0.05998
+wandb:        loss_s4 0.11423
+wandb:     loss_tr_s0 0.0588
+wandb:     loss_tr_s1 0.10618
+wandb:     loss_tr_s2 0.07935
+wandb:     loss_tr_s3 0.05998
+wandb:     loss_tr_s4 0.11423
+wandb:    mse_loss_s0 0.0588
+wandb:    mse_loss_s1 0.10618
+wandb:    mse_loss_s2 0.07935
+wandb:    mse_loss_s3 0.05998
+wandb:    mse_loss_s4 0.11423
+wandb: mse_loss_tr_s0 0.0588
+wandb: mse_loss_tr_s1 0.10618
+wandb: mse_loss_tr_s2 0.07935
+wandb: mse_loss_tr_s3 0.05998
+wandb: mse_loss_tr_s4 0.11423
+wandb:       reg_loss 0.0859
+wandb:          score 0.77449
+wandb: 
+wandb: 🚀 View run pleasant-sweep-10 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/i74217be
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172555-i74217be/logs
+wandb: Agent Starting Run: aiv7ebpa with config:
+wandb: 	learning_rate: 1
+wandb: 	reg_l1: 0.0001
+wandb: 	reg_l2: 0.0001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172606-aiv7ebpa
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run dry-sweep-11
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/aiv7ebpa
+wandb: uploading history steps 0-680, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▆▆▄▃▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 ▇█▄▄▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▅▄▄▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 ▇█▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 ▇█▇▅▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 ▆█▄▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▄▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▇█▇▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▄▄▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 ▇█▇▃▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▆▅▅▄▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▇▇▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 ██▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▄▃▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▅▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▅▇▅▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▇▄▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▇▆▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▆▇▅▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▇▄▄▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.00622
+wandb:        loss_s0 0.01925
+wandb:        loss_s1 0.02361
+wandb:        loss_s2 0.02071
+wandb:        loss_s3 0.01891
+wandb:        loss_s4 0.02238
+wandb:     loss_tr_s0 0.01925
+wandb:     loss_tr_s1 0.02361
+wandb:     loss_tr_s2 0.02071
+wandb:     loss_tr_s3 0.01891
+wandb:     loss_tr_s4 0.02238
+wandb:    mse_loss_s0 0.01925
+wandb:    mse_loss_s1 0.02361
+wandb:    mse_loss_s2 0.02071
+wandb:    mse_loss_s3 0.01891
+wandb:    mse_loss_s4 0.02238
+wandb: mse_loss_tr_s0 0.01925
+wandb: mse_loss_tr_s1 0.02361
+wandb: mse_loss_tr_s2 0.02071
+wandb: mse_loss_tr_s3 0.01891
+wandb: mse_loss_tr_s4 0.02238
+wandb:       reg_loss 0.02254
+wandb:          score 0.93002
+wandb: 
+wandb: 🚀 View run dry-sweep-11 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/aiv7ebpa
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172606-aiv7ebpa/logs
+wandb: Agent Starting Run: zb2qe1ub with config:
+wandb: 	learning_rate: 1
+wandb: 	reg_l1: 0.0001
+wandb: 	reg_l2: 1
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172617-zb2qe1ub
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run devout-sweep-12
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/zb2qe1ub
+wandb: uploading history steps 0-830, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▆▃▂▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 ▇▇█▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▄▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 █▆█▄▅▃▃▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 ▆█▄▄▅▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▄▅▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▄▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▅▄▆▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 ▇█▅▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▄▄▂▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 ▆██▆▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▆▄▅▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 ██▄▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▆█▄▄▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▆█▆▄▃▂▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▆▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 ███▆▄▂▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▇▄▃▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.08682
+wandb:        loss_s0 0.06424
+wandb:        loss_s1 0.11928
+wandb:        loss_s2 0.08914
+wandb:        loss_s3 0.06795
+wandb:        loss_s4 0.13548
+wandb:     loss_tr_s0 0.06424
+wandb:     loss_tr_s1 0.11928
+wandb:     loss_tr_s2 0.08914
+wandb:     loss_tr_s3 0.06795
+wandb:     loss_tr_s4 0.13548
+wandb:    mse_loss_s0 0.06424
+wandb:    mse_loss_s1 0.11928
+wandb:    mse_loss_s2 0.08914
+wandb:    mse_loss_s3 0.06795
+wandb:    mse_loss_s4 0.13548
+wandb: mse_loss_tr_s0 0.06424
+wandb: mse_loss_tr_s1 0.11928
+wandb: mse_loss_tr_s2 0.08914
+wandb: mse_loss_tr_s3 0.06795
+wandb: mse_loss_tr_s4 0.13548
+wandb:       reg_loss 0.17592
+wandb:          score 0.75548
+wandb: 
+wandb: 🚀 View run devout-sweep-12 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/zb2qe1ub
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172617-zb2qe1ub/logs
+wandb: Agent Starting Run: ehm6d28g with config:
+wandb: 	learning_rate: 0.0001
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 0.0001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172628-ehm6d28g
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run stoic-sweep-13
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/ehm6d28g
+wandb: uploading config.yaml
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 ███▇▇▆▆▆▆▆▆▅▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁
+wandb:        loss_s1 ███▇▇▇▇▇▇▇▆▆▆▆▆▅▅▅▅▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb:        loss_s2 ███▇▇▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▁▁
+wandb:        loss_s3 ██▇▇▇▇▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▁▁▁▁
+wandb:        loss_s4 ██▇▇▆▆▆▆▆▆▆▅▅▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▁
+wandb:     loss_tr_s0 ████▇▆▆▆▆▆▆▆▅▅▅▅▅▅▄▄▄▄▄▄▃▃▃▃▃▃▃▃▃▂▂▂▂▁▁▁
+wandb:     loss_tr_s1 █████▇▇▇▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁
+wandb:     loss_tr_s2 ███▇▇▆▆▅▅▅▅▅▅▅▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:     loss_tr_s3 █▇▇▇▇▇▇▇▆▆▆▅▅▅▅▅▅▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁
+wandb:     loss_tr_s4 █▇▇▇▇▇▆▆▆▆▆▆▅▅▅▅▅▅▄▄▄▄▄▄▄▄▃▃▃▂▂▂▂▂▂▁▁▁▁▁
+wandb:    mse_loss_s0 ███▇▇▇▆▆▆▆▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁
+wandb:    mse_loss_s1 ██▇▇▇▇▆▆▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 ███▇▆▆▅▅▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:    mse_loss_s3 █████▇▇▇▇▆▆▆▆▅▅▅▅▄▄▄▄▃▃▃▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:    mse_loss_s4 ████▇▇▆▆▆▆▆▆▅▅▅▅▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 ███▇▆▆▆▆▆▅▅▅▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▁▁▁▁
+wandb: mse_loss_tr_s1 ████▇▇▇▇▇▆▆▆▆▆▅▅▅▅▅▅▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁
+wandb: mse_loss_tr_s2 ██▇▇▇▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁
+wandb: mse_loss_tr_s3 ███▇▇▇▇▇▇▆▆▆▆▅▅▅▅▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 ██▇▇▇▆▆▆▆▆▆▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 1.0372
+wandb:        loss_s0 0.57034
+wandb:        loss_s1 0.67579
+wandb:        loss_s2 0.68277
+wandb:        loss_s3 0.56931
+wandb:        loss_s4 0.86114
+wandb:     loss_tr_s0 0.57034
+wandb:     loss_tr_s1 0.67579
+wandb:     loss_tr_s2 0.68277
+wandb:     loss_tr_s3 0.56931
+wandb:     loss_tr_s4 0.86114
+wandb:    mse_loss_s0 0.57034
+wandb:    mse_loss_s1 0.67579
+wandb:    mse_loss_s2 0.68277
+wandb:    mse_loss_s3 0.56931
+wandb:    mse_loss_s4 0.86114
+wandb: mse_loss_tr_s0 0.57034
+wandb: mse_loss_tr_s1 0.67579
+wandb: mse_loss_tr_s2 0.68277
+wandb: mse_loss_tr_s3 0.56931
+wandb: mse_loss_tr_s4 0.86114
+wandb:       reg_loss 1.04657
+wandb:          score -50.99388
+wandb: 
+wandb: 🚀 View run stoic-sweep-13 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/ehm6d28g
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172628-ehm6d28g/logs
+wandb: Agent Starting Run: n844nmfy with config:
+wandb: 	learning_rate: 0.01
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 0.0001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172837-n844nmfy
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run magic-sweep-14
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/n844nmfy
+wandb: uploading history steps 5952-7953, summary
+wandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:           loss ▁
+wandb:        loss_s0 █▅▅▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s1 █▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s2 █▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s3 █▇▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        loss_s4 █▆▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s0 █▆▆▅▅▅▄▄▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s1 █▆▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s2 █▅▅▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s3 █▇▆▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     loss_tr_s4 █▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s0 █▇▅▅▄▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s1 █▆▅▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s2 █▅▅▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s3 █▃▃▃▃▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:    mse_loss_s4 █▇▆▄▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s0 █▆▅▅▃▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s1 █▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s2 █▅▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s3 █▄▃▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb: mse_loss_tr_s4 █▅▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:       reg_loss ▁
+wandb:          score ▁
+wandb: 
+wandb: Run summary:
+wandb:           loss 0.02384
+wandb:        loss_s0 0.0107
+wandb:        loss_s1 0.01589
+wandb:        loss_s2 0.01231
+wandb:        loss_s3 0.01019
+wandb:        loss_s4 0.01326
+wandb:     loss_tr_s0 0.0107
+wandb:     loss_tr_s1 0.01589
+wandb:     loss_tr_s2 0.01231
+wandb:     loss_tr_s3 0.01019
+wandb:     loss_tr_s4 0.01326
+wandb:    mse_loss_s0 0.0107
+wandb:    mse_loss_s1 0.01589
+wandb:    mse_loss_s2 0.01231
+wandb:    mse_loss_s3 0.01019
+wandb:    mse_loss_s4 0.01326
+wandb: mse_loss_tr_s0 0.0107
+wandb: mse_loss_tr_s1 0.01589
+wandb: mse_loss_tr_s2 0.01231
+wandb: mse_loss_tr_s3 0.01019
+wandb: mse_loss_tr_s4 0.01326
+wandb:       reg_loss 0.03144
+wandb:          score 0.92784
+wandb: 
+wandb: 🚀 View run magic-sweep-14 at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/n844nmfy
+wandb: ⭐️ View project at: https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250716_172837-n844nmfy/logs
+wandb: Sweep Agent: Waiting for job.
+wandb: Job received.
+wandb: Agent Starting Run: 5o60q5cz with config:
+wandb: 	learning_rate: 0.01
+wandb: 	reg_l1: 1e-05
+wandb: 	reg_l2: 0.001
+wandb: WARNING Ignoring project 'hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data' when running a sweep.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /lisc/data/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/wandb/run-20250716_172930-5o60q5cz
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run swift-sweep-15
+wandb: ⭐️ View project at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data
+wandb: 🧹 View sweep at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/sweeps/6yqdydpg
+wandb: 🚀 View run at https://wandb.ai/julian-zimmermann-tue-university-of-vienna/hgm_sep_art_0_ZIMMERMANN_artificial_wt_worm3_FM-2023-11-30_no_image_data/runs/5o60q5cz

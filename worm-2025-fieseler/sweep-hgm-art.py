@@ -10,6 +10,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
+import gc
+
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import jax
 import jax.numpy as jnp
@@ -40,7 +42,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 
 		# Hyperparamters ============
 		hyperparams = {
-			'max_epochs': config.max_epochs,
+			'max_epochs': 5000,
 			'min_epochs': 100,
 			'max_patience': 20,
 			'learning_rate': config.learning_rate,
@@ -71,11 +73,11 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 		mse_losses_per_split = list()
 		mse_losses_tr_per_split = list()
 		__grads_per_split = list()
-		for train, test in splits:
-			# splitting and initializing ===============================================================
-			N_train, N_test = N[train], N[test]
-			B_hl_train, B_hl_test = B_hl[train], B_hl[test]
-			B_ll_train, B_ll_test = B_ll[train], B_ll[test]
+		for sid, (train, test) in enumerate(splits):
+			# splitting and initializing ========================== (this also moves the data to the GPU)
+			N_train, N_test = jnp.array(N[train]), jnp.array(N[test])
+			B_hl_train, B_hl_test = jnp.array(B_hl[train]), jnp.array(B_hl[test])
+			B_ll_train, B_ll_test = jnp.array(B_ll[train]), jnp.array(B_ll[test])
 
 			if is_hgm:
 				params = model.init_params(seeds, (n_neurons, n_dimensions), (n_behaviors_hl, n_dimensions), (n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
@@ -105,13 +107,13 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 			patience = 0
 			for epoch in range(max_epochs):
 				if is_hgm:
-					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N, B_ll, B_hl, loss_lambdas, reg_lambdas)
+					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, loss_lambdas, reg_lambdas)
 					loss = model.loss_fn(params, N_test, B_ll_test, B_hl_test, loss_lambdas, reg_lambdas).item()
 					loss_tr = model.loss_fn(params, N_train, B_ll_train, B_hl_train, loss_lambdas, reg_lambdas).item()
 					mse_loss = model.mse_loss_fn(params, N_test, B_ll_test).item()
 					mse_loss_tr = model.mse_loss_fn(params, N_train, B_ll_train).item()
 				else:
-					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N, B_ll, B_hl, loss_lambdas, reg_lambdas[0])
+					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, loss_lambdas, reg_lambdas[0])
 					loss = model.loss_fn(params, N_test, B_ll_test, B_hl_test, loss_lambdas, reg_lambdas[0]).item()
 					loss_tr = model.loss_fn(params, N_train, B_ll_train, B_hl_train, loss_lambdas, reg_lambdas[0]).item()
 					mse_loss = model.mse_loss_fn(params, N_test, B_ll_test).item()
@@ -119,17 +121,23 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 
 				__grads.append(__grad)
 
-				# early stopping =============
+				# early stopping ================
 				if epoch > min_epochs:
 					if loss < best_loss:
-						losses.append(loss)
-						losses_tr.append(loss_tr)
+						patience = 0
+
 						best_loss = loss
 						best_loss_tr = loss_tr
 						best_mse_loss = mse_loss
 						best_mse_loss_tr = mse_loss_tr
 						best_params = params
-						patience = 0
+
+						losses.append(loss)
+						losses_tr.append(loss_tr)
+						mse_losses.append(mse_loss)
+						mse_losses_tr.append(mse_loss_tr)
+
+						wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
 					else:
 						patience += 1
 						if patience > max_patience:
@@ -138,15 +146,24 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 							mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - len(mse_losses) + 1)]
 							mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - len(mse_losses_tr) + 1)]
 							break
+
 						losses.append(loss)
 						losses_tr.append(loss_tr)
-				# ============================
+						mse_losses.append(mse_loss)
+						mse_losses_tr.append(mse_loss_tr)
+
+						wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
+				# ===============================
 				else:
 					best_params = params
+
 					losses.append(loss)
 					losses_tr.append(loss_tr)
 					mse_losses.append(mse_loss)
 					mse_losses_tr.append(mse_loss_tr)
+
+					wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
+
 			params_per_split.append(best_params)
 			losses_per_split.append(losses)
 			losses_tr_per_split.append(losses_tr)
@@ -235,19 +252,23 @@ def sweep(config):
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces_art[i].values.shape[0]), discrete_states_art[i]['REV'].values))
 
 		def train_model_wrapper():
-			return train_joint_model(project_name, hgm, splits, jnp.array(traces_art[i].values), jnp.array(eigenworms_art[i].values), jnp.array(discrete_states_art[i].values))
+			return train_joint_model(project_name, hgm, splits, traces_art[i].values, eigenworms_art[i].values, discrete_states_art[i].values)
 
 		sweep_id = wandb.sweep(config, project=project_name)
 		wandb.agent(sweep_id, function=train_model_wrapper)
 
 
 
+print('Visible devices: ', jax.devices())  
 sweep_config = {
-	'method': 'grid',
+	'method': 'bayes',
+    'metric': {
+        'name': 'reg_loss',
+        'goal': 'minimize'
+    },
 	'parameters': {
-		'max_epochs': {'values': [1000, 5000, 10000]},
 		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
-		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
+		'reg_l1': {'values': [1E-2, 1E-3, 1E-4, 1E-5]},
 		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
 		'loss_l1': {'values': [0.8, 0.75, 0.67, 0.5, 0.33, 0.25, 0.2]},
 		'dimensions': {'values': [1, 2, 3]},

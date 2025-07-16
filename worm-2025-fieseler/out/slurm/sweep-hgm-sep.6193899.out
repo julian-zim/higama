@@ -1,0 +1,3 @@
+##LiSC job info: the temporary directory of your job is also available read-only until 3 days after job end on the login nodes (login01/login02) under this path: /lisc/slurm/node-d16/tmp/slurm-6193899
+##LiSC GPU info: IDs 0 on node-d16
+SLURM GPU assignment: 0
