@@ -180,7 +180,7 @@ def read():
 	# read
 	print('reading...')
 
-	path = os.path.join(read_utils.get_data_path(), 'exported_data_')
+	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_')
 	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, 9)
 
 	for i in range(len(filenames)):
