@@ -10,8 +10,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
-import gc
-
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import jax
 import jax.numpy as jnp
@@ -242,7 +240,7 @@ sweep_config = {
 	'parameters': {
 		'learning_rate': {'values': [1, 1E-1, 1E-2]},
 		'reg_l1': {'values': [1E-2, 1E-3]},
-		'reg_l2': {'values': [1E-2, 1E-3, 1E-4]}
+		'reg_l2': {'values': [1E-2, 1E-3, 1E-4, 0]}
 	}
 }
 sweep(sweep_config)
