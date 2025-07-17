@@ -26,6 +26,9 @@ dist/
 .eggs/
 MANIFEST
 
+# out
+worm-2025-fieseler/out/slurm/
+
 # weights & biases library
 **/wandb/
 
