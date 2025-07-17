@@ -172,7 +172,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 
 		# =====================================================
 
-		wandb.log({'score': np.mean(np.array(neuron_scores_per_split)), 'loss': np.mean(np.array(mse_losses_per_split)), 'reg_loss': np.mean(np.array(losses_per_split))})
+		wandb.log({'score': np.mean(np.mean(np.array(neuron_scores_per_split), axis=1)), 'loss': np.mean(np.array(mse_losses_per_split)), 'reg_loss': np.mean(np.array(losses_per_split))})
 
 	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mse_losses_per_split), np.array(mse_losses_tr_per_split), __grads_per_split
 
