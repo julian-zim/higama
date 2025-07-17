@@ -131,7 +131,7 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
 							mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
 							mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
-							for _ in max_epochs - epoch: wandb.log({f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
+							for _ in range(max_epochs - epoch): wandb.log({f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
 							break
 
 				losses.append(loss)
@@ -173,7 +173,7 @@ def read():
 	print('reading...')
 
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_')
-	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, 9)
+	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, 8)
 
 	for i in range(len(filenames)):
 		mask = eigenworms[i].notna().all(axis=1)
