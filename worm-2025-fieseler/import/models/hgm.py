@@ -60,7 +60,7 @@ def loss_fn(params, N, B_ll, B_hl, loss_lambdas, reg_lambdas):
 	B_hl_man = B_hl @ V
 
 	N_rec = N_man @ jax.numpy.linalg.pinv(U)
-	N_res = N - N_rec  # TOOD: another operation to enable sensory information removal?
+	N_res = N - N_rec
 
 	man_loss = cca_loss(N_man, B_hl_man)
 	# =========================================

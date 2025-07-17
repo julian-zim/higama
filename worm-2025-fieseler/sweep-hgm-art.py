@@ -126,45 +126,31 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 					if loss < best_loss:
 						patience = 0
 
+						best_params = params
 						best_loss = loss
 						best_loss_tr = loss_tr
 						best_mse_loss = mse_loss
 						best_mse_loss_tr = mse_loss_tr
-						best_params = params
-
-						losses.append(loss)
-						losses_tr.append(loss_tr)
-						mse_losses.append(mse_loss)
-						mse_losses_tr.append(mse_loss_tr)
-
-						wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
 					else:
 						patience += 1
 						if patience > max_patience:
-							losses = losses + [best_loss for _ in range(max_epochs - len(losses) + 1)]
-							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - len(losses_tr) + 1)]
-							mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - len(mse_losses) + 1)]
-							mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - len(mse_losses_tr) + 1)]
+							params = best_params
+							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
+							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
+							mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
+							mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
+							for _ in max_epochs - epoch: wandb.log({f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
 							break
 
-						losses.append(loss)
-						losses_tr.append(loss_tr)
-						mse_losses.append(mse_loss)
-						mse_losses_tr.append(mse_loss_tr)
+				losses.append(loss)
+				losses_tr.append(loss_tr)
+				mse_losses.append(mse_loss)
+				mse_losses_tr.append(mse_loss_tr)
 
-						wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
+				wandb.log({f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
 				# ===============================
-				else:
-					best_params = params
 
-					losses.append(loss)
-					losses_tr.append(loss_tr)
-					mse_losses.append(mse_loss)
-					mse_losses_tr.append(mse_loss_tr)
-
-					wandb.log({f'loss_s{sid}': loss, f'mse_loss_s{sid}': loss, f'loss_tr_s{sid}': loss, f'mse_loss_tr_s{sid}': loss})
-
-			params_per_split.append(best_params)
+			params_per_split.append(params)
 			losses_per_split.append(losses)
 			losses_tr_per_split.append(losses_tr)
 			mse_losses_per_split.append(mse_losses)
@@ -173,13 +159,13 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl):
 			__grads_per_split.append(__grads)
 
 			# predicting and scoring ========================================================================
-			N_test_man = N_test @ best_params['U']
-			N_test_rec = N_test_man @ jax.numpy.linalg.pinv(best_params['U'])
+			N_test_man = N_test @ params['U']
+			N_test_rec = N_test_man @ jax.numpy.linalg.pinv(params['U'])
 			N_test_res = N_test - N_test_rec
 			if is_hgm:
-				Y_pred = model.predict(B_ll_test, N_test_man, best_params['W1'], best_params['W2'])
+				Y_pred = model.predict(B_ll_test, N_test_man, params['W1'], params['W2'])
 			else:
-				Y_pred = model.predict(B_ll_test, best_params['W'])
+				Y_pred = model.predict(B_ll_test, params['W'])
 
 			score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(N_test_res.T, Y_pred.T)]
 			neuron_scores_per_split.append(score_per_neuron)
@@ -268,9 +254,9 @@ sweep_config = {
     },
 	'parameters': {
 		'learning_rate': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
-		'reg_l1': {'values': [1E-2, 1E-3, 1E-4, 1E-5]},
-		'reg_l2': {'values': [1, 1E-1, 1E-2, 1E-3, 1E-4]},
-		'loss_l1': {'values': [0.8, 0.75, 0.67, 0.5, 0.33, 0.25, 0.2]},
+		'reg_l1': {'values': [1, 1E-1, 1E-2, 1E-3]},
+		'reg_l2': {'values': [1E-3, 1E-4, 1E-5]},
+		'loss_l1': {'values': [0.8, 0.75, 0.67, 0.5]},  # the lower this value, the more easily the model can collapse everything to 0. dont reduce further.
 		'dimensions': {'values': [1, 2, 3]},
 	}
 }
