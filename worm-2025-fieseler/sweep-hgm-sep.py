@@ -1,6 +1,7 @@
 import sys
 import os
 import math
+import time
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -34,28 +35,26 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1)
 
-		n_neurons = Y.shape[1]
-		n_behaviors_ll = X_bll.shape[1]
-		if is_hgm: n_dimensions = X_man.shape[1]
-
 		# Hyperparamters ============
 		hyperparams = {
 			'max_epochs': 5000,
-			'min_epochs': 100,
-			'max_patience': 20,
+			'max_patience': 100,
 			'learning_rate': config.learning_rate,
-			'reg_l1': config.reg_l1,
-			'reg_l2': config.reg_l2,
+			'w1_reg_lambda': config.w1_reg_lambda,
+			'w2_reg_lambda': config.w2_reg_lambda,
 		}
 
 		max_epochs = hyperparams['max_epochs']
-		min_epochs = hyperparams['min_epochs']
 		max_patience = hyperparams['max_patience']
 
 		optimizer = optax.adam(hyperparams['learning_rate'])
 
-		reg_lambdas = hyperparams['reg_l1'], hyperparams['reg_l2']
+		reg_lambdas = hyperparams['w1_reg_lambda'], hyperparams['w2_reg_lambda']
 		# ===========================
+
+		n_neurons = Y.shape[1]
+		n_behaviors_ll = X_bll.shape[1]
+		if is_hgm: n_dimensions = X_man.shape[1]
 
 		# training loop =======================================
 		params_per_split = list()
@@ -114,32 +113,33 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 				__grads.append(__grad)
 
 				# early stopping ================
-				if epoch > min_epochs:
-					if loss < best_loss:
-						patience = 0
+				if loss < best_loss:
+					patience = 0
 
-						best_params = params
-						best_loss = loss
-						best_loss_tr = loss_tr
-						best_mse_loss = mse_loss
-						best_mse_loss_tr = mse_loss_tr
-					else:
-						patience += 1
-						if patience > max_patience:
-							params = best_params
-							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
-							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
-							mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
-							mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
-							for _ in range(max_epochs - epoch): wandb.log({f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
-							break
+					best_params = params
+					best_loss = loss
+					best_loss_tr = loss_tr
+					best_mse_loss = mse_loss
+					best_mse_loss_tr = mse_loss_tr
+				else:
+					patience += 1
+					if patience > max_patience:
+						params = best_params
+						losses = losses + [best_loss for _ in range(max_epochs - epoch)]
+						losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
+						mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
+						mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
+						for rest_epoch in range(max_epochs - epoch):
+							wandb.log({f'epoch_s{sid}': rest_epoch, f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
+						break
+				# ===============================
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
 				mse_losses.append(mse_loss)
 				mse_losses_tr.append(mse_loss_tr)
 
-				wandb.log({f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
+				wandb.log({f'epoch_s{sid}': epoch, f'loss_s{sid}': loss, f'loss_tr_s{sid}': loss_tr, f'mse_loss_s{sid}': mse_loss, f'mse_loss_tr_s{sid}': mse_loss_tr})
 				# ===============================
 
 			params_per_split.append(params)
@@ -162,7 +162,11 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 
 		# =====================================================
 
-		wandb.log({'score': np.mean(np.mean(np.array(neuron_scores_per_split), axis=1)), 'loss': np.mean(np.array(mse_losses_per_split)), 'reg_loss': np.mean(np.array(losses_per_split))})
+		wandb.log({'score': np.mean(np.mean(np.array(neuron_scores_per_split), axis=1)),
+				   'loss': np.mean(np.array(losses_per_split)),
+				   'loss_tr': np.mean(np.array(losses_tr_per_split)),
+				   'mse_loss': np.mean(np.array(mse_losses_per_split)),
+				   'mse_loss_tr': np.mean(np.array(mse_losses_tr_per_split))})
 
 	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mse_losses_per_split), np.array(mse_losses_tr_per_split), __grads_per_split
 
@@ -217,7 +221,7 @@ def sweep(config):
 	wandb.login()
 
 	for i in range(len(filenames)):
-		project_name = f'hgm_sep_{i}_{filenames[i]}'
+		project_name = f'hgm sep {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {i}-{filenames[i]}'
 		print(f'{i + 1}/{len(filenames)}: {filenames[i]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(eigenworms[i].values.shape[0]), discrete_states[i]['REV'].values))
@@ -234,13 +238,13 @@ print('Visible devices: ', jax.devices())
 sweep_config = {
 	'method': 'bayes',
     'metric': {
-        'name': 'reg_loss',
+        'name': 'mse_loss',
         'goal': 'minimize'
     },
 	'parameters': {
-		'learning_rate': {'values': [1, 1E-1, 1E-2]},
-		'reg_l1': {'values': [1E-2, 1E-3]},
-		'reg_l2': {'values': [1E-2, 1E-3, 1E-4, 0]}
+		'learning_rate': {'min': 1E-3, 'max': 1E0},
+		'w1_reg_lambda': {'min': 1E-5, 'max': 1E-1},
+		'w2_reg_lambda': {'min': 1E-5, 'max': 1E-1}
 	}
 }
 sweep(sweep_config)

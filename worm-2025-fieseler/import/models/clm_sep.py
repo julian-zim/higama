@@ -31,14 +31,14 @@ def mse_loss_fn(params, X_bll, Y):
 
 def loss_fn(params, X_bll, Y, reg_lambdas):
 	W = params['W']
-	reg_l = reg_lambdas[0]
+	w_reg_lambda = reg_lambdas[0]
 
 	Y_pred = predict(X_bll, W)
 
 	mse_loss = jnp.mean((Y_pred - Y) ** 2)
-	w_loss = reg_l * jnp.linalg.norm(W) ** 2
+	w_reg_loss = jnp.linalg.norm(W) ** 2
 
-	res_loss = mse_loss + w_loss
+	res_loss = mse_loss + w_reg_loss * w_reg_lambda
 
 	return res_loss
 

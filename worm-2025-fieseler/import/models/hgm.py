@@ -50,8 +50,8 @@ def cca_loss(X_proj, Y_proj):
 	return jnp.mean(1 - corrs)
 
 def loss_fn(params, N, B_ll, B_hl, loss_lambdas, reg_lambdas):
-	l1, l2 = loss_lambdas
-	reg_l1, reg_l2 = reg_lambdas[0], reg_lambdas[1]
+	loss1_lambda, loss2_lambda = loss_lambdas
+	w1_reg_lambda, w2_reg_lambda = reg_lambdas[0], reg_lambdas[1]
 
 	U, V, W1, W2 = params['U'], params['V'], params['W1'], params['W2']
 
@@ -68,13 +68,13 @@ def loss_fn(params, N, B_ll, B_hl, loss_lambdas, reg_lambdas):
 	# residuals ===============================
 	Y_pred = predict(B_ll, N_man, W1, W2)
 	mse_loss = jnp.mean((Y_pred - N_res) ** 2)
-	w1_loss = reg_l1 * jnp.linalg.norm(W1) ** 2
-	w2_loss = reg_l2 * jnp.linalg.norm(W2) ** 2
+	w1_reg_loss = jnp.linalg.norm(W1) ** 2
+	w2_reg_loss = jnp.linalg.norm(W2) ** 2
 
-	res_loss = mse_loss + w1_loss + w2_loss
+	res_loss = mse_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
 	# =========================================
 
-	return l1 * man_loss + l2 * res_loss
+	return man_loss * loss1_lambda + res_loss * loss2_lambda
 
 loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4, 5))
 
