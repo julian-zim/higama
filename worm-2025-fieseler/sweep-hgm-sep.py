@@ -129,7 +129,7 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 						losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
 						mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
 						mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
-						for rest_epoch in range(max_epochs - epoch):
+						for rest_epoch in range(epoch + 1, max_epochs):
 							wandb.log({f'epoch_s{sid}': rest_epoch, f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
 						break
 				# ===============================
