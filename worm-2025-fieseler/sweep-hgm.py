@@ -231,9 +231,9 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'learning_rate': {'min': 1E-3, 'max': 1E0},
-		'w1_reg_lambda': {'min': 0, 'max': 1E-1},
-		'w2_reg_lambda': {'min': 0, 'max': 1E-1},
+		'learning_rate': {'min': 1E-3, 'max': 1.},
+		'w1_reg_lambda': {'min': 0., 'max': 1E-1},
+		'w2_reg_lambda': {'min': 0., 'max': 1E-1},
 		'loss1_lambda': {'values': [0.8, 0.75, 0.67, 0.5]},  # the lower this value, the more easily the model can collapse everything to 0. dont reduce further.
 	}
 }

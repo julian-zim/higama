@@ -242,9 +242,9 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'learning_rate': {'min': 1E-3, 'max': 1E0},
-		'w1_reg_lambda': {'min': 0, 'max': 1E-1},
-		'w2_reg_lambda': {'min': 0, 'max': 1E-1}
+		'learning_rate': {'min': 1E-3, 'max': 1.},
+		'w1_reg_lambda': {'min': 0., 'max': 1E-1},
+		'w2_reg_lambda': {'min': 0., 'max': 1E-1}
 	}
 }
 sweep(sweep_config)
