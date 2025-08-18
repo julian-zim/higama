@@ -6,8 +6,10 @@ from sklearn.cross_decomposition import CCA
 
 
 def get_manifolds(traces, behaviors_hl, n_cc=2, n_pc=5):
-	modes_manifold = list()
-	traces_manifold = list()
+	modes_neural = list()
+	modes_ds = list()
+	recon_neural = list()
+	recon_ds = list()
 	loadings = list()
 	vars_expl = list()
 	vars_expl_rs = list()  # variance explained with respect to the reconstructed PCA data
@@ -23,8 +25,11 @@ def get_manifolds(traces, behaviors_hl, n_cc=2, n_pc=5):
 		trace_reduced, ds_reduced = cca.fit_transform(trace_reconstructed_pca, behavior.values)
 		trace_reconstructed, ds_reconstructed = cca.inverse_transform(trace_reduced, ds_reduced)
 
-		modes_manifold.append(pd.DataFrame(data=trace_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
-		traces_manifold.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
+		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
+		modes_ds.append(pd.DataFrame(data=ds_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
+
+		recon_neural.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
+		recon_ds.append(pd.DataFrame(data=ds_reconstructed, columns=behavior.columns))
 
 		loadings.append((cca.x_loadings_, cca.y_loadings_))
 
@@ -33,7 +38,7 @@ def get_manifolds(traces, behaviors_hl, n_cc=2, n_pc=5):
 		vars_expl.append(var_ratio)
 		vars_expl_rs.append(var_ratio_rs)
 
-	return modes_manifold, traces_manifold, loadings, vars_expl, vars_expl_rs
+	return modes_neural, modes_ds, recon_neural, recon_ds, loadings, vars_expl, vars_expl_rs
 
 
 def get_manifolds_pca(traces, n_pc=2):

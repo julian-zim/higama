@@ -1,7 +1,6 @@
 import jax
 import jax.numpy as jnp
 import optax
-import numpy as np
 
 
 def get_type():

@@ -90,10 +90,10 @@ def train_numerical_model(project_name, model, splits, X_bll, Y, X_man=None):
 			__grads = list()
 
 			best_params = params
-			best_loss = 1E3
-			best_loss_tr = 1E3
-			best_mse_loss = 1E3
-			best_mse_loss_tr = 1E3
+			best_loss = sys.float_info.max
+			best_loss_tr = sys.float_info.max
+			best_mse_loss = sys.float_info.max
+			best_mse_loss_tr = sys.float_info.max
 
 			patience = 0
 			for epoch in range(max_epochs):
