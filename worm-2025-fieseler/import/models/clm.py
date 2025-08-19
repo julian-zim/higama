@@ -2,6 +2,8 @@ import jax
 import jax.numpy as jnp
 import optax
 
+from sklearn.metrics import r2_score
+
 
 def get_type():
 	return False
@@ -9,31 +11,49 @@ def get_type():
 
 def init_params(seeds, shape_U, shape_V, shape_N):
 	return {
-	    'W': 1E-2 * jax.random.normal(seeds[0], shape_N),
-	    'U': 1E-2 * jax.random.normal(seeds[1], shape_U),
-	    'V': 1E-2 * jax.random.normal(seeds[2], shape_V)
+	    'U': 1E-2 * jax.random.normal(seeds[0], shape_U),
+	    'V': 1E-2 * jax.random.normal(seeds[1], shape_V),
+	    'W': 1E-2 * jax.random.normal(seeds[2], shape_N)
 	}
 
+
+# EVALUATING
 
 @jax.jit
 def predict(B_ll, W):
 	return B_ll @ W
 
+def obtain(params, N, B_ll, prep_data):
+	N_mean, N_std = jnp.asarray(prep_data.N_mean), jnp.asarray(prep_data.N_std)
 
-# temp
-@jax.jit
-def mse_loss_fn(params, N, B_ll):
 	U, V, W = params['U'], params['V'], params['W']
 
-	N_man = N @ U
-	# N_rec = N_man @ jax.numpy.linalg.pinv(U)
-	N_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N  # gottem
+	N_zs = (N - N_mean) / N_std
+	N_man = N_zs @ U
+	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # got'em	N_man @ jax.numpy.linalg.pinv(U)
+	N_rec = N_zs_rec * N_std + N_mean
 	N_res = N - N_rec
-	Y_pred = predict(B_ll, W)
-	mse_loss = jnp.mean((Y_pred - N_res) ** 2)
 
+	N_res_pred = predict(B_ll, W)
+
+	return N_res_pred, N_res, N_rec
+
+obtain = jax.jit(obtain, static_argnums=(3,))
+
+def mse_loss_fn(params, N, B_ll, prep_data):
+	N_res_pred, N_res, _ = obtain(params, N, B_ll, prep_data)
+	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
 	return mse_loss
 
+mse_loss_fn = jax.jit(mse_loss_fn, static_argnums=(3,))
+
+def score_fn(params, N, B_ll, prep_data):
+	N_res_pred, N_res, _ = obtain(params, N, B_ll, prep_data)
+	score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+	return score_per_neuron
+
+
+# TRAINING
 
 @jax.jit
 def norming(X_proj):
@@ -42,9 +62,7 @@ def norming(X_proj):
 	return X_proj
 
 @jax.jit
-def cca_loss(X_proj, Y_proj, cca_lambdas):
-	ccaunit_lambda, ccadiag_lambda = cca_lambdas
-
+def cca_loss(X_proj, Y_proj, ccaunit_lambda, ccadiag_lambda):
 	corr = norming(X_proj).T @ norming(Y_proj)
 
 	corr_diag = jnp.diag(jnp.diag(corr))
@@ -53,26 +71,37 @@ def cca_loss(X_proj, Y_proj, cca_lambdas):
 	return (ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape)))
 			+ ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag)))
 
-def loss_fn(params, N, B_ll, B_hl, cca_lambdas, loss_lambdas, reg_lambda):
+def loss_fn(params, N, B_ll, B_hl, lambdas, prep_data):
+	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
+
 	loss1_lambda, loss2_lambda = loss_lambdas
-	w_reg_lambda = reg_lambda
+	w_reg_lambda = reg_lambdas[0]
+	ccaunit_lambda, ccadiag_lambda = cca_lambdas
+
+	N_mean, N_std, B_hl_mean, B_hl_std = (jnp.asarray(prep_data.N_mean),
+										  jnp.asarray(prep_data.N_std),
+										  jnp.asarray(prep_data.B_hl_mean),
+										  jnp.asarray(prep_data.B_hl_std))
 
 	U, V, W = params['U'], params['V'], params['W']
 
 	# manifold ================================
-	N_man = N @ U
-	N_man_bhl = B_hl @ V
+	N_zs = (N - N_mean) / N_std
+	B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
 
-	# N_rec = N_man @ jax.numpy.linalg.pinv(U)
-	N_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N  # gottem
+	N_man = N_zs @ U
+	B_hl_man = B_hl_zs @ V
+
+	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # got'em	N_man @ jax.numpy.linalg.pinv(U)
+	N_rec = N_zs_rec * N_std + N_mean
 	N_res = N - N_rec
 
-	man_loss = cca_loss(N_man, N_man_bhl, cca_lambdas)
+	man_loss = cca_loss(N_man, B_hl_man, ccaunit_lambda, ccadiag_lambda)
 	# =========================================
 
 	# residuals ===============================
-	Y_pred = predict(B_ll, W)
-	mse_loss = jnp.mean((Y_pred - N_res) ** 2)
+	N_res_pred = predict(B_ll, W)
+	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
 	w_reg_loss = jnp.linalg.norm(W) ** 2
 
 	res_loss = mse_loss + w_reg_loss * w_reg_lambda
@@ -80,13 +109,13 @@ def loss_fn(params, N, B_ll, B_hl, cca_lambdas, loss_lambdas, reg_lambda):
 
 	return man_loss * loss1_lambda + res_loss * loss2_lambda
 
-loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4, 5, 6))
+loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4, 5))
 
 
-def update(opt_update, opt_state, params, N, B_ll, B_hl, cca_lambdas, loss_lambdas, reg_lambda):
-	grads = loss_fn_grad(params, N, B_ll, B_hl, cca_lambdas, loss_lambdas, reg_lambda)
+def update(opt_update, opt_state, params, N, B_ll, B_hl, lambdas, prep_data):
+	grads = loss_fn_grad(params, N, B_ll, B_hl, lambdas, prep_data)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
 	return params_new, opt_state, grads  # return grads for weight interpretation
 
-update = jax.jit(update, static_argnums=(0, 6, 7, 8))
+update = jax.jit(update, static_argnums=(0, 6, 7))
