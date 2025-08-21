@@ -9,11 +9,11 @@ def get_type():
 	return False
 
 
-def init_params(seeds, shape_U, shape_V, shape_N):
+def init_params(seeds, shape_U, shape_V, shape_bn):
 	return {
 	    'U': 1E-2 * jax.random.normal(seeds[0], shape_U),
 	    'V': 1E-2 * jax.random.normal(seeds[1], shape_V),
-	    'W': 1E-2 * jax.random.normal(seeds[2], shape_N)
+	    'W': 1E-2 * jax.random.normal(seeds[2], shape_bn)
 	}
 
 

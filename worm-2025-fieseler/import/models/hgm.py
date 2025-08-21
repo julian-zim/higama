@@ -9,12 +9,12 @@ def get_type():
 	return True
 
 
-def init_params(seeds, shape_U, shape_V, shape_N, shape_N_man):
+def init_params(seeds, shape_U, shape_V, shape_bn, shape_dn):
 	return {
-	    'U': 1E-2 * jax.random.normal(seeds[2], shape_U),
-	    'V': 1E-2 * jax.random.normal(seeds[3], shape_V),
-	    'W1': 1E-2 * jax.random.normal(seeds[0], shape_N),
-	    'W2': 1E-2 * jax.random.normal(seeds[1], shape_N_man)
+	    'U': 1E-2 * jax.random.normal(seeds[0], shape_U),
+	    'V': 1E-2 * jax.random.normal(seeds[1], shape_V),
+	    'W1': 1E-2 * jax.random.normal(seeds[2], shape_bn),
+	    'W2': 1E-2 * jax.random.normal(seeds[3], shape_dn)
 	}
 
 
@@ -119,3 +119,24 @@ def update(opt_update, opt_state, params, N, B_ll, B_hl, lambdas, prep_data):
 	return params_new, opt_state, grads  # return grads for weight interpretation
 
 update = jax.jit(update, static_argnums=(0, 6, 7))
+
+
+
+
+
+
+# temp
+def obtain2(params, N, B_ll, prep_data):
+	N_mean, N_std = jnp.asarray(prep_data.N_mean), jnp.asarray(prep_data.N_std)
+
+	U, V, W1, W2 = params['U'], params['V'], params['W1'], params['W2']
+
+	N_zs = (N - N_mean) / N_std
+	N_man = N_zs @ U
+	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # got'em	N_man @ jax.numpy.linalg.pinv(U)
+	N_rec = N_zs_rec * N_std + N_mean
+	N_res = N - N_rec
+
+	N_res_pred = predict(B_ll, N_man, W1, W2)
+
+	return N_res_pred, N_res, N_rec, (N_man, B_ll @ W1, jax.nn.sigmoid(N_man @ W2))

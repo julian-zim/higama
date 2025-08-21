@@ -347,7 +347,7 @@ def plot_traces(title, traces, states, keys=None, n_plots=None, n_columns=2, yli
 	plt.show()
 
 
-def plot_traces_splits(title, states, traces, traces_additional=None, n_plots=None, n_columns=2, ylimits=None, save_name=None):
+def plot_traces_splits(title, states, traces, traces_additional=None, plot_init=True, n_plots=None, n_columns=2, ylimits=None, save_name=None):
 	keys = [key for key in traces.columns if key != '']
 	if n_plots is None:
 		n_plots = len(keys)
@@ -387,7 +387,7 @@ def plot_traces_splits(title, states, traces, traces_additional=None, n_plots=No
 			if traces_additional is not None:
 				for traces_per_split in traces_additional:
 					axes[i // n_columns, i % n_columns].plot(traces_per_split[key], linewidth=1.0)
-			axes[i // n_columns, i % n_columns].plot(traces[key], color='black', linewidth=1.0)
+			axes[i // n_columns, i % n_columns].plot(traces[key], color='black', alpha=1. if plot_init else 0., linewidth=1.0)
 			axes[i // n_columns, i % n_columns].grid(False)
 			axes[i // n_columns, i % n_columns].set_title(f'{key}', fontsize=12)
 			i += 1
@@ -590,9 +590,9 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 				patch.set_alpha(0.5)
 
 	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
-		# if x >= 0:
-		plt.text(x, min_y - 0.01, label, color='red', ha='center', va='top', rotation=45, fontsize=5,
-				 transform=plt.gca().transData)
+		if x >= 0:
+			plt.text(x, min_y - 0.01, label, color='red', ha='center', va='top', rotation=45, fontsize=5,
+					 transform=plt.gca().transData)
 	# =================================================================================================================
 
 	if len(neuron_scores_control) > 0:
@@ -633,9 +633,9 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 				patch.set_alpha(0.5)
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		# if x >= 0:
-		plt.text(x, min_y - 0.01, label, color='blue', ha='center', va='top', rotation=45, fontsize=5,
-				 transform=plt.gca().transData)
+		if x >= 0:
+			plt.text(x, min_y - 0.01, label, color='blue', ha='center', va='top', rotation=45, fontsize=5,
+					 transform=plt.gca().transData)
 	# =================================================================================================================
 
 	xtickspos = np.arange(min_x, max_x, xstep)
