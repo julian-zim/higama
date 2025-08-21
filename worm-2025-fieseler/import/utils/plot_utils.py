@@ -77,7 +77,7 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 	else:
 		print(np.mean(np.array(vars_expl)))
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}.png', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
@@ -151,7 +151,7 @@ def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4
 	ax_bottom.grid(False)
 
 	plt.tight_layout()
-	if save_name is not None: plt.savefig(f'./out/{save_name}.png', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
@@ -216,7 +216,7 @@ def plot_mcos(bars, bar_labels, labels, order, save_name=None):
 	plt.grid(False)
 	plt.grid(axis='y', linestyle='--', linewidth=0.5, color=(0.0, 0.0, 0.0))
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}.png', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
@@ -254,7 +254,7 @@ def plot_mcos(bars, bar_labels, labels, order, save_name=None):
 # 	# 	hspace=0.5,
 # 	# )
 #
-# 	if save_name is not None: plt.savefig(f'./out/{save_name}')
+# 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}')
 
 
 def plot_losses_splits(title, filenames, losses_m1, losses_m2, n_plots=None, plots_per_row=5, top_space=1, ylimits=None, save_name=None):
@@ -289,7 +289,7 @@ def plot_losses_splits(title, filenames, losses_m1, losses_m2, n_plots=None, plo
 	# 	hspace=0.5,
 	# )
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()
 
 
@@ -343,7 +343,7 @@ def plot_traces(title, traces, states, keys=None, n_plots=None, n_columns=2, yli
 			axes[i // n_columns, i % n_columns].set_title(f'{key}', fontsize=12)
 			i += 1
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()
 
 
@@ -392,7 +392,7 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_init=
 			axes[i // n_columns, i % n_columns].set_title(f'{key}', fontsize=12)
 			i += 1
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 
 
 def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None, save_name=None):
@@ -516,7 +516,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 	ytickspos = np.arange(min_y, max_y, ystep)
 	plt.yticks(ytickspos, [f'{val:.2f}' for val in ytickspos])
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()
 
 
@@ -643,5 +643,5 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 	ytickspos = np.arange(min_y, max_y, ystep)
 	plt.yticks(ytickspos, [f'{val:.2f}' for val in ytickspos])
 
-	if save_name is not None: plt.savefig(f'./out/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()
