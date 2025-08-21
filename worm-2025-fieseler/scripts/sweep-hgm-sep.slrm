@@ -8,6 +8,7 @@
 #SBATCH --output=/lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/sweep-hgm-sep.%A.out
 #SBATCH --error=/lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/sweep-hgm-sep.%A.err
 
+module load Python/3.12.3-GCCcore-13.3.0
 source ~/.venv/hgm/bin/activate
 mkdir -p /lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/
 
