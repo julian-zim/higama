@@ -66,7 +66,7 @@ def artificialize(weights, model, filename, neurons, eigenworms, discrete_states
 	cyber_manifold = pd.DataFrame(data=generate_manifold(discrete_states, n_dimensions),
 								  columns=[f'CC{i+1}' for i in range(n_dimensions)])
 
-	#
+	# (dimensions x neurons)
 	cca_params = generate_cca_params(seeds, cyber_manifold.values.shape[1], n_neurons)
 
 	# (samples x neurons)
