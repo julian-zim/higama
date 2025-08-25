@@ -233,20 +233,20 @@ def read(artificial=False):
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
 		# 					   traces_art[0][['AVAR', 'ALA', 'VB02', 'IL2L', 'SMDDR', 'RID']],
 		# 					   discrete_states_art[0]['REV'],
-		# 					   n_plots=None, n_columns=2, ylimits=(-8, 8))
+		# 					   n_plots=None, plots_per_row=2, ylimits=(-8, 8))
 		return filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
 
 
-	# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
+	# plot_utils.plot_traces(f'[{filenames[0]}] traces artificial',
 	# 					   traces[0][['AVAR', 'ALA', 'VB02', 'IL2L', 'SMDDR', 'RID']],
 	# 					   discrete_states[0]['REV'],
-	# 					   n_plots=None, n_columns=2, ylimits=(-8, 8))
+	# 					   n_plots=None, plots_per_row=2, ylimits=(-2, 2))
 	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
 
 
 
 def sweep(config):
-	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read(artificial=True)
+	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read(artificial=False)
 
 	print('sweeping...')
 
