@@ -12,6 +12,7 @@ module load Python/3.12.3-GCCcore-13.3.0
 source ~/.venv/hgm/bin/activate
 mkdir -p /lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/
 
+python --version
 echo "SLURM GPU assignment: $CUDA_VISIBLE_DEVICES"
 # echo $VIRTUAL_ENV
 python ./sweep-hgm.py
