@@ -1,8 +1,8 @@
-l1_reg: >= 1E-3
-l2_reg: kinda irrelevant, maybe rather low (1E-4)
-dimensions: 1 or 3
+hyperparams
 
-
-Learning rate:	0.07
-w1 reg:			0.001
-w2 reg:			0.03
+loss1_lambda: 0.70790
+learning_rate: 0.18846 (kinda important)
+w1_reg_lambda: 0.00085 (important, but caveats: obviously important for artificial data, cuz no overfitting posible)
+w2_reg_lambda: 0.04910
+ccadiag_lambda: 0.48256
+ccaunit_lambda: 0.69974
