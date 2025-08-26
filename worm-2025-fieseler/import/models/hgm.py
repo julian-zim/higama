@@ -22,6 +22,9 @@ def init_params(seeds, shape_U, shape_V, shape_bn, shape_dn):
 
 @jax.jit
 def predict(B_ll, N_man, W1, W2):
+	N_man -= N_man.mean(axis=0)
+	N_man /= N_man.std(axis=0)
+
 	return B_ll @ W1 * jax.nn.sigmoid(N_man @ W2)
 
 def obtain(params, N, B_ll, prep_data):

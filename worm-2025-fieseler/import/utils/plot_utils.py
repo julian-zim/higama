@@ -354,7 +354,7 @@ def plot_traces(title, traces, states, keys=None, n_plots=None, plots_per_row=2,
 	plt.show()
 
 
-# todo: change function signature in soft-cca and model (states and traces have switched
+# todo: change function signature in soft-cca and model (states and traces have switched)
 def plot_traces_splits(title, states, traces, traces_additional=None, plot_init=True, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
 	keys = [key for key in traces.columns if key != '']
 	if n_plots is None:
@@ -402,14 +402,14 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_init=
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 
 
-def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None, save_name=None):
+def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, limits=None, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
 
-	plt.figure(figsize=(15, 15))
-	plt.xlabel('GLM r2 score (median)', fontsize=20, labelpad=50)
-	plt.ylabel('HGM r2 score (median)', fontsize=20)
+	plt.figure(figsize=(scale, scale))
+	plt.xlabel('GLM r2 score (median)', fontsize=1.5 * scale, labelpad=50)
+	plt.ylabel('HGM r2 score (median)', fontsize=1.5 * scale)
 
 	if limits is None:
 		gcamp_x = np.array([score for scores in neuron_scores.values() for score in scores[0]])
@@ -436,7 +436,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 	# max_x += 2 * xstep
 	# min_y -= 2 * ystep
 	# max_y += 2 * ystep
-	bp_width = 0.01
+	bp_width = 0.005 * scale
 
 	plt.xlim(min_x, max_x)
 	plt.ylim(min_y, max_y)
@@ -453,7 +453,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm, s=10, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm, s=2 * scale, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm)
@@ -471,7 +471,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 				patch.set_alpha(0.5)
 
 	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
-		plt.text(x, min_y - 0.01, label, color='red', ha='center', va='top', rotation=45, fontsize=5,
+		plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
 				 transform=plt.gca().transData)
 	# =================================================================================================================
 
@@ -494,7 +494,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm, s=10, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm, s=2 * scale, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		x = np.median(scores_glm)
 		# if x < gfp_high_score_glm: continue
@@ -514,7 +514,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 				patch.set_alpha(0.5)
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		plt.text(x, min_y - 0.01, label, color='blue', ha='center', va='top', rotation=45, fontsize=5,
+		plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
 				 transform=plt.gca().transData)
 	# =================================================================================================================
 
@@ -527,27 +527,27 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 	plt.show()
 
 
-def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None, save_name=None):
+def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, limits=None, save_name=None):
 	# TODO: automatic limit finding in this plot too
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
 
-	plt.figure(figsize=(15, 15))
-	plt.xlabel('GLM r2 score (median)', fontsize=20, labelpad=25)
-	plt.ylabel('HGM-GLM r2 score (median)', fontsize=20)
+	plt.figure(figsize=(scale, scale))
+	plt.xlabel('GLM r2 score (median)', fontsize=1.5 * scale, labelpad=25)
+	plt.ylabel('HGM-GLM r2 score (median)', fontsize=1.5 * scale)
 
 	if limits is None:
-		gcamp_x = np.array([score[0] for scores in neuron_scores.values() for score in scores])
+		gcamp_x = np.array([score for scores in neuron_scores.values() for score in scores[0]])
 		if len(neuron_scores_control) > 0:
-			gfp_x = np.array([score[0] for scores in neuron_scores_control.values() for score in scores])
+			gfp_x = np.array([score for scores in neuron_scores_control.values() for score in scores[0]])
 			full_x = np.array(np.concatenate([gcamp_x, gfp_x]))
 		else:
 			full_x = np.array(gcamp_x)
 
-		gcamp_y = np.array([score[1] for scores in neuron_scores.values() for score in scores])
+		gcamp_y = np.array([score for scores in neuron_scores.values() for score in scores[1]])
 		if len(neuron_scores_control) > 0:
-			gfp_y = np.array([score[1] for scores in neuron_scores_control.values() for score in scores])
+			gfp_y = np.array([score for scores in neuron_scores_control.values() for score in scores[1]])
 			full_y = np.array(np.concatenate([gcamp_y, gfp_y]))
 		else:
 			full_y = np.array(gcamp_y)
@@ -562,7 +562,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 	# max_x += 2 * xstep
 	# min_y -= 2 * ystep
 	# max_y += 2 * ystep
-	bp_width = 0.01
+	bp_width =  0.005 * scale
 
 	plt.xlim(min_x, max_x)
 	plt.ylim(min_y, max_y)
@@ -582,7 +582,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm - scores_glm)
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=10, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=2 * scale, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		gfp_boxplot_xticks.append(x)
 		gfp_boxplot_xtick_labels.append(f'{key}')
@@ -598,7 +598,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 
 	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
 		if x >= 0:
-			plt.text(x, min_y - 0.01, label, color='red', ha='center', va='top', rotation=45, fontsize=5,
+			plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
 					 transform=plt.gca().transData)
 	# =================================================================================================================
 
@@ -620,7 +620,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=10, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=2 * scale, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		x = np.median(scores_glm)
 		# if x < gfp_high_score_glm: continue
@@ -641,7 +641,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
 		if x >= 0:
-			plt.text(x, min_y - 0.01, label, color='blue', ha='center', va='top', rotation=45, fontsize=5,
+			plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
 					 transform=plt.gca().transData)
 	# =================================================================================================================
 
