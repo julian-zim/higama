@@ -45,7 +45,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		if hyperparameters is None:
 			hyperparameters = {
 				'max_epochs': 10000,
-				'max_patience': 100,
+				'max_patience': 50,
 				'learning_rate': config.learning_rate,  # 0.001,
 				'w1_reg_lambda': config.w1_reg_lambda,  # 1E-3,
 				'w2_reg_lambda': config.w2_reg_lambda,  # 1E-5,
@@ -64,7 +64,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		lambdas = Lambdas(
 			loss_lambdas=(hyperparameters['loss1_lambda'], hyperparameters['loss2_lambda']),
 			reg_lambdas=(hyperparameters['w1_reg_lambda'], hyperparameters['w2_reg_lambda']),
-			cca_lambdas=(hyperparameters['ccaunit_lambda'], hyperparameters['ccadiag_lambda'])
+			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
 		# ===========================
 

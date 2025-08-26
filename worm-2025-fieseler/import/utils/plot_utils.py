@@ -7,7 +7,7 @@ from matplotlib.colors import to_rgb
 from matplotlib import cm
 
 
-def subplot(title, datas, n_plots, plots_per_row=5, top_space=0, save_name=None):  # todo: fix top space stuff
+def subplot(title, datas, n_plots, plots_per_row=5, top_space=1, save_name=None):
 	if type(datas) in (pd.DataFrame, pd.Series):
 		datas = [datas]
 
@@ -28,7 +28,8 @@ def subplot(title, datas, n_plots, plots_per_row=5, top_space=0, save_name=None)
 				axes[i // plots_per_row, i % plots_per_row].set_title(key, fontsize=8)
 
 	top_space_rel = top_space / figheight
-	fig.text(0.5, 1. - top_space_rel * 1 / 2, title, ha='center', fontsize=20)
+	fig.text(0.5, 1. - top_space_rel / 2, title, ha='center', fontsize=20)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
@@ -53,7 +54,7 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 		points = np.array([modes_[f'{key}1'], modes_[f'{key}2']]).T.reshape(-1, 1, 2)
 		segments = np.concatenate([points[:-1], points[1:]], axis=1)
 		colors = np.argmax(states_.values, axis=1)
-		lc = LineCollection(segments, cmap='jet', norm=plt.Normalize(np.min(colors), np.max(colors)))
+		lc = LineCollection(segments, cmap='jet', norm=plt.Normalize(np.min(colors), np.max(colors)))  # ToDo: better colors
 		lc.set_array(colors)
 		lc.set_linewidth(2)
 
@@ -72,7 +73,7 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 										  fontsize=12)
 
 	top_space_rel = top_space / figheight
-	fig.text(0.5, 1. - top_space_rel * 1 / 2, 'manifolds', ha='center', fontsize=20)
+	fig.text(0.5, 1. - top_space_rel / 2, 'manifolds', ha='center', fontsize=20)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
 	if vars_expl_rs is not None:
@@ -260,6 +261,108 @@ def plot_mcos(bars, bar_labels, labels, order, save_name=None):
 # 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}')
 
 
+def plot_traces(title, states, traces, keys=None, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
+	if type(traces) in (pd.DataFrame, pd.Series):
+		traces = [traces]
+
+	columns = traces[0].columns if type(traces[0]) is pd.DataFrame else [str(idx) for idx in range(traces[0].shape[1])]
+	traces = [pd.DataFrame(data=trace, columns=columns) for trace in traces]
+
+	if keys is None: keys = traces[0].columns
+	keys = [key for key in keys if key != '']
+	if n_plots is None: n_plots = len(keys)
+	if ylimits is None: ylimits = (np.array([trace.values for trace in traces]).min(), np.array([trace.values for trace in traces]).max())
+
+	n_rows = math.ceil(n_plots / plots_per_row)
+	figheight = 2 * n_rows + top_space
+	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(10 * plots_per_row, figheight), squeeze=False)
+	for i in range(n_plots):
+		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
+
+	top_space_rel = top_space / figheight
+	fig.text(0.5, 1. - top_space_rel / 4, title, ha='center', fontsize=20)
+	fig.legend(
+		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label='reversal')],
+		loc='lower center',
+		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
+		ncol=1,
+		fontsize='large'
+	)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	fig.subplots_adjust(
+		hspace=0.5,
+	)
+
+	heatmap = states.values.reshape(-1, 1) * 0.1
+
+	i = 0
+	for key in keys[:n_plots]:
+		if key != '':
+			min_val, max_val = ylimits
+			axes[i // plots_per_row, i % plots_per_row].imshow(
+				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+			)
+			axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], color='black', linewidth=1.0)
+			for trace in traces[1:]:
+				axes[i // plots_per_row, i % plots_per_row].plot(trace[key], linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].grid(False)
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			i += 1
+
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	plt.show()
+
+
+
+def plot_traces_splits(title, states, traces, traces_additional=None, plot_first=True, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
+	keys = [key for key in traces.columns if key != '']
+	if n_plots is None:
+		n_plots = len(keys)
+	if ylimits is None: ylimits = (traces[keys].values.min(), traces[keys].values.max())
+
+	n_rows = math.ceil(n_plots / plots_per_row)
+	figheight = 2 * n_rows + top_space
+	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(10 * plots_per_row, figheight), squeeze=False)
+	for i in range(n_plots):
+		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
+
+	top_space_rel = top_space / figheight
+	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
+	fig.legend(
+		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label='reversal')],
+		loc='lower center',
+		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
+		ncol=1,
+		fontsize='large'
+	)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	fig.subplots_adjust(
+		hspace=0.5,
+	)
+
+	heatmap = states.values.reshape(-1, 1) * 0.1
+
+	i = 0
+	for key in keys[:n_plots]:
+		if key != '':
+			min_val, max_val = ylimits
+			axes[i // plots_per_row, i % plots_per_row].imshow(
+				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+			)
+			if traces_additional is not None:
+				for traces_per_split in traces_additional:
+					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split[key], linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1. if plot_first else 0., linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].grid(False)
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			i += 1
+
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+
+
+
 def plot_losses_splits(title, filenames, losses, losses_reference=None, n_plots=None, plots_per_row=5, top_space=1, ylimits=None, save_name=None):
 	if n_plots is None:
 		n_plots = len(filenames)
@@ -299,107 +402,6 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None, n_plots=
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()
-
-
-def plot_traces(title, traces, states, keys=None, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
-	if type(traces) in (pd.DataFrame, pd.Series):
-		traces = [traces]
-
-	columns = traces[0].columns if type(traces[0]) is pd.DataFrame else [str(idx) for idx in range(traces[0].shape[1])]
-	traces = [pd.DataFrame(data=trace, columns=columns) for trace in traces]
-
-	if keys is None: keys = traces[0].columns
-	keys = [key for key in keys if key != '']
-	if n_plots is None: n_plots = len(keys)
-	if ylimits is None: ylimits = (np.array([trace.values for trace in traces]).min(), np.array([trace.values for trace in traces]).max())
-
-	n_rows = math.ceil(n_plots / plots_per_row)
-	figheight = 2 * n_rows + top_space
-	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(10 * plots_per_row, figheight), squeeze=False)
-	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
-		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
-
-	top_space_rel = top_space / figheight
-	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
-	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label='reversal')],
-		loc='lower center',
-		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
-		ncol=1,
-		fontsize='large'
-	)
-	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
-	fig.subplots_adjust(
-		hspace=0.5,
-	)
-
-	heatmap = states.values.reshape(-1, 1) * 0.1
-
-	i = 0
-	for key in keys[:n_plots]:
-		if key != '':
-			min_val, max_val = ylimits
-			axes[i // plots_per_row, i % plots_per_row].imshow(
-				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
-			)
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], color='black', linewidth=1.0)
-			for trace in traces[1:]:
-				axes[i // plots_per_row, i % plots_per_row].plot(trace[key], linewidth=1.0)
-			axes[i // plots_per_row, i % plots_per_row].grid(False)
-			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
-			i += 1
-
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
-	plt.show()
-
-
-# todo: change function signature in soft-cca and model (states and traces have switched)
-def plot_traces_splits(title, states, traces, traces_additional=None, plot_init=True, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
-	keys = [key for key in traces.columns if key != '']
-	if n_plots is None:
-		n_plots = len(keys)
-	if ylimits is None: ylimits = (traces[keys].values.min(), traces[keys].values.max())
-
-	n_rows = math.ceil(n_plots / plots_per_row)
-	figheight = 2 * n_rows + top_space
-	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(10 * plots_per_row, figheight), squeeze=False)
-	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
-		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
-
-	top_space_rel = top_space / figheight
-	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
-	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label='reversal')],
-		loc='lower center',
-		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
-		ncol=1,
-		fontsize='large'
-	)
-	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
-	fig.subplots_adjust(
-		hspace=0.5,
-	)
-
-	heatmap = states.values.reshape(-1, 1) * 0.1
-
-	i = 0
-	for key in keys[:n_plots]:
-		if key != '':
-			min_val, max_val = ylimits
-			axes[i // plots_per_row, i % plots_per_row].imshow(
-				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
-			)
-			if traces_additional is not None:
-				for traces_per_split in traces_additional:
-					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split[key], linewidth=1.0)
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1. if plot_init else 0., linewidth=1.0)
-			axes[i // plots_per_row, i % plots_per_row].grid(False)
-			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
-			i += 1
-
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 
 
 def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, limits=None, save_name=None):
@@ -528,7 +530,6 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 
 
 def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, limits=None, save_name=None):
-	# TODO: automatic limit finding in this plot too
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
@@ -537,6 +538,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 	plt.xlabel('GLM r2 score (median)', fontsize=1.5 * scale, labelpad=25)
 	plt.ylabel('HGM-GLM r2 score (median)', fontsize=1.5 * scale)
 
+	# ToDo: automatic limit finding in this plot too
 	if limits is None:
 		gcamp_x = np.array([score for scores in neuron_scores.values() for score in scores[0]])
 		if len(neuron_scores_control) > 0:

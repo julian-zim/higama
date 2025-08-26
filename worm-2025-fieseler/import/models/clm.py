@@ -62,21 +62,21 @@ def norming(X_proj):
 	return X_proj
 
 @jax.jit
-def cca_loss(X_proj, Y_proj, ccaunit_lambda, ccadiag_lambda):
+def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
 	corr = norming(X_proj).T @ norming(Y_proj)
 
 	corr_diag = jnp.diag(jnp.diag(corr))
 	corr_nondiag = corr - corr_diag
 
-	return (ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape)))
-			+ ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag)))
+	return (ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag))
+			+ ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape))))
 
 def loss_fn(params, N, B_ll, B_hl, lambdas, prep_data):
 	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
 
 	loss1_lambda, loss2_lambda = loss_lambdas
 	w_reg_lambda = reg_lambdas[0]
-	ccaunit_lambda, ccadiag_lambda = cca_lambdas
+	ccadiag_lambda, ccaunit_lambda = cca_lambdas
 
 	N_mean, N_std, B_hl_mean, B_hl_std = (jnp.asarray(prep_data.N_mean),
 										  jnp.asarray(prep_data.N_std),
@@ -96,7 +96,7 @@ def loss_fn(params, N, B_ll, B_hl, lambdas, prep_data):
 	N_rec = N_zs_rec * N_std + N_mean
 	N_res = N - N_rec
 
-	man_loss = cca_loss(N_man, B_hl_man, ccaunit_lambda, ccadiag_lambda)
+	man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
 	# =========================================
 
 	# residuals ===============================
