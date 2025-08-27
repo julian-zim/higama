@@ -45,14 +45,14 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		if hyperparameters is None:
 			hyperparameters = {
 				'max_epochs': 10000,
-				'max_patience': 50,
+				'max_patience': 10000,
 				'learning_rate': config.learning_rate,
 				'w1_reg_lambda': config.w1_reg_lambda,
 				'w2_reg_lambda': config.w2_reg_lambda,
-				'ccadiag_lambda': 0.5,
-				'ccaunit_lambda': 0.5,
-				'loss1_lambda': 0.5,  # 0.5,
-				'loss2_lambda': 1. - 0.5,  # 0.5,
+				'ccadiag_lambda': 0.6,
+				'ccaunit_lambda': 0.4,
+				'loss1_lambda': 0.67,  # 0.5,
+				'loss2_lambda': 1. - 0.67,  # 0.5,
 				'dimensions': 1  # 3
 			}
 

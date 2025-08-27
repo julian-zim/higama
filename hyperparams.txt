@@ -1,4 +1,4 @@
-hyperparams
+ACTUAL DATA
 
 loss1_lambda: 0.70790
 learning_rate: 0.18846 (kinda important)
@@ -17,3 +17,29 @@ avg w1_reg_lambda: 0.002
 avg w2_reg_lambda: 0.1+
 avg ccadiag_lambda: 0.6
 avg ccaunit_lambda: 0.4
+
+
+
+
+
+
+
+
+ARTIFICIAL DATA:
+- With a learning arate of 1E-4, early stopping never kicked in. WHich makes sense, as it shuldnt kick in, since the data is artificial.
+-
+
+
+
+
+
+
+ARTIFICIAL DATA:
+- since incorporating the zscored manifold, it only slowly gets better over hte lieanr model when the learning rate is 1E-4. There was no regularization when i tested this, so it must be tested if it also work with it.
+
+
+
+
+
+ACTUAL DATA:
+- the loss curves fully overlap. It early stops after about 1.5k epochs
