@@ -314,7 +314,6 @@ def plot_traces(title, states, traces, keys=None, n_plots=None, plots_per_row=2,
 	plt.show()
 
 
-
 def plot_traces_splits(title, states, traces, traces_additional=None, plot_first=True, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
 	keys = [key for key in traces.columns if key != '']
 	if n_plots is None:
@@ -360,7 +359,6 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_first
 			i += 1
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
-
 
 
 def plot_losses_splits(title, filenames, losses, losses_reference=None, n_plots=None, plots_per_row=5, top_space=1, ylimits=None, save_name=None):
@@ -438,12 +436,12 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 	# max_x += 2 * xstep
 	# min_y -= 2 * ystep
 	# max_y += 2 * ystep
-	bp_width = 0.005 * scale
+	bp_width = 0.0025 * scale
 
 	plt.xlim(min_x, max_x)
 	plt.ylim(min_y, max_y)
 
-	plt.plot([-10, 10], [-10, 10], color='black', linestyle='--')
+	plt.plot([min(min_x, min_y), (max(max_x, max_y))], [min(min_x, min_y), max(max_x, max_y)], color='black', linestyle='--')
 
 	# GFP =============================================================================================================
 	gfp_boxplot_xticks, gfp_boxplot_xtick_labels = list(), list()
@@ -473,8 +471,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 				patch.set_alpha(0.5)
 
 	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
-		plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
-				 transform=plt.gca().transData)
+		if x >= min_x:
+			plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
+					 transform=plt.gca().transData)
 	# =================================================================================================================
 
 	if len(neuron_scores_control) > 0:
@@ -516,8 +515,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 				patch.set_alpha(0.5)
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
-				 transform=plt.gca().transData)
+		if x >= min_x:
+			plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
+					 transform=plt.gca().transData)
 	# =================================================================================================================
 
 	xtickspos = np.arange(min_x, max_x, xstep)
@@ -564,7 +564,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 	# max_x += 2 * xstep
 	# min_y -= 2 * ystep
 	# max_y += 2 * ystep
-	bp_width =  0.005 * scale
+	bp_width = 0.0025 * scale
 
 	plt.xlim(min_x, max_x)
 	plt.ylim(min_y, max_y)
@@ -599,7 +599,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 				patch.set_alpha(0.5)
 
 	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
-		if x >= 0:
+		if x >= min_x:
 			plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
 					 transform=plt.gca().transData)
 	# =================================================================================================================
@@ -642,7 +642,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 				patch.set_alpha(0.5)
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		if x >= 0:
+		if x >= min_x:
 			plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
 					 transform=plt.gca().transData)
 	# =================================================================================================================

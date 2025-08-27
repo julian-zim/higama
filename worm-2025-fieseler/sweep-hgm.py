@@ -46,13 +46,13 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			hyperparameters = {
 				'max_epochs': 10000,
 				'max_patience': 50,
-				'learning_rate': config.learning_rate,  # 0.001,
-				'w1_reg_lambda': config.w1_reg_lambda,  # 1E-3,
-				'w2_reg_lambda': config.w2_reg_lambda,  # 1E-5,
-				'ccadiag_lambda': config.ccadiag_lambda,  # 0.5,
-				'ccaunit_lambda': config.ccaunit_lambda,  # 0.5,
-				'loss1_lambda': config.loss1_lambda,  # 0.5,
-				'loss2_lambda': 1. - config.loss1_lambda,  # 0.5,
+				'learning_rate': config.learning_rate,
+				'w1_reg_lambda': config.w1_reg_lambda,
+				'w2_reg_lambda': config.w2_reg_lambda,
+				'ccadiag_lambda': 0.5,
+				'ccaunit_lambda': 0.5,
+				'loss1_lambda': 0.5,  # 0.5,
+				'loss2_lambda': 1. - 0.5,  # 0.5,
 				'dimensions': 1  # 3
 			}
 
@@ -276,10 +276,10 @@ sweep_config = {
 	'parameters': {
 		'learning_rate': {'min': 1E-4, 'max': 1.},
 		'w1_reg_lambda': {'min': 0., 'max': 1E-1},
-		'w2_reg_lambda': {'min': 0., 'max': 1E-1},
-		'ccadiag_lambda': {'min': 1E-1, 'max': 1.},
-		'ccaunit_lambda': {'min': 1E-1, 'max': 1.},
-		'loss1_lambda': {'values': [0.8, 0.75, 0.67, 0.5]},
+		'w2_reg_lambda': {'min': 0., 'max': 1.},
+		# 'ccadiag_lambda': {'min': 1E-1, 'max': 1.},
+		# 'ccaunit_lambda': {'min': 1E-1, 'max': 1.},
+		# 'loss1_lambda': {'values': [0.8, 0.75, 0.67, 0.5]},
 	}
 }
 sweep(sweep_config)

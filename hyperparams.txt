@@ -6,3 +6,14 @@ w1_reg_lambda: 0.00085 (important, but caveats: obviously important for artifici
 w2_reg_lambda: 0.04910
 ccadiag_lambda: 0.48256
 ccaunit_lambda: 0.69974
+
+
+
+
+ACTUAL DATA
+avg loss1_lambda: 0.67
+avg learning_rate: 0.02
+avg w1_reg_lambda: 0.002
+avg w2_reg_lambda: 0.1+
+avg ccadiag_lambda: 0.6
+avg ccaunit_lambda: 0.4
