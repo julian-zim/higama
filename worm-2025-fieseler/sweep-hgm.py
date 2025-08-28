@@ -35,6 +35,13 @@ class PrepData(NamedTuple):
 	B_hl_std: tuple[float, ...] | None = None
 
 
+def cosine_lr(step, warmup_steps, total_steps, lr_max, lr_min_ratio):
+	if step < warmup_steps:
+		return lr_max * step / warmup_steps
+	progress = (step - warmup_steps) / (total_steps - warmup_steps)
+	lr_min = lr_max * lr_min_ratio
+	return lr_min + 0.5*(lr_max - lr_min)*(1 + math.cos(math.pi*progress))
+
 def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None):
 	with wandb.init(project=project_name):
 		config = wandb.config
@@ -58,7 +65,9 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 
 		max_epochs = hyperparameters['max_epochs']
 		max_patience = hyperparameters['max_patience']
-		optimizer = optax.adam(hyperparameters['learning_rate'])
+
+		learning_rate = hyperparameters['learning_rate']
+
 		n_dimensions = hyperparameters['dimensions']
 
 		lambdas = Lambdas(
@@ -103,7 +112,8 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 									   (n_neurons, n_dimensions),
 									   (n_behaviors_hl, n_dimensions),
 									   (n_behaviors_ll, n_neurons),
-									   *((n_dimensions, n_neurons),) if model.get_type() else ())
+									   * ((n_dimensions, n_neurons),) if model.get_type() else ())
+			optimizer = optax.adam(learning_rate)
 			opt_state = optimizer.init(params)
 			# ===========================================================================================
 
@@ -119,8 +129,12 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			best_mse_loss = sys.float_info.max
 			best_mse_loss_tr = sys.float_info.max
 
+			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
+				# lr = cosine_lr(epoch, max_epochs / 10, max_epochs, learning_rate, 1E-6)
+				# optimizer = optax.adam(lr)
+
 				params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train)
 
 				loss = model.loss_fn(params, N_test, B_ll_test, B_hl_test, lambdas, prep_data_test).item()
@@ -148,7 +162,13 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 						mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
 						for rest_epoch in range(epoch + 1, max_epochs):
 							wandb.log({f'epoch_s{sid}': rest_epoch, f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
+
 						break
+
+						# lr_step += 1
+						# optimizer = optax.adam(learning_rate / (10 ** lr_step))
+						# patience = 0
+						# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
@@ -274,8 +294,8 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'learning_rate': {'min': 1E-5, 'max': 1.},
-		'w1_reg_lambda': {'min': 0., 'max': 1E-1},
+		'learning_rate': {'min': 1E-6, 'max': 1.},
+		'w1_reg_lambda': {'min': 0., 'max': 1.},
 		'w2_reg_lambda': {'min': 0., 'max': 1.},
 		# 'ccadiag_lambda': {'min': 1E-1, 'max': 1.},
 		# 'ccaunit_lambda': {'min': 1E-1, 'max': 1.},
