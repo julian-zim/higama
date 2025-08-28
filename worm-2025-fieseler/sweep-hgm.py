@@ -274,7 +274,7 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'learning_rate': {'min': 1E-4, 'max': 1.},
+		'learning_rate': {'min': 1E-5, 'max': 1.},
 		'w1_reg_lambda': {'min': 0., 'max': 1E-1},
 		'w2_reg_lambda': {'min': 0., 'max': 1.},
 		# 'ccadiag_lambda': {'min': 1E-1, 'max': 1.},

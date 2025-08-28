@@ -1,16 +1,4 @@
-ACTUAL DATA
-
-loss1_lambda: 0.70790
-learning_rate: 0.18846 (kinda important)
-w1_reg_lambda: 0.00085 (important, but caveats: obviously important for artificial data, cuz no overfitting posible)
-w2_reg_lambda: 0.04910
-ccadiag_lambda: 0.48256
-ccaunit_lambda: 0.69974
-
-
-
-
-ACTUAL DATA
+actual data, sweep with early stopping and max w2 reg of 1E-1
 avg loss1_lambda: 0.67
 avg learning_rate: 0.02
 avg w1_reg_lambda: 0.002
@@ -22,23 +10,8 @@ avg ccaunit_lambda: 0.4
 
 
 
-
-
-
 ARTIFICIAL DATA:
-- With a learning arate of 1E-4, early stopping never kicked in. WHich makes sense, as it shuldnt kick in, since the data is artificial.
--
-
-
-
-
-
-
-ARTIFICIAL DATA:
-- since incorporating the zscored manifold, it only slowly gets better over hte lieanr model when the learning rate is 1E-4. There was no regularization when i tested this, so it must be tested if it also work with it.
-
-
-
+- since incorporating the zscored manifold, it only slowly gets better over the linear model when the learning rate is 1E-4. There was no regularization when i tested this, so it must be tested if it also work with it.
 
 
 ACTUAL DATA:
