@@ -143,3 +143,52 @@ def obtain2(params, N, B_ll, prep_data):
 	N_res_pred = predict(B_ll, N_man, W1, W2)
 
 	return N_res_pred, N_res, N_rec, (N_man, B_ll @ W1, jax.nn.sigmoid(N_man @ W2))
+
+
+def loss_fn_partial(params, N, B_ll, B_hl, lambdas, prep_data):
+	def cca_loss_tmp(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
+		corr = norming(X_proj).T @ norming(Y_proj)
+
+		corr_diag = jnp.diag(jnp.diag(corr))
+		corr_nondiag = corr - corr_diag
+
+		term1 = ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag))
+		term2 = ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape)))
+		return term1 + term2
+
+	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
+
+	loss1_lambda, loss2_lambda = loss_lambdas
+	w1_reg_lambda, w2_reg_lambda = reg_lambdas
+	ccadiag_lambda, ccaunit_lambda = cca_lambdas
+
+	N_mean, N_std, B_hl_mean, B_hl_std = (jnp.asarray(prep_data.N_mean),
+										  jnp.asarray(prep_data.N_std),
+										  jnp.asarray(prep_data.B_hl_mean),
+										  jnp.asarray(prep_data.B_hl_std))
+
+	U, V, W1, W2 = params['U'], params['V'], params['W1'], params['W2']
+
+	# manifold ================================
+	N_zs = (N - N_mean) / N_std
+	B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
+
+	N_man = N_zs @ U
+	B_hl_man = B_hl_zs @ V
+
+	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # got'em	N_man @ jax.numpy.linalg.pinv(U)
+	N_rec = N_zs_rec * N_std + N_mean
+	N_res = N - N_rec
+
+	man_loss = cca_loss_tmp(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
+	# =========================================
+
+	# residuals ===============================
+	N_res_pred = predict(B_ll, N_man, W1, W2)
+	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
+	w1_reg_loss, w2_reg_loss = jnp.linalg.norm(W1) ** 2, jnp.linalg.norm(W2) ** 2
+
+	res_loss = mse_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
+	# =========================================
+
+	return man_loss, res_loss

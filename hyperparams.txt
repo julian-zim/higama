@@ -16,3 +16,15 @@ ARTIFICIAL DATA:
 
 ACTUAL DATA:
 - the loss curves fully overlap. It early stops after about 1.5k epochs
+
+
+
+
+
+
+
+
+
+
+
+The man_loss is usually around 0.001, the res loss around 0.24

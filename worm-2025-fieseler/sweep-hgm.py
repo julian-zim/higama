@@ -53,7 +53,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 				'ccaunit_lambda': 0.4,
 				'loss1_lambda': 0.8,
 				'loss2_lambda': 1. - 0.8,
-				'dimensions': 1  # 3
+				'dimensions': 2
 			}
 
 		max_epochs = hyperparameters['max_epochs']
