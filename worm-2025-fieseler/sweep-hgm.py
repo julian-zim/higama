@@ -18,7 +18,7 @@ import wandb
 
 sys.path.append(os.path.join(os.getcwd(), 'import'))
 from utils import read_utils
-from utils import plot_utils
+# from utils import plot_utils
 from utils import artificializer
 from models import hgm
 
@@ -201,8 +201,9 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 
 
 def read(artificial=False):
-	# read
 	print('reading...')
+
+	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_')
 	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, slice=(24, 24 + 1))
@@ -217,15 +218,16 @@ def read(artificial=False):
 		#kymographs[i] = kymographs[i][mask]
 		#filenames[i] = filenames[i][mask]
 
+	discrete_states = [ds[selection_bhl] for ds in discrete_states]
+
 
 	# artificialize
 	if artificial:
-		selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 		dims_generation = 1
 		weights = (0.5, 2.)
 
 		filenames_art = list()
-		discrete_states_art = [ds[selection_bhl] for ds in discrete_states.copy()]
+		discrete_states_art = discrete_states.copy()
 		eigenworms_art = eigenworms.copy()
 		neural_modes_art = list()
 		traces_reconstructed_art = list()

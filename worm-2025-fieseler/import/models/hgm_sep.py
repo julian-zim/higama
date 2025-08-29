@@ -2,44 +2,51 @@ import jax
 import jax.numpy as jnp
 import optax
 
+from sklearn.metrics import r2_score
+
 
 def get_type():
 	return True
 
 
-def init_params(seeds, shape_X_bll, shape_X_man):
-	# return {
-	# 	'W1': 0.5 * jnp.tile(jax.random.normal(seeds[0], shape_X_bll[1]), (shape_X_bll[0], 1)),  # + 1E-3 * jax.random.normal(jax.random.PRNGKey(69), shape_X_bll),
-	# 	'W2': 0.5 * jnp.tile(jnp.abs(jax.random.normal(seeds[1], shape_X_bll[1])), (shape_X_man[0], 1)) + 1.5 * jax.random.normal(jax.random.PRNGKey(420), shape_X_man)
-	# }
+def init_params(seeds, shape_bn, shape_dn):
 	return {
-		'W1': jax.random.normal(seeds[0], shape_X_bll),
-		'W2': jax.random.normal(seeds[1], shape_X_man)
+		'W1': 1E-2 * jax.random.normal(seeds[2], shape_bn),
+		'W2': 1E-2 * jax.random.normal(seeds[3], shape_dn)
 	}
 
 
-@jax.jit
-def predict(X_bll, X_man, W1, W2):
-	return X_bll @ W1 * jax.nn.sigmoid(X_man @ W2)
+# EVALUATING
 
+@jax.jit
+def predict(B_ll, N_man, W1, W2):
+	return B_ll @ W1 * jax.nn.sigmoid(N_man @ W2)
 
 # temp
-def mse_loss_fn(params, X_bll, X_man, Y):
+def mse_loss_fn(params, B_ll, N_man, N_res):
 	W1, W2 = params['W1'], params['W2']
-	Y_pred = predict(X_bll, X_man, W1, W2)
-	mse_loss = jnp.mean((Y_pred - Y) ** 2)
+	N_res_pred = predict(B_ll, N_man, W1, W2)
+	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
 	return mse_loss
 
-
-def loss_fn(params, X_bll, X_man, Y, reg_lambdas):
+def score_fn(params, B_ll, N_man, N_res):
 	W1, W2 = params['W1'], params['W2']
+	N_res_pred = predict(B_ll, N_man, W1, W2)
+	score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+	return score_per_neuron
+
+
+# TRAINING
+
+def loss_fn(params, B_ll, N_man, N_res, reg_lambdas):
 	w1_reg_lambda, w2_reg_lambda = reg_lambdas[0], reg_lambdas[1]
+	W1, W2 = params['W1'], params['W2']
 
-	Y_pred = predict(X_bll, X_man, W1, W2)
+	N_res_pred = predict(B_ll, N_man, W1, W2)
 
-	mse_loss = jnp.mean((Y_pred - Y) ** 2)
+	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
 	w1_reg_loss = jnp.linalg.norm(W1) ** 2
-	w2_reg_loss = jnp.linalg.norm(W2) ** 2  # todo: correct norm and squaring?
+	w2_reg_loss = jnp.linalg.norm(W2) ** 2
 
 	res_loss = mse_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
 
@@ -48,8 +55,8 @@ def loss_fn(params, X_bll, X_man, Y, reg_lambdas):
 loss_fn_grad = jax.jit(jax.grad(loss_fn), static_argnums=(4,))
 
 
-def update(opt_update, opt_state, params, X_bll, X_man, Y, reg_lambdas):
-	grads = loss_fn_grad(params, X_bll, X_man, Y, reg_lambdas)
+def update(opt_update, opt_state, params, B_ll, N_man, N_res, reg_lambdas):
+	grads = loss_fn_grad(params, B_ll, N_man, N_res, reg_lambdas)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
 	return params_new, opt_state, grads  # return grads for weight interpretation

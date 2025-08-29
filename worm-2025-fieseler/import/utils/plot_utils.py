@@ -350,10 +350,10 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_first
 			axes[i // plots_per_row, i % plots_per_row].imshow(
 				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
+			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1. if plot_first else 0., linewidth=1.0)
 			if traces_additional is not None:
 				for traces_per_split in traces_additional:
 					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split[key], linewidth=1.0)
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1. if plot_first else 0., linewidth=1.0)
 			axes[i // plots_per_row, i % plots_per_row].grid(False)
 			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
 			i += 1
