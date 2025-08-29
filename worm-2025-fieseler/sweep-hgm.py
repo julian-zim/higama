@@ -58,8 +58,8 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 				'w2_reg_lambda': config.w2_reg_lambda,
 				'ccadiag_lambda': 0.6,
 				'ccaunit_lambda': 0.4,
-				'loss1_lambda': 0.8,
-				'loss2_lambda': 1. - 0.8,
+				'loss1_lambda': 0.5,
+				'loss2_lambda': 1. - 0.5,
 				'dimensions': 2
 			}
 

@@ -277,7 +277,7 @@ def sweep(config):
 	wandb.login()
 
 	for i in range(len(filenames)):
-		project_name = f'hgm {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {i}-{filenames[i]}'
+		project_name = f'hgm sep {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {i}-{filenames[i]}'
 		print(f'{i + 1}/{len(filenames)}: {filenames[i]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(eigenworms[i].values.shape[0]), discrete_states[i]['REV'].values))
