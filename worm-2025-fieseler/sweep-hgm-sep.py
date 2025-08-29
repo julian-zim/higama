@@ -256,8 +256,8 @@ def read(artificial=False):
 def manifold(traces, discrete_states):
 	print('manifolding...')
 
-	(neural_modes,
-	 traces_manifold,
+	(neural_modes, states_modes,
+	 traces_manifold, states_manifold,
 	 cca_loadings_man,
 	 vars_expl_man, vars_expl_man_rs) = train_utils.get_manifolds(traces,
 																  discrete_states,

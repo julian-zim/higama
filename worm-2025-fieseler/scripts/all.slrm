@@ -1,4 +1,4 @@
 #!/bin/sh
 
-sbatch sweep-hgm.slrm
-sbatch sweep-hgm-sep.slrm
+sbatch ./scripts/sweep-hgm.slrm
+sbatch ./scripts/sweep-hgm-sep.slrm
