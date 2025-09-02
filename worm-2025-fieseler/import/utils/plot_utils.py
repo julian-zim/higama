@@ -402,215 +402,255 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None, n_plots=
 	plt.show()
 
 
-def plot_performance_plot(neuron_scores, neuron_scores_control=None, scale=10, limits=None, save_name=None):
+def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None, content_size=20, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
 
-	plt.figure(figsize=(scale, scale))
-	plt.xlabel('GLM r2 score (median)', fontsize=1.5 * scale, labelpad=50)
-	plt.ylabel('HGM r2 score (median)', fontsize=1.5 * scale)
+	plt.figure(figsize=(10, 10))
+	plt.xlabel('GLM r2 score (median)', fontsize=12.5, labelpad=50)
+	plt.ylabel('HGM r2 score (median)', fontsize=12.5)
 
 	if limits is None:
-		gcamp_x = np.array([score for scores in neuron_scores.values() for score in scores[0]])
+		x_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_glm])
 		if len(neuron_scores_control) > 0:
-			gfp_x = np.array([score for scores in neuron_scores_control.values() for score in scores[0]])
-			full_x = np.array(np.concatenate([gcamp_x, gfp_x]))
-		else:
-			full_x = np.array(gcamp_x)
+			x_all = np.array(np.concatenate(
+				[x_all,
+				 np.array([score for scores_glm, scores_hgm in neuron_scores_control.values() for score in scores_glm])]
+			))
 
-		gcamp_y = np.array([score for scores in neuron_scores.values() for score in scores[1]])
+		y_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_hgm])
 		if len(neuron_scores_control) > 0:
-			gfp_y = np.array([score for scores in neuron_scores_control.values() for score in scores[1]])
-			full_y = np.array(np.concatenate([gcamp_y, gfp_y]))
-		else:
-			full_y = np.array(gcamp_y)
+			y_all = np.array(np.concatenate(
+				[y_all,
+				 np.array([score for scores_glm, scores_hgm in neuron_scores_control.values() for score in scores_hgm])]
+			))
 
-		min_x, max_x = full_x.min(), full_x.max()
-		min_y, max_y = full_y.min(), full_y.max()
+		x_min, x_max = x_all.min(), x_all.max()
+		y_min, y_max = y_all.min(), y_all.max()
+		x_step, y_step = (x_max - x_min) / 10, (y_max - y_min) / 10
+		x_min -= x_step
+		x_max += x_step
+		y_min -= y_step
+		y_max += y_step
 	else:
-		min_x, max_x, min_y, max_y = limits
-	xstep = (max_x - min_x) / 10
-	ystep = (max_y - min_y) / 10
-	# min_x -= 2 * xstep
-	# max_x += 2 * xstep
-	# min_y -= 2 * ystep
-	# max_y += 2 * ystep
-	bp_width = 0.0025 * scale
+		x_min, x_max, y_min, y_max = limits
+		x_step, y_step = (x_max - x_min) / 10, (y_max - y_min) / 10
 
-	plt.xlim(min_x, max_x)
-	plt.ylim(min_y, max_y)
+	plt.xlim(x_min, x_max)
+	plt.ylim(y_min, y_max)
 
-	plt.plot([min(min_x, min_y), (max(max_x, max_y))], [min(min_x, min_y), max(max_x, max_y)], color='black', linestyle='--')
+	bp_pxs = (
+		plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0)) + (content_size, 0)
+		)[0]
+		- plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0))
+		)[0],
+		plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0)) + (0, content_size)
+		)[1]
+		- plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0))
+		)[1]
+	)
+
+	plt.plot([min(x_min, y_min), (max(x_max, y_max))], [min(x_min, y_min), max(x_max, y_max)], color='black', linestyle='--')
 
 	# GFP =============================================================================================================
-	gfp_boxplot_xticks, gfp_boxplot_xtick_labels = list(), list()
+	boxplot_xticks_gfp, boxplot_xtick_labels_gfp = list(), list()
 
-	keys = neuron_scores_control.keys()
-	for key in keys:
+	for key in neuron_scores_control.keys():
 		scores_glm, scores_hgm = neuron_scores_control[key]
 		if len(scores_hgm.shape) == 0:
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm, s=2 * scale, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm, s=content_size, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm)
 
-		gfp_boxplot_xticks.append(x)
-		gfp_boxplot_xtick_labels.append(f'{key}')
+		boxplot_xticks_gfp.append(x)
+		boxplot_xtick_labels_gfp.append(f'{key}')
 
-		boxplot_h = plt.boxplot(scores_hgm, positions=[x], widths=bp_width, patch_artist=True,
+		boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 								showfliers=True)
-		boxplot_v = plt.boxplot(scores_glm, positions=[y], widths=bp_width * (max_y - min_y) / (max_x - min_x), patch_artist=True,
+		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
 								showfliers=True, vert=False)
-		for box in [boxplot_h, boxplot_v]:
+		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('tomato')
 				patch.set_alpha(0.5)
+			for median in box['medians']:
+				median.set_color('lightsteelblue')
+				median.set_linewidth(1)
 
-	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
-		if x >= min_x:
-			plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
-					 transform=plt.gca().transData)
+	for x, label in zip(boxplot_xticks_gfp, boxplot_xtick_labels_gfp):
+		if x_min <= x <= x_max:
+			plt.text(x, -0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=7.5,
+					 transform=plt.gca().get_xaxis_transform())
 	# =================================================================================================================
 
 	if len(neuron_scores_control) > 0:
-		# gfp_high_score_hgm_impr = np.quantile(np.concatenate([pair[1] - pair[0] for pair in neuron_scores_gfp.values()]), threshold)
-		# gfp_high_score_glm = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_gfp.values()]), threshold)
-		gfp_high_score_hgm = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]), threshold)
-		plt.plot([min_x, max_x + 1], [gfp_high_score_hgm, gfp_high_score_hgm], color='black', linestyle='--')
+		# high_score_glm_gfp = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]),
+		# 								 threshold)
+		high_score_hgm_gfp = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]),
+										 threshold)
+		# high_score_hgm_impr_gfp = np.quantile(np.concatenate([pair[1] - pair[0] for pair in neuron_scores_control.values()]),
+		# 									  threshold)
+		plt.plot([x_min, x_max + x_step], [high_score_hgm_gfp, high_score_hgm_gfp], color='black', linestyle='--')
 	else:
-		gfp_high_score_hgm_impr = -1E3
-		gfp_high_score_hgm = -1E3
+		high_score_hgm_gfp = -1E3
+		# high_score_hgm_impr_gfp = -1E3
 
 	# GCAMP ===========================================================================================================
 	boxplot_xticks, boxplot_xtick_labels = list(), list()
 
-	keys = neuron_scores.keys()
-	for key in keys:
+	for key in neuron_scores.keys():
 		scores_glm, scores_hgm = neuron_scores[key]
 		if len(scores_hgm.shape) == 0:
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm, s=2 * scale, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm, s=content_size, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		x = np.median(scores_glm)
-		# if x < gfp_high_score_glm: continue
+		# if x < high_score_glm_gfp: continue
 		y = np.median(scores_hgm)
-		if y < gfp_high_score_hgm: continue
+		if y < high_score_hgm_gfp: continue
 
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
 
-		boxplot_h = plt.boxplot(scores_hgm, positions=[x], widths=bp_width, patch_artist=True,
+		boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 								showfliers=True)
-		boxplot_v = plt.boxplot(scores_glm, positions=[y], widths=bp_width * (max_y - min_y) / (max_x - min_x), patch_artist=True,
+		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
 								showfliers=True, vert=False)
-		for box in [boxplot_h, boxplot_v]:
+		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('skyblue')
 				patch.set_alpha(0.5)
+			for median in box['medians']:
+				median.set_color('darkorange')
+				median.set_linewidth(1)
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		if x >= min_x:
-			plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
-					 transform=plt.gca().transData)
+		if x_min <= x <= x_max:
+			plt.text(x, -0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=7.5,
+					 transform=plt.gca().get_xaxis_transform())
 	# =================================================================================================================
 
-	xtickspos = np.arange(min_x, max_x, xstep)
-	plt.xticks(xtickspos, [f'{val:.2f}' for val in xtickspos])
-	ytickspos = np.arange(min_y, max_y, ystep)
-	plt.yticks(ytickspos, [f'{val:.2f}' for val in ytickspos])
+	x_ticks_pos = np.arange(x_min, x_max, x_step)
+	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
+	y_ticks_pos = np.arange(y_min, y_max, y_step)
+	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()
 
 
-def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, limits=None, save_name=None):
+def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None, content_size=20, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
 
-	plt.figure(figsize=(scale, scale))
-	plt.xlabel('GLM r2 score (median)', fontsize=1.5 * scale, labelpad=25)
-	plt.ylabel('HGM-GLM r2 score (median)', fontsize=1.5 * scale)
+	plt.figure(figsize=(10, 10))
+	plt.xlabel('GLM r2 score (median)', fontsize=12.5, labelpad=50)
+	plt.ylabel('HGM-GLM r2 score (median)', fontsize=12.5)
 
-	# ToDo: automatic limit finding in this plot too
 	if limits is None:
-		gcamp_x = np.array([score for scores in neuron_scores.values() for score in scores[0]])
+		x_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_glm])
 		if len(neuron_scores_control) > 0:
-			gfp_x = np.array([score for scores in neuron_scores_control.values() for score in scores[0]])
-			full_x = np.array(np.concatenate([gcamp_x, gfp_x]))
-		else:
-			full_x = np.array(gcamp_x)
+			x_all = np.array(np.concatenate(
+				[x_all,
+				 np.array([score for scores_glm, scores_hgm in neuron_scores_control.values() for score in scores_glm])]
+			))
 
-		gcamp_y = np.array([score for scores in neuron_scores.values() for score in scores[1]])
+		y_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_hgm - scores_glm])
 		if len(neuron_scores_control) > 0:
-			gfp_y = np.array([score for scores in neuron_scores_control.values() for score in scores[1]])
-			full_y = np.array(np.concatenate([gcamp_y, gfp_y]))
-		else:
-			full_y = np.array(gcamp_y)
+			y_all = np.array(np.concatenate(
+				[y_all,
+				 np.array([score for scores_glm, scores_hgm in neuron_scores_control.values() for score in scores_hgm - scores_glm])]
+			))
 
-		min_x, max_x = full_x.min(), full_x.max()
-		min_y, max_y = full_y.min(), full_y.max()
+		x_min, x_max = x_all.min(), x_all.max()
+		y_min, y_max = y_all.min(), y_all.max()
+		x_step, y_step = (x_max - x_min) / 10, (y_max - y_min) / 10
+		x_min -= x_step
+		x_max += x_step
+		y_min -= y_step
+		y_max += y_step
 	else:
-		min_x, max_x, min_y, max_y = limits
-	xstep = (max_x - min_x) / 10
-	ystep = (max_y - min_y) / 10
-	# min_x -= 2 * xstep
-	# max_x += 2 * xstep
-	# min_y -= 2 * ystep
-	# max_y += 2 * ystep
-	bp_width = 0.0025 * scale
+		x_min, x_max, y_min, y_max = limits
+		x_step, y_step = (x_max - x_min) / 10, (y_max - y_min) / 10
 
-	plt.xlim(min_x, max_x)
-	plt.ylim(min_y, max_y)
+	plt.xlim(x_min, x_max)
+	plt.ylim(y_min, y_max)
 
-	# plt.plot([min_x, max_x + 1], [min_y, max_y + 1], color='black', linestyle='--')
+	bp_pxs = (
+		plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0)) + (content_size, 0)
+		)[0]
+		- plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0))
+		)[0],
+		plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0)) + (0, content_size)
+		)[1]
+		- plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0))
+		)[1]
+	)
+
+	# plt.plot([x_min, x_max + x_step], [y_min, y_max + y_step], color='black', linestyle='--')
 
 	# GFP =============================================================================================================
-	gfp_boxplot_xticks, gfp_boxplot_xtick_labels = list(), list()
+	boxplot_xticks_gfp, boxplot_xtick_labels_gfp = list(), list()
 
-	keys = neuron_scores_control.keys()
-	for key in keys:
+	for key in neuron_scores_control.keys():
 		scores_glm, scores_hgm = neuron_scores_control[key]
 		if len(scores_hgm.shape) == 0:
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=content_size, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm - scores_glm)
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=2 * scale, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		boxplot_xticks_gfp.append(x)
+		boxplot_xtick_labels_gfp.append(f'{key}')
 
-		gfp_boxplot_xticks.append(x)
-		gfp_boxplot_xtick_labels.append(f'{key}')
-
-		boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_width, patch_artist=True,
+		boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 								showfliers=True)
-		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_width * (max_y - min_y) / (max_x - min_x), patch_artist=True,
+		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
 								showfliers=True, vert=False)
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('tomato')
 				patch.set_alpha(0.5)
+			for median in box['medians']:
+				median.set_color('lightsteelblue')
+				median.set_linewidth(1)
 
-	for x, label in zip(gfp_boxplot_xticks, gfp_boxplot_xtick_labels):
-		if x >= min_x:
-			plt.text(x, min_y - 0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
-					 transform=plt.gca().transData)
+	for x, label in zip(boxplot_xticks_gfp, boxplot_xtick_labels_gfp):
+		if x_min <= x <= x_max:
+			plt.text(x, -0.05, label, color='red', ha='center', va='top', rotation=45, fontsize=7.5,
+					 transform=plt.gca().get_xaxis_transform())
 	# =================================================================================================================
 
 	if len(neuron_scores_control) > 0:
-		gfp_high_score_hgm_impr = np.quantile(np.concatenate([pair[1] - pair[0] for pair in neuron_scores_control.values()]),
+		# high_score_glm_gfp = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]),
+		# 								 threshold)
+		# high_score_hgm_gfp = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]),
+		# 								 threshold)
+		high_score_hgm_impr_gfp = np.quantile(np.concatenate([pair[1] - pair[0] for pair in neuron_scores_control.values()]),
 											  threshold)
-		plt.plot([min_x, max_x + 1], [gfp_high_score_hgm_impr, gfp_high_score_hgm_impr], color='black', linestyle='--')
+		plt.plot([x_min, x_max + x_step], [high_score_hgm_impr_gfp, high_score_hgm_impr_gfp], color='black', linestyle='--')
 	else:
-		gfp_high_score_hgm_impr = -1E3
-		gfp_high_score_hgm = -1E3
+		high_score_hgm_impr_gfp = -1E3
+		# high_score_hgm_gfp = -1E3
 
 	# GCAMP ===========================================================================================================
 	boxplot_xticks, boxplot_xtick_labels = list(), list()
@@ -622,35 +662,38 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, scale=10, l
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=2 * scale, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=content_size, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
 		x = np.median(scores_glm)
-		# if x < gfp_high_score_glm: continue
+		# if x < high_score_glm_gfp: continue
 		y = np.median(scores_hgm - scores_glm)
-		if y < gfp_high_score_hgm_impr: continue
+		if y < high_score_hgm_impr_gfp: continue
 
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
 
-		boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_width, patch_artist=True,
-								showfliers=True)
-		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_width * (max_y - min_y) / (max_x - min_x), patch_artist=True,
+		boxplot_v = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[0], patch_artist=True,
 								showfliers=True, vert=False)
+		boxplot_h = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[1], patch_artist=True,
+								showfliers=True)
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('skyblue')
 				patch.set_alpha(0.5)
+			for median in box['medians']:
+				median.set_color('darkorange')
+				median.set_linewidth(1)
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		if x >= min_x:
-			plt.text(x, min_y - 0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=0.67 * scale,
-					 transform=plt.gca().transData)
+		if x >= x_min:
+			plt.text(x, -0.05, label, color='blue', ha='center', va='top', rotation=45, fontsize=7.5,
+					 transform=plt.gca().get_xaxis_transform())
 	# =================================================================================================================
 
-	xtickspos = np.arange(min_x, max_x, xstep)
-	plt.xticks(xtickspos, [f'{val:.2f}' for val in xtickspos])
-	ytickspos = np.arange(min_y, max_y, ystep)
-	plt.yticks(ytickspos, [f'{val:.2f}' for val in ytickspos])
+	x_ticks_pos = np.arange(x_min, x_max, x_step)
+	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
+	y_ticks_pos = np.arange(y_min, y_max, y_step)
+	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
 	plt.show()

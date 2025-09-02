@@ -51,8 +51,8 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 
 		if hyperparameters is None:
 			hyperparameters = {
-				'max_epochs': 10000,
-				'max_patience': 10000,
+				'max_epochs': 1000,
+				'max_patience': 1000,
 				'learning_rate': config.learning_rate,
 				'w1_reg_lambda': config.w1_reg_lambda,
 				'w2_reg_lambda': config.w2_reg_lambda,
@@ -89,7 +89,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		mse_losses_per_split = list()
 		mse_losses_tr_per_split = list()
 		__grads_per_split = list()
-		for sid, (train, test) in enumerate(splits):
+		for s_id, (train, test) in enumerate(splits):
 			# splitting and initializing ========================== (this also moves the data to the GPU)
 			N_train, N_test = jnp.array(N[train]), jnp.array(N[test])
 			B_hl_train, B_hl_test = jnp.array(B_hl[train]), jnp.array(B_hl[test])
@@ -160,9 +160,9 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 						losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
 						mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
 						mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
-						for rest_epoch in range(epoch + 1, max_epochs):
-							wandb.log({f'epoch_s{sid}': rest_epoch, f'loss_s{sid}': best_loss, f'loss_tr_s{sid}': best_loss_tr, f'mse_loss_s{sid}': best_mse_loss, f'mse_loss_tr_s{sid}': best_mse_loss_tr})
 
+						for rest_epoch in range(epoch + 1, max_epochs):
+							wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mse_loss_s{s_id}': best_mse_loss, f'mse_loss_tr_s{s_id}': best_mse_loss_tr})
 						break
 
 						# lr_step += 1
@@ -174,7 +174,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 				losses_tr.append(loss_tr)
 				mse_losses.append(mse_loss)
 				mse_losses_tr.append(mse_loss_tr)
-				wandb.log({f'epoch_s{sid}': epoch, f'loss_s{sid}': loss, f'loss_tr_s{sid}': loss_tr, f'mse_loss_s{sid}': mse_loss, f'mse_loss_tr_s{sid}': mse_loss_tr})
+				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_tr_s{s_id}': loss_tr, f'mse_loss_s{s_id}': mse_loss, f'mse_loss_tr_s{s_id}': mse_loss_tr})
 			# ===============================
 
 			params_per_split.append(params)
@@ -203,10 +203,12 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 def read(artificial=False):
 	print('reading...')
 
+	read_ids = (0, 24)
+	# selection_n = ['VB02', 'SMDDR', 'SMDDL', 'RMDDR', 'RMDDL', 'SMDVR']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_')
-	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, slice=(24, 24 + 1))
+	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, slice=(read_ids[0], read_ids[1] + 1))
 
 	for i in range(len(filenames)):
 		mask = eigenworms[i].notna().all(axis=1)
@@ -223,7 +225,7 @@ def read(artificial=False):
 
 	# artificialize
 	if artificial:
-		dims_generation = 1
+		dims_generation = 2
 		weights = (0.5, 2.)
 
 		filenames_art = list()
@@ -253,14 +255,14 @@ def read(artificial=False):
 			traces_art.append(traces_art_)
 
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
-		# 					   traces_art[0][['AVAR', 'ALA', 'VB02', 'IL2L', 'SMDDR', 'RID']],
+		# 					   traces_art[0][selection_n],
 		# 					   discrete_states_art[0]['REV'],
 		# 					   n_plots=None, plots_per_row=2, ylimits=(-8, 8))
 		return filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
 
 
 	# plot_utils.plot_traces(f'[{filenames[0]}] traces artificial',
-	# 					   traces[0][['AVAR', 'ALA', 'VB02', 'IL2L', 'SMDDR', 'RID']],
+	# 					   traces[0][selection_n],
 	# 					   discrete_states[0]['REV'],
 	# 					   n_plots=None, plots_per_row=2, ylimits=(-2, 2))
 	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
