@@ -672,10 +672,11 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
 
-		boxplot_v = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[0], patch_artist=True,
-								showfliers=True, vert=False)
-		boxplot_h = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[1], patch_artist=True,
+		boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 								showfliers=True)
+		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
+								showfliers=True, vert=False)
+
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('skyblue')

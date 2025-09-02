@@ -113,6 +113,12 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 									   (n_behaviors_hl, n_dimensions),
 									   (n_behaviors_ll, n_neurons),
 									   * ((n_dimensions, n_neurons),) if model.get_type() else ())
+
+			# optimizer = optax.adam(learning_rate=optax.cosine_decay_schedule(
+			# 	init_value=learning_rate,
+			# 	decay_steps=max_epochs,
+			# 	alpha=1E-2
+			# ))
 			optimizer = optax.adam(learning_rate)
 			opt_state = optimizer.init(params)
 			# ===========================================================================================
@@ -132,9 +138,6 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
-				# lr = cosine_lr(epoch, max_epochs / 10, max_epochs, learning_rate, 1E-6)
-				# optimizer = optax.adam(lr)
-
 				params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train)
 
 				loss = model.loss_fn(params, N_test, B_ll_test, B_hl_test, lambdas, prep_data_test).item()

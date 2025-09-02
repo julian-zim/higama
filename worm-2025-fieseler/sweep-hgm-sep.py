@@ -79,6 +79,12 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 				params = model.init_params(seeds, (n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
 			else:
 				params = model.init_params(seeds, (n_behaviors_ll, n_neurons))
+
+			# optimizer = optax.adam(learning_rate=optax.cosine_decay_schedule(
+			# 	init_value=learning_rate,
+			# 	decay_steps=max_epochs,
+			# 	alpha=1E-2
+			# ))
 			optimizer = optax.adam(learning_rate)
 			opt_state = optimizer.init(params)
 			# ==========================================================================================
@@ -104,9 +110,6 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
-				# lr = cosine_lr(epoch, max_epochs / 10, max_epochs, learning_rate, 1E-6)
-				# optimizer = optax.adam(lr)
-
 				if is_hgm:
 					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train, N_man_train, N_res_train, reg_lambdas)
 					loss = model.loss_fn(params, B_ll_test, N_man_test, N_res_test, reg_lambdas).item()

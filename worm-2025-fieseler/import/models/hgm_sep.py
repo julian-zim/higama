@@ -22,7 +22,6 @@ def init_params(seeds, shape_bn, shape_dn):
 def predict(B_ll, N_man, W1, W2):
 	return B_ll @ W1 * jax.nn.sigmoid(N_man @ W2)
 
-# temp
 def mse_loss_fn(params, B_ll, N_man, N_res):
 	W1, W2 = params['W1'], params['W2']
 	N_res_pred = predict(B_ll, N_man, W1, W2)
