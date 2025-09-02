@@ -1,13 +1,14 @@
 #!/bin/sh
 #SBATCH --job-name sweep-hgm-sep
-#SBATCH --gres=shard:1
 #SBATCH --mem=16G
+#SBATCH --cpus-per-task=16
 #SBATCH --time=10:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --output=/lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/sweep-hgm-sep.%A.out
 #SBATCH --error=/lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/sweep-hgm-sep.%A.err
 
+# --gres=shard:1
 module load Python/3.12.3-GCCcore-13.3.0
 source ~/.venv/hgm/bin/activate
 mkdir -p /lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/
