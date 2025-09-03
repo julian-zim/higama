@@ -5,6 +5,9 @@ import optax
 from sklearn.metrics import r2_score
 
 
+p = 1
+
+
 def get_type():
 	return True
 
@@ -46,7 +49,7 @@ obtain = jax.jit(obtain, static_argnums=(3,))
 
 def mpe_loss_fn(params, N, B_ll, prep_data):
 	N_res_pred, N_res, _ = obtain(params, N, B_ll, prep_data)
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
 	return mpe_loss
 
 mpe_loss_fn = jax.jit(mpe_loss_fn, static_argnums=(3,))
@@ -105,7 +108,7 @@ def loss_fn(params, N, B_ll, B_hl, lambdas, prep_data):
 
 	# residuals ===============================
 	N_res_pred = predict(B_ll, N_man, W1, W2)
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
 	w1_reg_loss, w2_reg_loss = jnp.linalg.norm(W1) ** 2, jnp.linalg.norm(W2) ** 2
 
 	res_loss = mpe_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda

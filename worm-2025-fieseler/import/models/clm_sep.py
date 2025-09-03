@@ -5,6 +5,9 @@ import optax
 from sklearn.metrics import r2_score
 
 
+p = 1
+
+
 def get_type():
 	return False
 
@@ -24,7 +27,7 @@ def predict(B_bll, W):
 def mpe_loss_fn(params, B_ll, N_res):
 	W = params['W']
 	N_res_pred = predict(B_ll, W)
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
 	return mpe_loss
 
 def score_fn(params, B_ll, N_res):
@@ -42,7 +45,7 @@ def loss_fn(params, B_ll, N_res, reg_lambdas):
 
 	N_res_pred = predict(B_ll, W)
 
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
 	w_reg_loss = jnp.linalg.norm(W) ** 2
 
 	res_loss = mpe_loss + w_reg_loss * w_reg_lambda
