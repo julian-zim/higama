@@ -44,12 +44,12 @@ def obtain(params, N, B_ll, prep_data):
 
 obtain = jax.jit(obtain, static_argnums=(3,))
 
-def mse_loss_fn(params, N, B_ll, prep_data):
+def mpe_loss_fn(params, N, B_ll, prep_data):
 	N_res_pred, N_res, _ = obtain(params, N, B_ll, prep_data)
-	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
-	return mse_loss
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
+	return mpe_loss
 
-mse_loss_fn = jax.jit(mse_loss_fn, static_argnums=(3,))
+mpe_loss_fn = jax.jit(mpe_loss_fn, static_argnums=(3,))
 
 def score_fn(params, N, B_ll, prep_data):
 	N_res_pred, N_res, _ = obtain(params, N, B_ll, prep_data)
@@ -105,10 +105,10 @@ def loss_fn(params, N, B_ll, B_hl, lambdas, prep_data):
 
 	# residuals ===============================
 	N_res_pred = predict(B_ll, N_man, W1, W2)
-	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
 	w1_reg_loss, w2_reg_loss = jnp.linalg.norm(W1) ** 2, jnp.linalg.norm(W2) ** 2
 
-	res_loss = mse_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
+	res_loss = mpe_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
 	# =========================================
 
 	return man_loss * loss1_lambda + res_loss * loss2_lambda
@@ -185,10 +185,10 @@ def loss_fn_partial(params, N, B_ll, B_hl, lambdas, prep_data):
 
 	# residuals ===============================
 	N_res_pred = predict(B_ll, N_man, W1, W2)
-	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
+	mpe_loss = jnp.mean((N_res_pred - N_res) ** 2)
 	w1_reg_loss, w2_reg_loss = jnp.linalg.norm(W1) ** 2, jnp.linalg.norm(W2) ** 2
 
-	res_loss = mse_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
+	res_loss = mpe_loss + w1_reg_loss * w1_reg_lambda + w2_reg_loss * w2_reg_lambda
 	# =========================================
 
 	return man_loss, res_loss

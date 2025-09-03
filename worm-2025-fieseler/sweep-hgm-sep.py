@@ -66,8 +66,8 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 		neuron_scores_per_split = list()
 		losses_per_split = list()
 		losses_tr_per_split = list()
-		mse_losses_per_split = list()
-		mse_losses_tr_per_split = list()
+		mpe_losses_per_split = list()
+		mpe_losses_tr_per_split = list()
 		__grads_per_split = list()
 		for s_id, (train, test) in enumerate(splits):
 			# splitting and initializing ========================= (this also moves the data to the GPU)
@@ -92,20 +92,20 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 			if is_hgm:
 				losses = [model.loss_fn(params, B_ll_test, N_man_test, N_res_test, reg_lambdas).item()]
 				losses_tr = [model.loss_fn(params, B_ll_train, N_man_train, N_res_train, reg_lambdas).item()]
-				mse_losses = [model.mse_loss_fn(params, B_ll_test, N_man_test, N_res_test).item()]
-				mse_losses_tr = [model.mse_loss_fn(params, B_ll_train, N_man_train, N_res_train).item()]
+				mpe_losses = [model.mpe_loss_fn(params, B_ll_test, N_man_test, N_res_test).item()]
+				mpe_losses_tr = [model.mpe_loss_fn(params, B_ll_train, N_man_train, N_res_train).item()]
 			else:
 				losses = [model.loss_fn(params, B_ll_test, N_res_test, reg_lambdas).item()]
 				losses_tr = [model.loss_fn(params, B_ll_train, N_res_train, reg_lambdas).item()]
-				mse_losses = [model.mse_loss_fn(params, B_ll_test, N_res_test).item()]
-				mse_losses_tr = [model.mse_loss_fn(params, B_ll_train, N_res_train).item()]
+				mpe_losses = [model.mpe_loss_fn(params, B_ll_test, N_res_test).item()]
+				mpe_losses_tr = [model.mpe_loss_fn(params, B_ll_train, N_res_train).item()]
 			__grads = list()
 
 			best_params = params
 			best_loss = sys.float_info.max
 			best_loss_tr = sys.float_info.max
-			best_mse_loss = sys.float_info.max
-			best_mse_loss_tr = sys.float_info.max
+			best_mpe_loss = sys.float_info.max
+			best_mpe_loss_tr = sys.float_info.max
 
 			# lr_step = 0
 			patience = 0
@@ -114,14 +114,14 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train, N_man_train, N_res_train, reg_lambdas)
 					loss = model.loss_fn(params, B_ll_test, N_man_test, N_res_test, reg_lambdas).item()
 					loss_tr = model.loss_fn(params, B_ll_train, N_man_train, N_res_train, reg_lambdas).item()
-					mse_loss = model.mse_loss_fn(params, B_ll_test, N_man_test, N_res_test).item()
-					mse_loss_tr = model.mse_loss_fn(params, B_ll_train, N_man_train, N_res_train).item()
+					mpe_loss = model.mpe_loss_fn(params, B_ll_test, N_man_test, N_res_test).item()
+					mpe_loss_tr = model.mpe_loss_fn(params, B_ll_train, N_man_train, N_res_train).item()
 				else:
 					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train, N_res_train, reg_lambdas)
 					loss = model.loss_fn(params, B_ll_test, N_res_test, reg_lambdas).item()
 					loss_tr = model.loss_fn(params, B_ll_train, N_res_train, reg_lambdas).item()
-					mse_loss = model.mse_loss_fn(params, B_ll_test, N_res_test).item()
-					mse_loss_tr = model.mse_loss_fn(params, B_ll_train, N_res_train).item()
+					mpe_loss = model.mpe_loss_fn(params, B_ll_test, N_res_test).item()
+					mpe_loss_tr = model.mpe_loss_fn(params, B_ll_train, N_res_train).item()
 				__grads.append(__grad)
 
 				# early stopping ================
@@ -131,19 +131,19 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 					best_params = params
 					best_loss = loss
 					best_loss_tr = loss_tr
-					best_mse_loss = mse_loss
-					best_mse_loss_tr = mse_loss_tr
+					best_mpe_loss = mpe_loss
+					best_mpe_loss_tr = mpe_loss_tr
 				else:
 					patience += 1
 					if patience > max_patience:
 						params = best_params
 						losses = losses + [best_loss for _ in range(max_epochs - epoch)]
 						losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
-						mse_losses = mse_losses + [best_mse_loss for _ in range(max_epochs - epoch)]
-						mse_losses_tr = mse_losses_tr + [best_mse_loss_tr for _ in range(max_epochs - epoch)]
+						mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
+						mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
 
 						for rest_epoch in range(epoch + 1, max_epochs):
-							wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mse_loss_s{s_id}': best_mse_loss, f'mse_loss_tr_s{s_id}': best_mse_loss_tr})
+							wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
 						break
 
 						# lr_step += 1
@@ -153,16 +153,16 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
-				mse_losses.append(mse_loss)
-				mse_losses_tr.append(mse_loss_tr)
-				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_tr_s{s_id}': loss_tr, f'mse_loss_s{s_id}': mse_loss, f'mse_loss_tr_s{s_id}': mse_loss_tr})
+				mpe_losses.append(mpe_loss)
+				mpe_losses_tr.append(mpe_loss_tr)
+				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_tr_s{s_id}': loss_tr, f'mpe_loss_s{s_id}': mpe_loss, f'mpe_loss_tr_s{s_id}': mpe_loss_tr})
 			# ===============================
 
 			params_per_split.append(params)
 			losses_per_split.append(losses)
 			losses_tr_per_split.append(losses_tr)
-			mse_losses_per_split.append(mse_losses)
-			mse_losses_tr_per_split.append(mse_losses_tr)
+			mpe_losses_per_split.append(mpe_losses)
+			mpe_losses_tr_per_split.append(mpe_losses_tr)
 
 			__grads_per_split.append(__grads)
 
@@ -179,10 +179,10 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 		wandb.log({'score': np.mean(np.mean(np.array(neuron_scores_per_split), axis=1)),
 				   'loss': np.mean(np.array(losses_per_split)[:, -1]),
 				   'loss_tr': np.mean(np.array(losses_tr_per_split)[:, -1]),
-				   'mse_loss': np.mean(np.array(mse_losses_per_split)[:, -1]),
-				   'mse_loss_tr': np.mean(np.array(mse_losses_tr_per_split)[:, -1])})
+				   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1]),
+				   'mpe_loss_tr': np.mean(np.array(mpe_losses_tr_per_split)[:, -1])})
 
-	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mse_losses_per_split), np.array(mse_losses_tr_per_split), __grads_per_split
+	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mpe_losses_per_split), np.array(mpe_losses_tr_per_split), __grads_per_split
 
 
 
@@ -296,7 +296,7 @@ print('Visible devices: ', jax.devices())
 sweep_config = {
 	'method': 'bayes',
     'metric': {
-        'name': 'mse_loss',
+        'name': 'mpe_loss',
         'goal': 'minimize'
     },
 	'parameters': {

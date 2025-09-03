@@ -2,6 +2,7 @@
 #SBATCH --job-name sweep-hgm-sep
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=16
+#SBATCH --gres=shard:1
 #SBATCH --time=10:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL

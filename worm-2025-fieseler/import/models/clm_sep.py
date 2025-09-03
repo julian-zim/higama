@@ -21,11 +21,11 @@ def init_params(seeds, shape_bn):
 def predict(B_bll, W):
 	return B_bll @ W
 
-def mse_loss_fn(params, B_ll, N_res):
+def mpe_loss_fn(params, B_ll, N_res):
 	W = params['W']
 	N_res_pred = predict(B_ll, W)
-	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
-	return mse_loss
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
+	return mpe_loss
 
 def score_fn(params, B_ll, N_res):
 	W = params['W']
@@ -42,10 +42,10 @@ def loss_fn(params, B_ll, N_res, reg_lambdas):
 
 	N_res_pred = predict(B_ll, W)
 
-	mse_loss = jnp.mean((N_res_pred - N_res) ** 2)
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** 1, axis=0))
 	w_reg_loss = jnp.linalg.norm(W) ** 2
 
-	res_loss = mse_loss + w_reg_loss * w_reg_lambda
+	res_loss = mpe_loss + w_reg_loss * w_reg_lambda
 
 	return res_loss
 
