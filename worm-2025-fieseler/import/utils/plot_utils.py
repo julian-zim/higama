@@ -475,9 +475,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 		boxplot_xtick_labels_gfp.append(f'{key}')
 
 		boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
-								showfliers=True)
+								showfliers=False)
 		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
-								showfliers=True, vert=False)
+								showfliers=False, vert=False)
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('tomato')
@@ -524,9 +524,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 		boxplot_xtick_labels.append(f'{key}')
 
 		boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
-								showfliers=True)
+								showfliers=False)
 		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
-								showfliers=True, vert=False)
+								showfliers=False, vert=False)
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('skyblue')
@@ -623,9 +623,9 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 		boxplot_xtick_labels_gfp.append(f'{key}')
 
 		boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
-								showfliers=True)
+								showfliers=False)
 		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
-								showfliers=True, vert=False)
+								showfliers=False, vert=False)
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:
 				patch.set_facecolor('tomato')
@@ -673,9 +673,9 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 		boxplot_xtick_labels.append(f'{key}')
 
 		boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
-								showfliers=True)
+								showfliers=False)
 		boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
-								showfliers=True, vert=False)
+								showfliers=False, vert=False)
 
 		for box in [boxplot_v, boxplot_h]:
 			for patch in box['boxes']:

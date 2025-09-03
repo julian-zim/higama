@@ -51,7 +51,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 
 		if hyperparameters is None:
 			hyperparameters = {
-				'max_epochs': 1000,
+				'max_epochs': 5000,
 				'max_patience': 1000,
 				'learning_rate': config.learning_rate,
 				'w1_reg_lambda': config.w1_reg_lambda,
