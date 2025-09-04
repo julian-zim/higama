@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import patches, pyplot as plt
 from matplotlib.collections import LineCollection
-from matplotlib.colors import to_rgb
+import matplotlib.colors as mcolors
 from matplotlib import cm
 
 
@@ -283,7 +283,7 @@ def plot_traces(title, states, traces, keys=None, n_plots=None, plots_per_row=2,
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 4, title, ha='center', fontsize=20)
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
 		loc='lower center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
@@ -301,7 +301,9 @@ def plot_traces(title, states, traces, keys=None, n_plots=None, plots_per_row=2,
 		if key != '':
 			min_val, max_val = ylimits
 			axes[i // plots_per_row, i % plots_per_row].imshow(
-				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+				heatmap.T, aspect='auto',
+				cmap=mcolors.LinearSegmentedColormap.from_list("middle_third", plt.get_cmap('binary')(np.linspace(0, 1/2, 256))),
+				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
 			axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], color='black', linewidth=1.0)
 			for trace in traces[1:]:
@@ -330,7 +332,7 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_first
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('rainbow_r')(1.0), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
 		loc='lower center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
@@ -348,7 +350,10 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_first
 		if key != '':
 			min_val, max_val = ylimits
 			axes[i // plots_per_row, i % plots_per_row].imshow(
-				heatmap.T, aspect='auto', cmap='rainbow_r', interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+				heatmap.T, aspect='auto',
+				cmap=mcolors.LinearSegmentedColormap.from_list("middle_third",
+															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
+				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
 			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1. if plot_first else 0., linewidth=1.0)
 			if traces_additional is not None:
