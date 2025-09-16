@@ -5,8 +5,11 @@ import h5py
 
 
 def get_data_path():
-	return os.path.join(os.path.expanduser('~'), 'Desktop/DATA')
-	# return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/'
+	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA')
+	if os.path.exists(local_path):
+		return local_path
+	else:
+		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/'
 
 
 def get_data(path, slice=None):
