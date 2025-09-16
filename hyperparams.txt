@@ -1,21 +1,12 @@
-actual data, sweep with early stopping and max w2 reg of 1E-1
-avg loss1_lambda: 0.67
-avg learning_rate: 0.02
-avg w1_reg_lambda: 0.002
-avg w2_reg_lambda: 0.1+
-avg ccadiag_lambda: 0.6
-avg ccaunit_lambda: 0.4
+Sep model:
+- w2 reg doesnt matter. Just dont reg it.					1E-9 or 0
+- w1 reg makes the mpe loss go up, with high importance		1E-2
+- lr makes the mpe loss go up, ubt with low importance		0.5
 
-
-
-
-
-ARTIFICIAL DATA:
-- since incorporating the zscored manifold, it only slowly gets better over the linear model when the learning rate is 1E-4. There was no regularization when i tested this, so it must be tested if it also work with it.
-
-
-ACTUAL DATA:
-- the loss curves fully overlap. It early stops after about 1.5k epochs
+Joint model (relatively unclear):
+- w2 barely matters, increasing loss.						1E-9 or 0
+- w1 reg makes the mpe loss go up, with mid importance		1E-2
+- lr makes the mpe loss go down, with high importance		0.5
 
 
 
@@ -25,6 +16,8 @@ ACTUAL DATA:
 
 
 
-
-
-The man_loss is usually around 0.001, the res loss around 0.24
+Joint Model:
+- loss 1 lambda:	0.5
+- w1 reg lambda:	0.1 - 0.3
+- learning rate:	1
+- w2 reg lambda:	maxed out?

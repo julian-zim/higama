@@ -274,11 +274,12 @@ def plot_traces(title, states, traces, keys=None, n_plots=None, plots_per_row=2,
 	if ylimits is None: ylimits = (np.array([trace.values for trace in traces]).min(), np.array([trace.values for trace in traces]).max())
 
 	n_rows = math.ceil(n_plots / plots_per_row)
-	figheight = 2 * n_rows + top_space
-	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(10 * plots_per_row, figheight), squeeze=False)
+	figheight = 3 * n_rows + top_space
+	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(15 * plots_per_row, figheight), squeeze=False)
 	for i in range(n_plots):
 		axes[i // plots_per_row, i % plots_per_row].grid(False)
 		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
+		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces[0].shape), color='gray')
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 4, title, ha='center', fontsize=20)
@@ -323,11 +324,12 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_first
 	if ylimits is None: ylimits = (traces[keys].values.min(), traces[keys].values.max())
 
 	n_rows = math.ceil(n_plots / plots_per_row)
-	figheight = 2 * n_rows + top_space
-	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(10 * plots_per_row, figheight), squeeze=False)
+	figheight = 3 * n_rows + top_space
+	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(15 * plots_per_row, figheight), squeeze=False)
 	for i in range(n_plots):
 		axes[i // plots_per_row, i % plots_per_row].grid(False)
 		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
+		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces[0].shape), color='gray')
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
@@ -359,6 +361,60 @@ def plot_traces_splits(title, states, traces, traces_additional=None, plot_first
 			if traces_additional is not None:
 				for traces_per_split in traces_additional:
 					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split[key], linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].grid(False)
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			i += 1
+
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+
+
+def plot_traces_splits_splits(title, states, traces, traces_pairs=None, plot_first=True, n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
+	keys = [key for key in traces.columns if key != '']
+	if n_plots is None:
+		n_plots = len(keys)
+	if ylimits is None: ylimits = (traces[keys].values.min(), traces[keys].values.max())
+
+	n_rows = math.ceil(n_plots / plots_per_row)
+	figheight = 3 * n_rows + top_space
+	fig, axes = plt.subplots(n_rows, plots_per_row, figsize=(15 * plots_per_row, figheight), squeeze=False)
+	for i in range(n_plots):
+		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
+		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces[0].shape), color='gray')
+
+	top_space_rel = top_space / figheight
+	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', fontsize=20)
+	fig.legend(
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		loc='lower center',
+		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
+		ncol=1,
+		fontsize='large'
+	)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	fig.subplots_adjust(
+		hspace=0.5,
+	)
+
+	heatmap = states.values.reshape(-1, 1) * 0.1
+
+	i = 0
+	for key in keys[:n_plots]:
+		if key != '':
+			min_val, max_val = ylimits
+			axes[i // plots_per_row, i % plots_per_row].imshow(
+				heatmap.T, aspect='auto',
+				cmap=mcolors.LinearSegmentedColormap.from_list("middle_third",
+															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
+				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+			)
+			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1. if plot_first else 0., linewidth=1.0)
+			if traces_pairs is not None:
+				colors = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+				for traces_per_split_1, traces_per_split_2 in zip(traces_pairs[0], traces_pairs[1]):
+					color = next(colors)
+					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split_1[key], linewidth=1.0, color=color)
+					axes[i // plots_per_row, i % plots_per_row].plot(traces_per_split_2[key], linewidth=1.0, color=color, alpha=0.5)
 			axes[i // plots_per_row, i % plots_per_row].grid(False)
 			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
 			i += 1

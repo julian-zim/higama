@@ -42,6 +42,8 @@ def generate_reconstructed_traces(N_man, cca_weights):
 
 def generate_residual_traces(model, X_bll, X_man, W1, W2):
 	if model.get_type():
+		print(W2)
+		print(X_man)
 		traces = model.predict(X_bll.values, X_man.values, W1, W2)
 	else:
 		traces = model.predict(X_bll.values, W1)
