@@ -18,6 +18,6 @@ Joint model (relatively unclear):
 
 Joint Model:
 - loss 1 lambda:	0.5
-- w1 reg lambda:	0.1 - 0.3
+- w1 reg lambda:	0.05
 - learning rate:	1
-- w2 reg lambda:	maxed out?
+- w2 reg lambda:	maxed out? or 1.

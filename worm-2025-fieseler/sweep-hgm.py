@@ -46,20 +46,20 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 	with wandb.init(project=project_name):
 		config = wandb.config
 
-		# Hyperparamters ============
+		#region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
 
 		if hyperparameters is None:
 			hyperparameters = {
-				'max_epochs': 5000,
-				'max_patience': 1000,
-				'learning_rate': config.learning_rate,
-				'w1_reg_lambda': config.w1_reg_lambda,
+				'max_epochs': config.max_epochs,
+				'max_patience': config.max_epochs / 4,
+				'learning_rate': 1,
+				'w1_reg_lambda': 0.05,
 				'w2_reg_lambda': config.w2_reg_lambda,
 				'ccadiag_lambda': 0.6,
-				'ccaunit_lambda': 0.4,
-				'loss1_lambda': config.loss1_lambda,
-				'loss2_lambda': 1. - config.loss1_lambda,
+				'ccaunit_lambda': 1. - 0.6,
+				'loss1_lambda': 0.5,
+				'loss2_lambda': 1. - 0.5,
 				'dimensions': 2
 			}
 
@@ -75,7 +75,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			reg_lambdas=(hyperparameters['w1_reg_lambda'], hyperparameters['w2_reg_lambda']),
 			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
-		# ===========================
+		#endregion ===========================================================================
 
 		n_neurons = N.shape[1]
 		n_behaviors_hl = B_hl.shape[1]
@@ -90,7 +90,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		mpe_losses_tr_per_split = list()
 		__grads_per_split = list()
 		for s_id, (train, test) in enumerate(splits):
-			# splitting and initializing ========================== (this also moves the data to the GPU)
+		#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_test = jnp.array(N[train]), jnp.array(N[test])
 			B_hl_train, B_hl_test = jnp.array(B_hl[train]), jnp.array(B_hl[test])
 			B_ll_train, B_ll_test = jnp.array(B_ll[train]), jnp.array(B_ll[test])
@@ -121,7 +121,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			# ))
 			optimizer = optax.adam(learning_rate)
 			opt_state = optimizer.init(params)
-			# ===========================================================================================
+			#endregion ========================================================================================
 
 			losses = [model.loss_fn(params, N_test, B_ll_test, B_hl_test, lambdas, prep_data_test).item()]
 			losses_tr = [model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()]
@@ -146,39 +146,40 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 				mpe_loss_tr = model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()
 				__grads.append(__grad)
 
-				# early stopping ================
-				if loss < best_loss:
-					patience = 0
+				# region early stopping ===========================================================================
+				if epoch >= max_patience:  # give it an initial time
+					if loss < best_loss:
+						patience = 0
 
-					best_params = params
-					best_loss = loss
-					best_loss_tr = loss_tr
-					best_mpe_loss = mpe_loss
-					best_mpe_loss_tr = mpe_loss_tr
-				else:
-					patience += 1
-					if patience > max_patience:
-						params = best_params
-						losses = losses + [best_loss for _ in range(max_epochs - epoch)]
-						losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
-						mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
-						mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
+						best_params = params
+						best_loss = loss
+						best_loss_tr = loss_tr
+						best_mpe_loss = mpe_loss
+						best_mpe_loss_tr = mpe_loss_tr
+					else:
+						patience += 1
+						if patience > max_patience:
+							params = best_params
+							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
+							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
+							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
+							mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
 
-						for rest_epoch in range(epoch + 1, max_epochs):
-							wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
-						break
+							for rest_epoch in range(epoch + 1, max_epochs):
+								wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
+							break
 
-						# lr_step += 1
-						# optimizer = optax.adam(learning_rate / (10 ** lr_step))
-						# patience = 0
-						# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
+							# lr_step += 1
+							# optimizer = optax.adam(learning_rate / (10 ** lr_step))
+							# patience = 0
+							# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
+				# endregion =======================================================================================
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
 				mpe_losses.append(mpe_loss)
 				mpe_losses_tr.append(mpe_loss_tr)
 				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_tr_s{s_id}': loss_tr, f'mpe_loss_s{s_id}': mpe_loss, f'mpe_loss_tr_s{s_id}': mpe_loss_tr})
-			# ===============================
 
 			params_per_split.append(params)
 			losses_per_split.append(losses)
@@ -301,12 +302,8 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'learning_rate': {'min': 1E-6, 'max': 10.},
-		'w1_reg_lambda': {'min': 0., 'max': 10.},
+		'max_epochs': {'min': 100., 'max': 5000.},
 		'w2_reg_lambda': {'min': 0., 'max': 10.},
-		# 'ccadiag_lambda': {'min': 1E-1, 'max': 1.},
-		# 'ccaunit_lambda': {'min': 1E-1, 'max': 1.},
-		'loss1_lambda': {'values': [0.8, 0.75, 0.67, 0.5]},
 	}
 }
 sweep(sweep_config)
