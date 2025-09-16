@@ -90,7 +90,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		mpe_losses_tr_per_split = list()
 		__grads_per_split = list()
 		for s_id, (train, test) in enumerate(splits):
-		#region splitting and initializing (this also moves the data to the GPU) ==========================
+			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_test = jnp.array(N[train]), jnp.array(N[test])
 			B_hl_train, B_hl_test = jnp.array(B_hl[train]), jnp.array(B_hl[test])
 			B_ll_train, B_ll_test = jnp.array(B_ll[train]), jnp.array(B_ll[test])
@@ -302,7 +302,7 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'max_epochs': {'min': 100., 'max': 5000.},
+		'max_epochs': {'min': 100, 'max': 5000},
 		'w2_reg_lambda': {'min': 0., 'max': 10.},
 	}
 }
