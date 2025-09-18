@@ -35,8 +35,8 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 
 		if hyperparameters is None:
 			hyperparameters = {
-				'max_epochs': config.max_epoochs,
-				'max_patience': config.max_epoochs / 4,
+				'max_epochs': config.max_epochs,
+				'max_patience': config.max_epochs / 4,
 				'learning_rate': config.learning_rate,
 				'w1_reg_lambda': config.w1_reg_lambda,
 				'w2_reg_lambda': config.w2_reg_lambda,
