@@ -52,7 +52,7 @@ mpe_loss_fn = jax.jit(mpe_loss_fn, static_argnums=(3,))
 
 def score_fn(params, N, B_ll, prep_data):
 	N_res_pred, N_res, _ = obtain(params, N, B_ll, prep_data)
-	score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+	score_per_neuron = [(r2_score(trace, trace_pred) if trace.var() > 0 else 0) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
 	return score_per_neuron
 
 

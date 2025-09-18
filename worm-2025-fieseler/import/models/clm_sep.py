@@ -21,8 +21,8 @@ def init_params(seeds, shape_bn):
 # EVALUATING
 
 @jax.jit
-def predict(B_bll, W):
-	return B_bll @ W
+def predict(B_ll, W):
+	return B_ll @ W
 
 def mpe_loss_fn(params, B_ll, N_res):
 	W = params['W']
@@ -33,7 +33,7 @@ def mpe_loss_fn(params, B_ll, N_res):
 def score_fn(params, B_ll, N_res):
 	W = params['W']
 	N_res_pred = predict(B_ll, W)
-	score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+	score_per_neuron = [(r2_score(trace, trace_pred) if trace.var() > 0 else 0) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
 	return score_per_neuron
 
 

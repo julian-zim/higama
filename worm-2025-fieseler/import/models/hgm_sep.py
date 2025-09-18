@@ -23,6 +23,9 @@ def init_params(seeds, shape_bn, shape_dn):
 
 @jax.jit
 def predict(B_ll, N_man, W1, W2):
+	N_man -= N_man.mean(axis=0)
+	N_man /= jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
+
 	return B_ll @ W1 * jax.nn.sigmoid(N_man @ W2)
 
 def mpe_loss_fn(params, B_ll, N_man, N_res):
@@ -34,7 +37,8 @@ def mpe_loss_fn(params, B_ll, N_man, N_res):
 def score_fn(params, B_ll, N_man, N_res):
 	W1, W2 = params['W1'], params['W2']
 	N_res_pred = predict(B_ll, N_man, W1, W2)
-	score_per_neuron = [r2_score(trace, trace_pred) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+	score_per_neuron = [(r2_score(trace, trace_pred) if trace.var() > 0 and trace_pred.var() > 0 else 0) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+
 	return score_per_neuron
 
 

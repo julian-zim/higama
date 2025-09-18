@@ -4,21 +4,21 @@ import jax
 import jax.numpy as jnp
 
 
-def generate_params(weights, model, seeds, shape_X_bll, shape_X_man):
+def generate_params(weights, model, seeds, shape_B_ll, shape_N_man):
 	clm_lin = weights[0]
 	hgm_sig = weights[1]
 	hgm_lin = clm_lin / jax.nn.sigmoid(hgm_sig)
 
 	if model.get_type():
 		return {
-			'W1': hgm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_X_bll[1],)), (shape_X_bll[0], 1)),
-			'W2': -hgm_sig * jnp.ones((shape_X_man[0], shape_X_bll[1])),
-			# 'W2': -hgm_sig * jnp.tile(jnp.abs(jax.random.normal(seeds[1], (shape_X_bll[1],))), (shape_X_man[0], 1))
+			'W1': hgm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1)),
+			'W2': -hgm_sig * jnp.ones((shape_N_man[0], shape_B_ll[1])),
+			# 'W2': -hgm_sig * jnp.tile(jnp.abs(jax.random.normal(seeds[1], (shape_B_ll[1],))), (shape_N_man[0], 1))
 		}
 	else:
 		return {
-			'W': clm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_X_bll[1],)), (shape_X_bll[0], 1))
-			# 'W': clm_lin * jnp.ones(shape_X_bll),
+			'W': clm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1))
+			# 'W': clm_lin * jnp.ones(shape_B_ll),
 		}
 
 def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=0.25):
@@ -40,13 +40,11 @@ def generate_manifold(discrete_states, n_dimensions):
 def generate_reconstructed_traces(N_man, cca_weights):
 	return N_man.values @ cca_weights
 
-def generate_residual_traces(model, X_bll, X_man, W1, W2):
+def generate_residual_traces(model, B_ll, N_man, W1, W2):
 	if model.get_type():
-		print(W2)
-		print(X_man)
-		traces = model.predict(X_bll.values, X_man.values, W1, W2)
+		traces = model.predict(B_ll.values, N_man.values, W1, W2)
 	else:
-		traces = model.predict(X_bll.values, W1)
+		traces = model.predict(B_ll.values, W1)
 	return traces
 
 def generate_traces(N_rec, N_res):

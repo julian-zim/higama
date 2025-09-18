@@ -35,13 +35,6 @@ class PrepData(NamedTuple):
 	B_hl_std: tuple[float, ...] | None = None
 
 
-def cosine_lr(step, warmup_steps, total_steps, lr_max, lr_min_ratio):
-	if step < warmup_steps:
-		return lr_max * step / warmup_steps
-	progress = (step - warmup_steps) / (total_steps - warmup_steps)
-	lr_min = lr_max * lr_min_ratio
-	return lr_min + 0.5*(lr_max - lr_min)*(1 + math.cos(math.pi*progress))
-
 def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None):
 	with wandb.init(project=project_name):
 		config = wandb.config
@@ -53,8 +46,8 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			hyperparameters = {
 				'max_epochs': config.max_epochs,
 				'max_patience': config.max_epochs / 4,
-				'learning_rate': 1,
-				'w1_reg_lambda': 0.05,
+				'learning_rate': config.leaerning_rate,
+				'w1_reg_lambda': config.w1_reg_lambda,
 				'w2_reg_lambda': config.w2_reg_lambda,
 				'ccadiag_lambda': 0.6,
 				'ccaunit_lambda': 1. - 0.6,
@@ -89,11 +82,11 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		mpe_losses_per_split = list()
 		mpe_losses_tr_per_split = list()
 		__grads_per_split = list()
-		for s_id, (train, test) in enumerate(splits):
+		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
-			N_train, N_test = jnp.array(N[train]), jnp.array(N[test])
-			B_hl_train, B_hl_test = jnp.array(B_hl[train]), jnp.array(B_hl[test])
-			B_ll_train, B_ll_test = jnp.array(B_ll[train]), jnp.array(B_ll[test])
+			N_train, N_eval = jnp.array(N[train]), jnp.array(N[eval])
+			B_hl_train, B_hl_eval = jnp.array(B_hl[train]), jnp.array(B_hl[eval])
+			B_ll_train, B_ll_eval = jnp.array(B_ll[train]), jnp.array(B_ll[eval])
 
 			prep_data_train = PrepData(
 				N_mean=tuple((map(float, N_train.mean(axis=0)))),
@@ -101,11 +94,11 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 				B_hl_mean=tuple((map(float, B_hl_train.mean(axis=0)))),
 				B_hl_std=tuple((map(float, jnp.where((B_hl_std := jnp.std(B_hl_train, axis=0)) == 0.0, 1.0, B_hl_std))))
 			)
-			prep_data_test = PrepData(
-				N_mean=tuple((map(float, N_test.mean(axis=0)))),
-				N_std=tuple((map(float, jnp.where((N_std := jnp.std(N_test, axis=0)) == 0.0, 1.0, N_std)))),
-				B_hl_mean=tuple((map(float, B_hl_test.mean(axis=0)))),
-				B_hl_std=tuple((map(float, jnp.where((B_hl_std := jnp.std(B_hl_test, axis=0)) == 0.0, 1.0, B_hl_std))))
+			prep_data_eval = PrepData(
+				N_mean=tuple((map(float, N_eval.mean(axis=0)))),
+				N_std=tuple((map(float, jnp.where((N_std := jnp.std(N_eval, axis=0)) == 0.0, 1.0, N_std)))),
+				B_hl_mean=tuple((map(float, B_hl_eval.mean(axis=0)))),
+				B_hl_std=tuple((map(float, jnp.where((B_hl_std := jnp.std(B_hl_eval, axis=0)) == 0.0, 1.0, B_hl_std))))
 			)
 
 			params = model.init_params(seeds,
@@ -123,9 +116,9 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			opt_state = optimizer.init(params)
 			#endregion ========================================================================================
 
-			losses = [model.loss_fn(params, N_test, B_ll_test, B_hl_test, lambdas, prep_data_test).item()]
+			losses = [model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas, prep_data_eval).item()]
 			losses_tr = [model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()]
-			mpe_losses = [model.mpe_loss_fn(params, N_test, B_ll_test, prep_data_test).item()]
+			mpe_losses = [model.mpe_loss_fn(params, N_eval, B_ll_eval, prep_data_eval).item()]
 			mpe_losses_tr = [model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()]
 			__grads = list()
 
@@ -140,13 +133,13 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			for epoch in range(max_epochs):
 				params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train)
 
-				loss = model.loss_fn(params, N_test, B_ll_test, B_hl_test, lambdas, prep_data_test).item()
+				loss = model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas, prep_data_eval).item()
 				loss_tr = model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()
-				mpe_loss = model.mpe_loss_fn(params, N_test, B_ll_test, prep_data_test).item()
+				mpe_loss = model.mpe_loss_fn(params, N_eval, B_ll_eval, prep_data_eval).item()
 				mpe_loss_tr = model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()
 				__grads.append(__grad)
 
-				# region early stopping ===========================================================================
+				#region early stopping ===========================================================================
 				if epoch >= max_patience:  # give it an initial time
 					if loss < best_loss:
 						patience = 0
@@ -173,7 +166,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 							# optimizer = optax.adam(learning_rate / (10 ** lr_step))
 							# patience = 0
 							# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
-				# endregion =======================================================================================
+				#endregion =======================================================================================
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
@@ -189,7 +182,7 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			__grads_per_split.append(__grads)
 
 			# predicting and scoring ========================================================================
-			score_per_neuron = model.score_fn(params, N_test, B_ll_test, prep_data_test)
+			score_per_neuron = model.score_fn(params, N_eval, B_ll_eval, prep_data_eval)
 			neuron_scores_per_split.append(score_per_neuron)
 			# ===============================================================================================
 
@@ -207,12 +200,13 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 def read(artificial=False):
 	print('reading...')
 
-	read_ids = (0, 24)
-	# selection_n = ['VB02', 'SMDDR', 'SMDDL', 'RMDDR', 'RMDDL', 'SMDVR']
+	read_ids = [0, 4, 5, 6, 27, 30, 31, 32, 33]
+	# read_ids = [4]
+	# selection_n = ['VB02', 'RMDDR', 'AVAR', 'AVAL']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_gcamp')
-	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, slice=(read_ids[0], read_ids[1] + 1))
+	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, read_ids)
 
 	for i in range(len(filenames)):
 		mask = eigenworms[i].notna().all(axis=1)
@@ -259,16 +253,16 @@ def read(artificial=False):
 			traces_art.append(traces_art_)
 
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
-		# 					   traces_art[0][selection_n],
 		# 					   discrete_states_art[0]['REV'],
-		# 					   n_plots=None, plots_per_row=2, ylimits=(-8, 8))
+		# 					   traces_art[0][selection_n],
+		# 					   plots_per_row=2, ylimits=(-8, 8))
 		return filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
 
 
-	# plot_utils.plot_traces(f'[{filenames[0]}] traces artificial',
-	# 					   traces[0][selection_n],
+	# plot_utils.plot_traces(f'[{filenames[0]}] traces',
 	# 					   discrete_states[0]['REV'],
-	# 					   n_plots=None, plots_per_row=2, ylimits=(-2, 2))
+	# 					   traces[0][selection_n],
+	# 					   plots_per_row=2, ylimits=(-2, 2))
 	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
 
 
@@ -303,6 +297,8 @@ sweep_config = {
     },
 	'parameters': {
 		'max_epochs': {'min': 100, 'max': 5000},
+		'learning_rate': {'min': 1E-6, 'max': 10.},
+		'w1_reg_lambda': {'min': 0., 'max': 10.},
 		'w2_reg_lambda': {'min': 0., 'max': 10.},
 	}
 }

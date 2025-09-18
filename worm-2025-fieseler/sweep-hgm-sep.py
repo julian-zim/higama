@@ -24,26 +24,19 @@ from utils import artificializer
 from models import hgm_sep as hgm
 
 
-def cosine_lr(step, warmup_steps, total_steps, lr_max, lr_min_ratio):
-	if step < warmup_steps:
-		return lr_max * step / warmup_steps
-	progress = (step - warmup_steps) / (total_steps - warmup_steps)
-	lr_min = lr_max * lr_min_ratio
-	return lr_min + 0.5*(lr_max - lr_min)*(1 + math.cos(math.pi*progress))
-
 def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, hyperparameters=None):
 	with wandb.init(project=project_name):
 		config = wandb.config
 
 		is_hgm = model.get_type()
 
-		# Hyperparamters ============
+		# region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
 
 		if hyperparameters is None:
 			hyperparameters = {
-				'max_epochs': 5000,
-				'max_patience': 1000,
+				'max_epochs': config.max_epoochs,
+				'max_patience': config.max_epoochs / 4,
 				'learning_rate': config.learning_rate,
 				'w1_reg_lambda': config.w1_reg_lambda,
 				'w2_reg_lambda': config.w2_reg_lambda,
@@ -55,13 +48,13 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 		learning_rate = hyperparameters['learning_rate']
 
 		reg_lambdas = hyperparameters['w1_reg_lambda'], hyperparameters['w2_reg_lambda']
-		# ===========================
+		# endregion ==========================================================================
 
 		n_neurons = N_res.shape[1]
 		if is_hgm: n_dimensions = N_man.shape[1]
 		n_behaviors_ll = B_ll.shape[1]
 
-		# training loop =======================================
+		# training loop =============================
 		params_per_split = list()
 		neuron_scores_per_split = list()
 		losses_per_split = list()
@@ -69,11 +62,11 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 		mpe_losses_per_split = list()
 		mpe_losses_tr_per_split = list()
 		__grads_per_split = list()
-		for s_id, (train, test) in enumerate(splits):
-			# splitting and initializing ========================= (this also moves the data to the GPU)
-			B_ll_train, B_ll_test = jnp.array(B_ll[train]), jnp.array(B_ll[test])
-			if is_hgm: N_man_train, N_man_test = jnp.array(N_man[train]), jnp.array(N_man[test])
-			N_res_train, N_res_test = jnp.array(N_res[train]), jnp.array(N_res[test])
+		for s_id, (train, eval) in enumerate(splits):
+			# region splitting and initializing (this also moves the data to the GPU) ==========================
+			B_ll_train, B_ll_eval = jnp.array(B_ll[train]), jnp.array(B_ll[eval])
+			if is_hgm: N_man_train, N_man_eval = jnp.array(N_man[train]), jnp.array(N_man[eval])
+			N_res_train, N_res_eval = jnp.array(N_res[train]), jnp.array(N_res[eval])
 
 			if is_hgm:
 				params = model.init_params(seeds, (n_behaviors_ll, n_neurons), (n_dimensions, n_neurons))
@@ -87,17 +80,17 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 			# ))
 			optimizer = optax.adam(learning_rate)
 			opt_state = optimizer.init(params)
-			# ==========================================================================================
+			# endregion ========================================================================================
 
 			if is_hgm:
-				losses = [model.loss_fn(params, B_ll_test, N_man_test, N_res_test, reg_lambdas).item()]
+				losses = [model.loss_fn(params, B_ll_eval, N_man_eval, N_res_eval, reg_lambdas).item()]
 				losses_tr = [model.loss_fn(params, B_ll_train, N_man_train, N_res_train, reg_lambdas).item()]
-				mpe_losses = [model.mpe_loss_fn(params, B_ll_test, N_man_test, N_res_test).item()]
+				mpe_losses = [model.mpe_loss_fn(params, B_ll_eval, N_man_eval, N_res_eval).item()]
 				mpe_losses_tr = [model.mpe_loss_fn(params, B_ll_train, N_man_train, N_res_train).item()]
 			else:
-				losses = [model.loss_fn(params, B_ll_test, N_res_test, reg_lambdas).item()]
+				losses = [model.loss_fn(params, B_ll_eval, N_res_eval, reg_lambdas).item()]
 				losses_tr = [model.loss_fn(params, B_ll_train, N_res_train, reg_lambdas).item()]
-				mpe_losses = [model.mpe_loss_fn(params, B_ll_test, N_res_test).item()]
+				mpe_losses = [model.mpe_loss_fn(params, B_ll_eval, N_res_eval).item()]
 				mpe_losses_tr = [model.mpe_loss_fn(params, B_ll_train, N_res_train).item()]
 			__grads = list()
 
@@ -111,36 +104,39 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 			patience = 0
 			for epoch in range(max_epochs):
 				if is_hgm:
-					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train, N_man_train, N_res_train, reg_lambdas)
-					loss = model.loss_fn(params, B_ll_test, N_man_test, N_res_test, reg_lambdas).item()
+					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train,
+															 N_man_train, N_res_train, reg_lambdas)
+					loss = model.loss_fn(params, B_ll_eval, N_man_eval, N_res_eval, reg_lambdas).item()
 					loss_tr = model.loss_fn(params, B_ll_train, N_man_train, N_res_train, reg_lambdas).item()
-					mpe_loss = model.mpe_loss_fn(params, B_ll_test, N_man_test, N_res_test).item()
+					mpe_loss = model.mpe_loss_fn(params, B_ll_eval, N_man_eval, N_res_eval).item()
 					mpe_loss_tr = model.mpe_loss_fn(params, B_ll_train, N_man_train, N_res_train).item()
 				else:
-					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train, N_res_train, reg_lambdas)
-					loss = model.loss_fn(params, B_ll_test, N_res_test, reg_lambdas).item()
+					params, opt_state, __grad = model.update(optimizer.update, opt_state, params, B_ll_train,
+															 N_res_train, reg_lambdas)
+					loss = model.loss_fn(params, B_ll_eval, N_res_eval, reg_lambdas).item()
 					loss_tr = model.loss_fn(params, B_ll_train, N_res_train, reg_lambdas).item()
-					mpe_loss = model.mpe_loss_fn(params, B_ll_test, N_res_test).item()
+					mpe_loss = model.mpe_loss_fn(params, B_ll_eval, N_res_eval).item()
 					mpe_loss_tr = model.mpe_loss_fn(params, B_ll_train, N_res_train).item()
 				__grads.append(__grad)
 
-				# early stopping ================
-				if loss < best_loss:
-					patience = 0
+				# region early stopping ===========================================================================
+				if epoch >= max_patience:  # give it an initial time
+					if loss < best_loss:
+						patience = 0
 
-					best_params = params
-					best_loss = loss
-					best_loss_tr = loss_tr
-					best_mpe_loss = mpe_loss
-					best_mpe_loss_tr = mpe_loss_tr
-				else:
-					patience += 1
-					if patience > max_patience:
-						params = best_params
-						losses = losses + [best_loss for _ in range(max_epochs - epoch)]
-						losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
-						mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
-						mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
+						best_params = params
+						best_loss = loss
+						best_loss_tr = loss_tr
+						best_mpe_loss = mpe_loss
+						best_mpe_loss_tr = mpe_loss_tr
+					else:
+						patience += 1
+						if patience > max_patience:
+							params = best_params
+							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
+							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
+							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
+							mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
 
 						for rest_epoch in range(epoch + 1, max_epochs):
 							wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
@@ -150,13 +146,13 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 						# optimizer = optax.adam(learning_rate / (10 ** lr_step))
 						# patience = 0
 						# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
+						# endregion =======================================================================================
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
 				mpe_losses.append(mpe_loss)
 				mpe_losses_tr.append(mpe_loss_tr)
 				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_tr_s{s_id}': loss_tr, f'mpe_loss_s{s_id}': mpe_loss, f'mpe_loss_tr_s{s_id}': mpe_loss_tr})
-			# ===============================
 
 			params_per_split.append(params)
 			losses_per_split.append(losses)
@@ -168,11 +164,11 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 
 			# predicting and scoring ========================================================================
 			if is_hgm:
-				score_per_neuron = model.score_fn(params, B_ll, N_man, N_res)
+				score_per_neuron = model.score_fn(params, B_ll_eval, N_man_eval, N_res_eval)
 			else:
-				score_per_neuron = model.score_fn(params, B_ll, N_res)
+				score_per_neuron = model.score_fn(params, B_ll_eval, N_res_eval)
 			neuron_scores_per_split.append(score_per_neuron)
-		# ===============================================================================================
+			# ===============================================================================================
 
 		# =====================================================
 
@@ -189,12 +185,13 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 def read(artificial=False):
 	print('reading...')
 
-	read_ids = (0, 24)
-	# selection_n = ['VB02', 'SMDDR', 'SMDDL', 'RMDDR', 'RMDDL', 'SMDVR']
+	# read_ids = [0, 4, 5, 6, 27, 30, 31, 32, 33]
+	read_ids = [4]
+	# selection_n = ['VB02', 'RMDDR', 'AVAR', 'AVAL']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_')
-	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, slice=(read_ids[0], read_ids[1] + 1))
+	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, read_ids)
 
 	for i in range(len(filenames)):
 		mask = eigenworms[i].notna().all(axis=1)
@@ -241,16 +238,16 @@ def read(artificial=False):
 			traces_art.append(traces_art_)
 
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
-		# 					   traces_art[0][selection_n],
 		# 					   discrete_states_art[0]['REV'],
-		# 					   n_plots=None, plots_per_row=2, ylimits=(-8, 8))
+		# 					   traces_art[0][selection_n],
+		# 					   plots_per_row=2, ylimits=(-8, 8))
 		return filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
 
 
-	# plot_utils.plot_traces(f'[{filenames[0]}] traces artificial',
-	# 					   traces[0][selection_n],
+	# plot_utils.plot_traces(f'[{filenames[0]}] traces',
 	# 					   discrete_states[0]['REV'],
-	# 					   n_plots=None, plots_per_row=2, ylimits=(-2, 2))
+	# 					   traces[0][selection_n],
+	# 					   plots_per_row=2, ylimits=(-2, 2))
 	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
 
 
@@ -258,8 +255,8 @@ def read(artificial=False):
 def manifold(traces, discrete_states):
 	print('manifolding...')
 
-	(neural_modes, states_modes,
-	 traces_manifold, states_manifold,
+	(neural_modes, _,
+	 traces_manifold, _,
 	 cca_loadings_man,
 	 vars_expl_man, vars_expl_man_rs) = train_utils.get_manifolds(traces,
 																  discrete_states,
@@ -300,6 +297,7 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
+		'max_epochs': {'min': 100, 'max': 5000},
 		'learning_rate': {'min': 1E-6, 'max': 10.},
 		'w1_reg_lambda': {'min': 0., 'max': 10.},
 		'w2_reg_lambda': {'min': 0., 'max': 10.},
