@@ -30,7 +30,7 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 
 		is_hgm = model.get_type()
 
-		# region hyperparamters ===============================================================
+		#region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
 
 		if hyperparameters is None:
@@ -48,7 +48,7 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 		learning_rate = hyperparameters['learning_rate']
 
 		reg_lambdas = hyperparameters['w1_reg_lambda'], hyperparameters['w2_reg_lambda']
-		# endregion ==========================================================================
+		#endregion ==========================================================================
 
 		n_neurons = N_res.shape[1]
 		if is_hgm: n_dimensions = N_man.shape[1]
@@ -63,7 +63,7 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 		mpe_losses_tr_per_split = list()
 		__grads_per_split = list()
 		for s_id, (train, eval) in enumerate(splits):
-			# region splitting and initializing (this also moves the data to the GPU) ==========================
+			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			B_ll_train, B_ll_eval = jnp.array(B_ll[train]), jnp.array(B_ll[eval])
 			if is_hgm: N_man_train, N_man_eval = jnp.array(N_man[train]), jnp.array(N_man[eval])
 			N_res_train, N_res_eval = jnp.array(N_res[train]), jnp.array(N_res[eval])
@@ -80,7 +80,7 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 			# ))
 			optimizer = optax.adam(learning_rate)
 			opt_state = optimizer.init(params)
-			# endregion ========================================================================================
+			#endregion ========================================================================================
 
 			if is_hgm:
 				losses = [model.loss_fn(params, B_ll_eval, N_man_eval, N_res_eval, reg_lambdas).item()]
@@ -119,7 +119,7 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 					mpe_loss_tr = model.mpe_loss_fn(params, B_ll_train, N_res_train).item()
 				__grads.append(__grad)
 
-				# region early stopping ===========================================================================
+				#region early stopping ===========================================================================
 				if epoch >= max_patience:  # give it an initial time
 					if loss < best_loss:
 						patience = 0
@@ -138,15 +138,15 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
 							mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
 
-						for rest_epoch in range(epoch + 1, max_epochs):
-							wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
-						break
+							for rest_epoch in range(epoch + 1, max_epochs):
+								wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
+							break
 
-						# lr_step += 1
-						# optimizer = optax.adam(learning_rate / (10 ** lr_step))
-						# patience = 0
-						# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
-						# endregion =======================================================================================
+							# lr_step += 1
+							# optimizer = optax.adam(learning_rate / (10 ** lr_step))
+							# patience = 0
+							# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
+				#endregion =======================================================================================
 
 				losses.append(loss)
 				losses_tr.append(loss_tr)
