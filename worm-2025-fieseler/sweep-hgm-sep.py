@@ -190,7 +190,7 @@ def read(artificial=False):
 	# selection_n = ['VB02', 'RMDDR', 'AVAR', 'AVAL']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
-	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_')
+	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_gcamp')
 	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, read_ids)
 
 	for i in range(len(filenames)):
