@@ -185,8 +185,8 @@ def train_numerical_model(project_name, model, splits, B_ll, N_res, N_man=None, 
 def read(artificial=False):
 	print('reading...')
 
-	# read_ids = [0, 4, 5, 6, 27, 30, 31, 32, 33]
-	read_ids = [4]
+	read_ids = [0, 4, 5, 6, 27, 30, 31, 32, 33]
+	# read_ids = [4]
 	# selection_n = ['VB02', 'RMDDR', 'AVAR', 'AVAL']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
