@@ -25,7 +25,7 @@ def get_data(path, ids=None):
 
 
 def get_hdf5_files(path, file_ids):
-	filenames = [os.listdir(path)[file_id] for file_id in file_ids]
+	filenames = [sorted(os.listdir(path))[file_id] for file_id in file_ids]
 	return [h5py.File(os.path.join(path, filename), 'r') for filename in filenames]
 
 

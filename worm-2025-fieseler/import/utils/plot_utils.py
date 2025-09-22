@@ -7,26 +7,32 @@ import matplotlib.colors as mcolors
 from matplotlib import cm
 
 
-def subplot(title, datas, n_plots, plots_per_row=5, top_space=1, save_name=None):
+def subplot(title, datas, n_plots=None, plots_per_row=4, top_space=1, save_name=None):
 	if type(datas) in (pd.DataFrame, pd.Series):
 		datas = [datas]
 
+	if n_plots is None:
+		n_plots = len(datas[0].columns)
 	plots_per_row = min(n_plots, plots_per_row)
 	plots_per_col = math.ceil(n_plots / plots_per_row)
 	figheight = 4 * plots_per_col + top_space
 	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(4 * plots_per_row, figheight), squeeze=False)
-	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].set_xticklabels([])
-		axes[i // plots_per_row, i % plots_per_row].set_yticklabels([])
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
+	for ax in axes.ravel():
+		# ax.set_xticklabels([])
+		# ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
 
 	for data in datas:
 		if data is not None:
 			for i, key in enumerate(data):
 				y = data[key]
-				axes[i // plots_per_row, i % plots_per_row].grid(True)
-				axes[i // plots_per_row, i % plots_per_row].plot(y)
 				axes[i // plots_per_row, i % plots_per_row].set_title(key, fontsize=8)
+				axes[i // plots_per_row, i % plots_per_row].plot(y)
+				axes[i // plots_per_row, i % plots_per_row].grid(True)
+				for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+					spine.set_visible(True)
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 2, title, ha='center', fontsize=20)
@@ -36,7 +42,7 @@ def subplot(title, datas, n_plots, plots_per_row=5, top_space=1, save_name=None)
 	plt.show()
 
 
-def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plots=None, plots_per_row=5, top_space=1, save_name=None):
+def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plots=None, plots_per_row=4, top_space=1, save_name=None):
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -46,10 +52,12 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 	plots_per_col = math.ceil(n_plots / plots_per_row)
 	figheight = 4 * plots_per_col + top_space
 	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(4 * plots_per_row, figheight), squeeze=False)
-	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].set_xticklabels([])
-		axes[i // plots_per_row, i % plots_per_row].set_yticklabels([])
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
+	for ax in axes.ravel():
+		ax.set_xticklabels([])
+		ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
 
 	scale = [-1, 0, 1]
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
@@ -60,19 +68,19 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 		lc.set_array(colors)
 		lc.set_linewidth(2)
 
-		axes[i // plots_per_row, i % plots_per_row].add_collection(lc)
+		axes[i // plots_per_row, i % plots_per_row].set_title(f'{filenames[i][:-14]}\n{i}: {vars_expl[i]:.2f}' +
+										  (f' ({vars_expl_rs[i]:.2f})' if vars_expl_rs is not None else ''),
+										  fontsize=12)
 
-		# axes[i // plots_per_row, i % plots_per_row].set_xlim(modes_[f'{key}1'].min(), modes_[f'{key}1'].max())
-		# axes[i // plots_per_row, i % plots_per_row].set_ylim(modes_[f'{key}2'].min(), modes_[f'{key}2'].max())
 		axes[i // plots_per_row, i % plots_per_row].plot(modes_[f'{key}1'], modes_[f'{key}2'], alpha=0)
+		axes[i // plots_per_row, i % plots_per_row].add_collection(lc)
 		axes[i // plots_per_row, i % plots_per_row].set_xticks(scale)
 		axes[i // plots_per_row, i % plots_per_row].set_xticklabels(scale)
 		axes[i // plots_per_row, i % plots_per_row].set_yticks(scale)
 		axes[i // plots_per_row, i % plots_per_row].set_yticklabels(scale)
 		axes[i // plots_per_row, i % plots_per_row].grid(True)
-		axes[i // plots_per_row, i % plots_per_row].set_title(f'{filenames[i][:-14]}\n{i}: {vars_expl[i]:.2f}' +
-										  (f', ({vars_expl_rs[i]:.2f})' if vars_expl_rs is not None else ''),
-										  fontsize=12)
+		for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+			spine.set_visible(True)
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 2, 'manifolds', ha='center', fontsize=20)
@@ -260,7 +268,7 @@ def plot_mcos(bars, bar_labels, labels, order, save_name=None):
 # 	# 	hspace=0.5,
 # 	# )
 #
-# 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}')
+# 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png')
 
 
 """
@@ -275,7 +283,14 @@ def plot_traces(title, states, traces,
 	keys = [key for key in traces[0].columns if key != '']
 	if n_plots is None:
 		n_plots = len(keys)
-	if ylimits is None: ylimits = (traces[0][keys].values.min(), traces[0][keys].values.max())
+	if ylimits is None: ylimits = (
+		np.array(
+			[trace[keys].values for trace in traces]
+		).min(),
+		np.array(
+			[trace[keys].values for trace in traces]
+		).max()
+	)
 	#endregion
 
 	#region plot setup
@@ -283,10 +298,15 @@ def plot_traces(title, states, traces,
 	plots_per_col = math.ceil(n_plots / plots_per_row)
 	figheight = 3 * plots_per_col + top_space
 	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(15 * plots_per_row, figheight), squeeze=False)
+	for ax in axes.ravel():
+		# ax.set_xticklabels([])
+		# ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
 	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
-		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
 		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces[0].shape), color='gray', linewidth=0.25)
+		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 4, title, ha='center', fontsize=20)
@@ -310,35 +330,49 @@ def plot_traces(title, states, traces,
 	for key in keys[:n_plots]:
 		if key != '':
 			min_val, max_val = ylimits
+
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+
 			axes[i // plots_per_row, i % plots_per_row].imshow(
 				heatmap.T, aspect='auto',
 				cmap=mcolors.LinearSegmentedColormap.from_list('middle_third',
 															   plt.get_cmap('binary')(np.linspace(0, 1/2, 256))),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], color='black', linewidth=1.0)
+			axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], color='black', linewidth=0.5)
 			for trace in traces[1:]:
-				axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], linewidth=1.0)
+				axes[i // plots_per_row, i % plots_per_row].plot(trace[key], linewidth=0.5)
 
-			axes[i // plots_per_row, i % plots_per_row].grid(False)
-			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+				spine.set_visible(True)
 			i += 1
 	#endregion
 
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
 """
 Plots single trace in black and optional splits in cycling colors, with the first being opaques and the second transparents
 """
-def plot_traces_x_splits(title, states, traces, traces_splits=None, traces_splits_ref=None, plot_first=True,
+def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces_splits_ref=None, plot_first=True,
 						 n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
 	#region setup
-	keys = [key for key in traces.columns if key != '']
+	keys = [key for key in traces_first.columns if key != '']
 	if n_plots is None:
 		n_plots = len(keys)
-	if ylimits is None: ylimits = (traces[keys].values.min(), traces[keys].values.max())
+	if ylimits is None: ylimits = (
+		np.array(
+			([traces_first[keys].values] if plot_first else []) +
+			([trace_splits[keys].values for trace_splits in traces_splits] if traces_splits is not None else []) +
+			([trace_splits_ref[keys].values for trace_splits_ref in traces_splits_ref] if traces_splits_ref is not None else [])
+		).min(),
+		np.array(
+			([traces_first[keys].values] if plot_first else []) +
+			([trace_splits[keys].values for trace_splits in traces_splits] if traces_splits is not None else []) +
+			([trace_splits_ref[keys].values for trace_splits_ref in traces_splits_ref] if traces_splits_ref is not None else [])
+		).max()
+	)
 	#endregion
 
 	#region plot setup
@@ -346,10 +380,15 @@ def plot_traces_x_splits(title, states, traces, traces_splits=None, traces_split
 	plots_per_col = math.ceil(n_plots / plots_per_row)
 	figheight = 3 * plots_per_col + top_space
 	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(15 * plots_per_row, figheight), squeeze=False)
+	for ax in axes.ravel():
+		# ax.set_xticklabels([])
+		# ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
 	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces_first.shape), color='gray', linewidth=0.25)
 		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
-		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces.shape), color='gray', linewidth=0.25)
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 4, title, ha='center', fontsize=20)
@@ -373,41 +412,55 @@ def plot_traces_x_splits(title, states, traces, traces_splits=None, traces_split
 	for key in keys[:n_plots]:
 		if key != '':
 			min_val, max_val = ylimits
+
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+
 			axes[i // plots_per_row, i % plots_per_row].imshow(
 				heatmap.T, aspect='auto',
 				cmap=mcolors.LinearSegmentedColormap.from_list('middle_third',
 															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=1.0)
-
+			axes[i // plots_per_row, i % plots_per_row].plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=0.5)
 			if traces_splits is not None:
 				colors = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 				for j in range(len(traces_splits)):
 					color = next(colors)
-					axes[i // plots_per_row, i % plots_per_row].plot(traces_splits[j][key], linewidth=1.0, color=color)
+					axes[i // plots_per_row, i % plots_per_row].plot(traces_splits[j][key], color=color, linewidth=0.5)
 					if traces_splits_ref is not None:
-						axes[i // plots_per_row, i % plots_per_row].plot(traces_splits_ref[j][key], linewidth=1.0, color=color, alpha=0.5)
+						axes[i // plots_per_row, i % plots_per_row].plot(traces_splits_ref[j][key], color=color, alpha=0.5, linewidth=0.5)
 
-			axes[i // plots_per_row, i % plots_per_row].grid(False)
-			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+				spine.set_visible(True)
+
 			i += 1
 	#endregion
 
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
 """
 Plots two pairs of traces in red and green black, with the respective first one being opaque and the second transparent
 """
-def plot_traces_comparisons(title, states, traces, traces_ref=None,
+def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref=None, plot_first=True,
 							n_plots=None, plots_per_row=2, top_space=2, ylimits=None, save_name=None):
 	#region setup
-	keys = [key for key in traces[0].columns if key != '']
+	keys = [key for key in traces_first.columns if key != '']
 	if n_plots is None:
 		n_plots = len(keys)
-	if ylimits is None: ylimits = (np.array([trace[keys].values for trace in traces]).min(), np.array([trace[keys].values for trace in traces]).max())
+	if ylimits is None: ylimits = (
+		np.array(
+			([traces_first[keys].values] if plot_first else []) +
+			([trace[keys].values for trace in traces] if traces is not None else []) +
+			([trace_ref[keys].values for trace_ref in traces_ref] if traces_ref is not None else [])
+		).min(),
+		np.array(
+			([traces_first[keys].values] if plot_first else []) +
+			([trace[keys].values for trace in traces] if traces is not None else []) +
+			([trace_ref[keys].values for trace_ref in traces_ref] if traces_ref is not None else [])
+		).max()
+	)
 	#endregion
 
 	#region plot setup
@@ -415,10 +468,15 @@ def plot_traces_comparisons(title, states, traces, traces_ref=None,
 	plots_per_col = math.ceil(n_plots / plots_per_row)
 	figheight = 3 * plots_per_col + top_space
 	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(15 * plots_per_row, figheight), squeeze=False)
+	for ax in axes.ravel():
+		# ax.set_xticklabels([])
+		# ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
 	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
+		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces_first.shape), color='gray', linewidth=0.25)
 		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
-		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces[0].shape), color='gray', linewidth=0.25)
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel / 4, title, ha='center', fontsize=20)
@@ -442,26 +500,30 @@ def plot_traces_comparisons(title, states, traces, traces_ref=None,
 	for key in keys[:n_plots]:
 		if key != '':
 			min_val, max_val = ylimits
+
+			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+
 			axes[i // plots_per_row, i % plots_per_row].imshow(
 				heatmap.T, aspect='auto',
 				cmap=mcolors.LinearSegmentedColormap.from_list('middle_third',
 															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
-
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], linewidth=1.0, color='C0')
-			axes[i // plots_per_row, i % plots_per_row].plot(traces[1][key], linewidth=1.0, color='green')
-
+			axes[i // plots_per_row, i % plots_per_row].plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=0.5)
+			if traces is not None:
+				axes[i // plots_per_row, i % plots_per_row].plot(traces[0][key], color='C0', linewidth=0.5)
+				axes[i // plots_per_row, i % plots_per_row].plot(traces[1][key], color='green', linewidth=0.5)
 			if traces_ref is not None:
-				axes[i // plots_per_row, i % plots_per_row].plot(traces_ref[0][key], linewidth=1.0, color='C0', alpha=0.5)
-				axes[i // plots_per_row, i % plots_per_row].plot(traces_ref[1][key], linewidth=1.0, color='green', alpha=0.5)
+				axes[i // plots_per_row, i % plots_per_row].plot(traces_ref[0][key], color='C0', alpha=0.5, linewidth=0.5)
+				axes[i // plots_per_row, i % plots_per_row].plot(traces_ref[1][key], color='green', alpha=0.5, linewidth=0.5)
 
-			axes[i // plots_per_row, i % plots_per_row].grid(False)
-			axes[i // plots_per_row, i % plots_per_row].set_title(f'{key}', fontsize=12)
+			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+				spine.set_visible(True)
+
 			i += 1
 	#endregion
 
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
@@ -469,7 +531,7 @@ def plot_traces_comparisons(title, states, traces, traces_ref=None,
 Plots losses for splits, with additional losses in transparent, as references.
 """
 def plot_losses_splits(title, filenames, losses, losses_reference=None,
-					   n_plots=None, plots_per_row=5, top_space=1, ylimits=None, save_name=None):
+					   n_plots=None, plots_per_row=4, top_space=1, ylimits=None, save_name=None):
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -477,8 +539,13 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 	plots_per_col = math.ceil(n_plots / plots_per_row)
 	figheight = 4 * plots_per_col + top_space
 	fig, axes = plt.subplots(plots_per_col, plots_per_row, figsize=(4 * plots_per_row, figheight), squeeze=False)
+	for ax in axes.ravel():
+		# ax.set_xticklabels([])
+		# ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
 	for i in range(n_plots):
-		axes[i // plots_per_row, i % plots_per_row].grid(False)
 		if ylimits is not None: axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits)
 
 	loss_ref = True
@@ -487,18 +554,21 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 		losses_reference = losses
 	for i, (losses_per_split_m1, losses_per_split_m2) in enumerate(zip(losses[:n_plots], losses_reference[:n_plots])):
 		colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-		for j, (losses, losses_reference) in enumerate(zip(losses_per_split_m1, losses_per_split_m2)):
-			axes[i // plots_per_row, i % plots_per_row].plot(losses, color=colors[j])
-			if loss_ref:
-				axes[i // plots_per_row, i % plots_per_row].plot(losses_reference, color=colors[j], alpha=0.5)
-		axes[i // plots_per_row, i % plots_per_row].grid(True)
+
 		axes[i // plots_per_row, i % plots_per_row].set_title(f'{filenames[i][:-14]}\n' +
 															  f'(model: {np.average(losses_per_split_m1[:, -1], axis=0) * 100:.2f}E-2' +
 															  (f', comp: {np.average(losses_per_split_m2[:, -1], axis=0) * 100:.2f}E-2)' if loss_ref else ''),
 															  fontsize=10)
 
-		yticks = axes[i // plots_per_row, i % plots_per_row].get_yticks()
-		axes[i // plots_per_row, i % plots_per_row].set_yticks(yticks)
+		for j, (losses, losses_reference) in enumerate(zip(losses_per_split_m1, losses_per_split_m2)):
+			axes[i // plots_per_row, i % plots_per_row].plot(losses, color=colors[j])
+			if loss_ref:
+				axes[i // plots_per_row, i % plots_per_row].plot(losses_reference, color=colors[j], alpha=0.5)
+
+		axes[i // plots_per_row, i % plots_per_row].set_yticks(axes[i // plots_per_row, i % plots_per_row].get_yticks())
+		axes[i // plots_per_row, i % plots_per_row].grid(True)
+		for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+			spine.set_visible(True)
 
 	top_space_rel = top_space / figheight
 	fig.text(0.5, 1. - top_space_rel * 1 / 2, title, ha='center', fontsize=20)
@@ -507,7 +577,7 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 	# 	hspace=0.5,
 	# )
 
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
@@ -517,7 +587,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 	threshold = 0.95
 
 	plt.figure(figsize=(10, 10))
-	plt.xlabel('GLM r2 score (median)', fontsize=12.5, labelpad=50)
+	plt.xlabel('BOM r2 score (median)', fontsize=12.5, labelpad=50)
 	plt.ylabel('HGM r2 score (median)', fontsize=12.5)
 
 	if limits is None:
@@ -657,7 +727,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
 	plt.yticks(y_ticks_pos, [f'{val:.3f}' for val in y_ticks_pos])
 
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()
 
 
@@ -667,8 +737,8 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 	threshold = 0.95
 
 	plt.figure(figsize=(10, 10))
-	plt.xlabel('GLM r2 score (median)', fontsize=12.5, labelpad=50)
-	plt.ylabel('HGM-GLM r2 score (median)', fontsize=12.5)
+	plt.xlabel('BOM r2 score (median)', fontsize=12.5, labelpad=50)
+	plt.ylabel('HGM-BOM r2 score improvement (median)', fontsize=12.5)
 
 	if limits is None:
 		x_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_glm])
@@ -809,5 +879,5 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
 	plt.yticks(y_ticks_pos, [f'{val:.3f}' for val in y_ticks_pos])
 
-	if save_name is not None: plt.savefig(f'./out/plots/{save_name}', dpi=300)
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300)
 	plt.show()

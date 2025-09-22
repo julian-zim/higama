@@ -5,15 +5,13 @@ from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import CCA
 
 
-def get_manifolds(traces, behaviors_hl, n_cc=2, n_pc=5):
-	modes_neural = list()
-	modes_ds = list()
-	recon_neural = list()
-	recon_ds = list()
-	loadings = list()
+def get_manifolds(traces, behavior, n_cc=2, n_pc=5):
+	modes_neural, modes_behavioral = list(), list()
+	recon_neural, recon_behavioral = list(), list()
+	loadings_neural, loadings_behavioral = list(), list()
 	vars_expl = list()
 	vars_expl_rs = list()  # variance explained with respect to the reconstructed PCA data
-	for trace, behavior in zip(traces, behaviors_hl):
+	for trace, behavior in zip(traces, behavior):
 		if n_pc < 1:
 			trace_reconstructed_pca = trace
 		else:
@@ -22,23 +20,24 @@ def get_manifolds(traces, behaviors_hl, n_cc=2, n_pc=5):
 			trace_reconstructed_pca = pca.inverse_transform(trace_reduced_pca)
 
 		cca = CCA(n_components=n_cc, scale=True)
-		trace_reduced, ds_reduced = cca.fit_transform(trace_reconstructed_pca, behavior.values)
-		trace_reconstructed, ds_reconstructed = cca.inverse_transform(trace_reduced, ds_reduced)
+		trace_reduced, behavior_reduced = cca.fit_transform(trace_reconstructed_pca, behavior.values)
+		trace_reconstructed, behavior_reconstructed = cca.inverse_transform(trace_reduced, behavior_reduced)
 
 		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
-		modes_ds.append(pd.DataFrame(data=ds_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
+		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
 
 		recon_neural.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
-		recon_ds.append(pd.DataFrame(data=ds_reconstructed, columns=behavior.columns))
+		recon_behavioral.append(pd.DataFrame(data=behavior_reconstructed, columns=behavior.columns))
 
-		loadings.append((cca.x_loadings_, cca.y_loadings_))
+		loadings_neural.append(cca.x_loadings_)
+		loadings_behavioral.append(cca.y_loadings_)
 
 		var_ratio = get_variance_explained(trace, trace_reconstructed)
 		var_ratio_rs = get_variance_explained(trace_reconstructed_pca, trace_reconstructed)
 		vars_expl.append(var_ratio)
 		vars_expl_rs.append(var_ratio_rs)
 
-	return modes_neural, modes_ds, recon_neural, recon_ds, loadings, vars_expl, vars_expl_rs
+	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl, vars_expl_rs
 
 
 def get_manifolds_pca(traces, n_pc=2):

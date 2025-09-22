@@ -1,3 +1,4 @@
+#region imports
 import sys
 import os
 import math
@@ -10,7 +11,7 @@ import pandas as pd
 
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
-os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = 'false'
 import jax
 import jax.numpy as jnp
 import optax
@@ -21,6 +22,7 @@ from utils import read_utils
 # from utils import plot_utils
 from utils import artificializer
 from models import hgm
+#endregion
 
 
 class Lambdas(NamedTuple):
@@ -35,7 +37,7 @@ class PrepData(NamedTuple):
 	B_hl_std: tuple[float, ...] | None = None
 
 
-def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None):
+def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None):
 	with wandb.init(project=project_name):
 		config = wandb.config
 
@@ -81,7 +83,6 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 		losses_tr_per_split = list()
 		mpe_losses_per_split = list()
 		mpe_losses_tr_per_split = list()
-		__grads_per_split = list()
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_eval = jnp.array(N[train]), jnp.array(N[eval])
@@ -120,7 +121,6 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			losses_tr = [model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()]
 			mpe_losses = [model.mpe_loss_fn(params, N_eval, B_ll_eval, prep_data_eval).item()]
 			mpe_losses_tr = [model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()]
-			__grads = list()
 
 			best_params = params
 			best_loss = sys.float_info.max
@@ -131,13 +131,12 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
-				params, opt_state, __grad = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train)
+				params, opt_state = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train)
 
 				loss = model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas, prep_data_eval).item()
 				loss_tr = model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()
 				mpe_loss = model.mpe_loss_fn(params, N_eval, B_ll_eval, prep_data_eval).item()
 				mpe_loss_tr = model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()
-				__grads.append(__grad)
 
 				#region early stopping ===========================================================================
 				if epoch >= max_patience:  # give it an initial time
@@ -179,7 +178,6 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 			losses_tr_per_split.append(losses_tr)
 			mpe_losses_per_split.append(mpe_losses)
 			mpe_losses_tr_per_split.append(mpe_losses_tr)
-			__grads_per_split.append(__grads)
 
 			# predicting and scoring ========================================================================
 			score_per_neuron = model.score_fn(params, N_eval, B_ll_eval, prep_data_eval)
@@ -194,15 +192,15 @@ def train_joint_model(project_name, model, splits, N, B_ll, B_hl, hyperparameter
 				   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1]),
 				   'mpe_loss_tr': np.mean(np.array(mpe_losses_tr_per_split)[:, -1])})
 
-	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mpe_losses_per_split), np.array(mpe_losses_tr_per_split), __grads_per_split
+	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mpe_losses_per_split), np.array(mpe_losses_tr_per_split)
 
 
 def read(artificial=False):
 	print('reading...')
 
-	read_ids = [0, 4, 5, 6, 27, 30, 31, 32, 33]
-	# read_ids = [4]
-	# selection_n = ['VB02', 'RMDDR', 'AVAR', 'AVAL']
+	# read_ids = [0, 12, 14, 23, 29, 32]
+	read_ids = [14]
+	# selection_n = ['DD01', 'VB02', 'SMDDR', 'AVAR']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_gcamp')
@@ -226,6 +224,7 @@ def read(artificial=False):
 		dims_generation = 2
 		weights = (0.5, 2.)
 
+		file_ids_art = file_ids.copy()
 		filenames_art = list()
 		discrete_states_art = discrete_states.copy()
 		eigenworms_art = eigenworms.copy()
@@ -256,32 +255,34 @@ def read(artificial=False):
 		# 					   discrete_states_art[0]['REV'],
 		# 					   traces_art[0][selection_n],
 		# 					   plots_per_row=2, ylimits=(-8, 8))
-		return filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
+		return file_ids_art, filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
 
 
 	# plot_utils.plot_traces(f'[{filenames[0]}] traces',
 	# 					   discrete_states[0]['REV'],
 	# 					   traces[0][selection_n],
 	# 					   plots_per_row=2, ylimits=(-2, 2))
-	return filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
-
+	return file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
 
 
 def sweep(config):
-	filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read(artificial=False)
+	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read(artificial=False)
 
 	print('sweeping...')
 
 	wandb.login()
 
-	for i in range(len(filenames)):
-		project_name = f'hgm {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {i}-{filenames[i]}'
-		print(f'{i + 1}/{len(filenames)}: {filenames[i]}  ', end='')
+	for _id in file_ids:
+		project_name = f'hgm {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {_id}-{filenames[file_ids.index(_id)]}'
+		print(f'{_id}: {filenames[file_ids.index(_id)]}  ', end='')
 
-		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[i].values.shape[0]), discrete_states[i]['REV'].values))
+		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(_id)].values.shape[0]), discrete_states[file_ids.index(_id)]['REV'].values))
 
 		def train_model_wrapper():
-			return train_joint_model(project_name, hgm, splits, traces[i].values, eigenworms[i].values, discrete_states[i].values)
+			return train_model(project_name, hgm, splits,
+							   traces[file_ids.index(_id)].values,
+							   eigenworms[file_ids.index(_id)].values,
+							   discrete_states[file_ids.index(_id)].values)
 
 		sweep_id = wandb.sweep(config, project=project_name)
 		wandb.agent(sweep_id, function=train_model_wrapper)
@@ -296,11 +297,9 @@ sweep_config = {
         'goal': 'minimize'
     },
 	'parameters': {
-		'max_epochs': {'min': 100, 'max': 5000},
-		'learning_rate': {'min': 1E-6, 'max': 10.},
-		'w1_reg_lambda': {'min': 0., 'max': 10.},
-		'w2_reg_lambda': {'min': 0., 'max': 10.},
+		'learning_rate': {'min': 1E-3, 'max': 1},
+		'w1_reg_lambda': {'min': 1E-4, 'max': 1E-2},
+		'w2_reg_lambda': {'min': 1E-6, 'max': 1E-3},
 	}
 }
 sweep(sweep_config)
-

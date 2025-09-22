@@ -65,6 +65,6 @@ def update(opt_update, opt_state, params, B_ll, N_man, N_res, reg_lambdas):
 	grads = loss_fn_grad(params, B_ll, N_man, N_res, reg_lambdas)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
-	return params_new, opt_state, grads  # return grads for weight interpretation
+	return params_new, opt_state
 
 update = jax.jit(update, static_argnums=(0, 6))

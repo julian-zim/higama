@@ -5,9 +5,9 @@ import jax.numpy as jnp
 
 
 def generate_params(weights, model, seeds, shape_B_ll, shape_N_man):
-	clm_lin = weights[0]
+	bom_lin = weights[0]
 	hgm_sig = weights[1]
-	hgm_lin = clm_lin / jax.nn.sigmoid(hgm_sig)
+	hgm_lin = bom_lin / jax.nn.sigmoid(hgm_sig)
 
 	if model.get_type():
 		return {
@@ -17,8 +17,8 @@ def generate_params(weights, model, seeds, shape_B_ll, shape_N_man):
 		}
 	else:
 		return {
-			'W': clm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1))
-			# 'W': clm_lin * jnp.ones(shape_B_ll),
+			'W': bom_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1))
+			# 'W': bom_lin * jnp.ones(shape_B_ll),
 		}
 
 def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=0.25):
