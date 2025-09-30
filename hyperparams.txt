@@ -9,15 +9,52 @@ Joint model (relatively unclear):
 - lr makes the mpe loss go down, with high importance		0.5
 
 
-
-
-
-
-
-
-
 Joint Model:
 - loss 1 lambda:	0.5
 - w1 reg lambda:	0.05
 - learning rate:	1
 - w2 reg lambda:	maxed out? or 1.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+lr = 1E-1
+
+w1 = 1E-3
+w2 = 1E-5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import pandas as pd
+from flax.serialization import to_bytes, from_bytes
 
 from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import CCA
@@ -70,6 +72,27 @@ def get_variance_explained(X, X_rec):
 	X_var_ratio = 1 - X_res_var / X_var
 
 	return X_var_ratio
+
+
+def save_params(params, save_name):
+	outdir_path = f'./out/params/{save_name}'
+	os.makedirs(outdir_path, exist_ok=True)
+	for i, param in enumerate(params):
+		with open(f'{outdir_path}/split_{i}.msgpack', 'wb') as f:
+			f.write(to_bytes(param))
+
+
+def load_params(load_name):
+	params = list()
+	indir_path = f'./out/params/{load_name}'
+	for i in range(len(os.listdir(indir_path))):
+		with open(f'{indir_path}/split_{i}.msgpack', 'rb') as f:
+			param_dict = from_bytes(None, f.read())
+			param = list()
+			for key in param_dict.keys():
+				param.append(param_dict[key])
+			params.append(param)
+	return params
 
 
 def get_good_neuron_labels():

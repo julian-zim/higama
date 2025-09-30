@@ -3,11 +3,13 @@ import numpy as np
 import pandas as pd
 from matplotlib import patches, pyplot as plt
 from matplotlib.collections import LineCollection
+from matplotlib.colors import ListedColormap
 import matplotlib.colors as mcolors
 from matplotlib import cm
 
 
-def subplot(title, datas, n_plots=None, plots_per_row=4, top_space=1, save_name=None):
+def subplot(title, datas,
+			n_plots=None, plots_per_row=4, top_space=1, save_name=None):
 	if type(datas) in (pd.DataFrame, pd.Series):
 		datas = [datas]
 
@@ -42,7 +44,8 @@ def subplot(title, datas, n_plots=None, plots_per_row=4, top_space=1, save_name=
 	plt.show()
 
 
-def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plots=None, plots_per_row=4, top_space=1, save_name=None):
+def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
+				   n_plots=None, plots_per_row=4, top_space=3, save_name=None):
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -59,12 +62,16 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 		for spine in ax.spines.values():
 			spine.set_visible(False)
 
+	colormap = plt.get_cmap('hsv')
+	colormap = ListedColormap(colormap(np.linspace(0, 1, colormap.N))[:, :3] * 0.8, name='hsv_dark')
+	normalizer = plt.Normalize(0, len(states[0].columns))
+
 	scale = [-1, 0, 1]
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
 		points = np.array([modes_[f'{key}1'], modes_[f'{key}2']]).T.reshape(-1, 1, 2)
 		segments = np.concatenate([points[:-1], points[1:]], axis=1)
 		colors = np.argmax(states_.values, axis=1)
-		lc = LineCollection(segments, cmap='jet', norm=plt.Normalize(np.min(colors), np.max(colors)))  # ToDo: better colors
+		lc = LineCollection(segments, cmap=colormap, norm=normalizer)
 		lc.set_array(colors)
 		lc.set_linewidth(2)
 
@@ -83,8 +90,18 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 			spine.set_visible(True)
 
 	top_space_rel = top_space / figheight
-	fig.text(0.5, 1. - top_space_rel / 2, 'manifolds', ha='center', fontsize=20)
+	fig.text(0.5, 1. - top_space_rel / 4, 'manifolds', ha='center', fontsize=20)
+	fig.legend(
+		handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
+		loc='lower center',
+		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
+		ncol=1,
+		fontsize='large'
+	)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+	# fig.subplots_adjust(
+	# 	hspace=0.5,
+	# )
 
 	if vars_expl_rs is not None:
 		print(np.mean(np.array(vars_expl)), np.mean(np.array(vars_expl_rs)))
@@ -142,7 +159,8 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None, n_plo
 # 	plt.show()
 
 
-def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4), save_name=None):
+def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4),
+					   save_name=None):
 	fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=(12, 6), sharex=True, gridspec_kw={'height_ratios': height_ratios})
 
 	if states is not None:
@@ -169,7 +187,8 @@ def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4
 	plt.show()
 
 
-def plot_mcos(bars, bar_labels, labels, order, save_name=None):
+def plot_mcos(bars, bar_labels, labels, order,
+			  save_name=None):
 	index_orders = [
 		['m', 'c', 'o'].index(order[0]),
 		['m', 'c', 'o'].index(order[1]),
@@ -581,7 +600,8 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 	plt.show()
 
 
-def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None, content_size=20, save_name=None):
+def plot_performance_plot(neuron_scores, neuron_scores_control=None,
+						  limits=None, content_size=20, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
@@ -731,7 +751,8 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, limits=None
 	plt.show()
 
 
-def plot_improvement_plot(neuron_scores, neuron_scores_control=None, limits=None, content_size=20, save_name=None):
+def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
+						  limits=None, content_size=20, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
