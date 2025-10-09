@@ -7,3 +7,4 @@ df.loc[n, 'string']		row, columns label indexing
 df.iloc[n, m]			row, column index indexing
 
 np.tile()
+
