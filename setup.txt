@@ -1,7 +1,8 @@
 module load Python/3.12.3-GCCcore-13.3.0
 python -m venv /lisc/home/user/zimmermann/.venv/hgm
-source /lisc/home/user/zimmermann/.venv/hgm/activate
+source /lisc/home/user/zimmermann/.venv/hgm/bin/activate
 
 python -m pip install --upgrade pip
-pip install jupyter numpy matplotlib pandas seaborn scikit-learn fastcluster h5py pynwb dandi fsspec openpyxl ipywidgets wandb optax flax
-pip install -U "jax[cuda12]"
+python -m pip install jupyter matplotlib numpy pandas seaborn scikit-learn fastcluster h5py pynwb dandi fsspec openpyxl ipywidgets wandb optax flax
+python -m pip install -U "jax[cuda12]"
+
