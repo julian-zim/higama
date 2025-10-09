@@ -29,7 +29,6 @@ Joint Model:
 
 
 
-
 lr = 1E-1
 
 w1 = 1E-3
