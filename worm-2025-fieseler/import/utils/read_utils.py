@@ -30,7 +30,10 @@ def get_hdf5_files(path, file_ids):
 
 
 def get_filename(file_handle):
-	return file_handle.filename.split('/')[-1].split('.')[0]
+	filename = file_handle.filename.split('/')[-1].split('.')[0]
+	if filename.endswith('_no_image_data'):
+		filename = filename[:-len('_no_image_data')]
+	return filename
 
 
 def get_continuous_behaviors(file_handle):
