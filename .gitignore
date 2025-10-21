@@ -28,7 +28,8 @@ MANIFEST
 
 # out
 worm-2025-fieseler/out/slurm/
-worm-2025-fieseler/out/plots/_extra/
+
+
 
 # weights & biases library
 **/wandb/
