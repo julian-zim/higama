@@ -114,11 +114,12 @@ def loss_fn(params, N, B_ll, B_hl, lambdas):
 	# manifold ================================
 	N_man, N_rec, N_res = predict_man(prep['N'], N, U)
 
-	B_hl_mean, B_hl_std = prep['B_hl']['mean'], prep['B_hl']['std']
-	B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
-	B_hl_man = B_hl_zs @ V
-
-	man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
+	# B_hl_mean, B_hl_std = prep['B_hl']['mean'], prep['B_hl']['std']
+	# B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
+	# B_hl_man = B_hl_zs @ V
+	#
+	# man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
+	man_loss = jnp.array(0)
 	# =========================================
 
 	# residuals ===============================

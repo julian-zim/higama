@@ -8,6 +8,8 @@ from sklearn.cross_decomposition import CCA
 from sklearn.cross_decomposition import PLSCanonical
 
 
+#region manifolds
+
 def get_manifolds_plsc(traces, behavior, n_ls=3):
 	modes_neural, modes_behavioral = list(), list()
 	recon_neural, recon_behavioral = list(), list()
@@ -128,7 +130,10 @@ def get_manifolds_pca(traces, n_pc=3):
 
 	return modes, recon, loadings, vars_expl
 
+#endregion
 
+
+#region variance explained
 
 def get_variance_explained(X_rec, X):
 	X_res = X - X_rec
@@ -149,7 +154,10 @@ def get_variance_explained_alt(X_rec, X):
 
 	return X_var_ratio
 
+#endregion
 
+
+#region models
 
 def save_params(filenames, params, save_name):
 	outdir_path = f'./out/models/{save_name}/params'
@@ -195,6 +203,7 @@ def load_losses(load_name, filenames=None):
 		losses.append(np.load(f'{indir_path}/{filename}'))
 	return losses
 
+#endregion
 
 
 def get_good_neuron_labels():
