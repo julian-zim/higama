@@ -5,28 +5,72 @@ from flax.serialization import to_bytes, from_bytes
 
 from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import CCA
+from sklearn.cross_decomposition import PLSCanonical
 
 
-def get_manifolds(traces, behavior, n_cc=2, n_pc=5):
+def get_manifolds_plsc(traces, behavior, n_ls=3):
 	modes_neural, modes_behavioral = list(), list()
 	recon_neural, recon_behavioral = list(), list()
 	loadings_neural, loadings_behavioral = list(), list()
 	vars_expl = list()
-	vars_expl_rs = list()  # variance explained with respect to the reconstructed PCA data
 	for trace, behavior in zip(traces, behavior):
-		if n_pc < 1:
-			trace_reconstructed_pca = trace
-		else:
+		# reduction
+		plsc = PLSCanonical(n_components=n_ls, scale=True)
+		trace_reduced, behavior_reduced = plsc.fit_transform(trace, behavior.values)
+		trace_reconstructed, behavior_reconstructed = plsc.inverse_transform(trace_reduced, behavior_reduced)
+
+		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'LS{n + 1}' for n in range(n_ls)]))
+		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'LS{n + 1}' for n in range(n_ls)]))
+
+		recon_neural.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
+		recon_behavioral.append(pd.DataFrame(data=behavior_reconstructed, columns=behavior.columns))
+
+		loadings_neural.append(plsc.x_loadings_)
+		loadings_behavioral.append(plsc.y_loadings_)
+
+		# variance explained
+		var_ratio = list()
+
+		var_ratio_cumulative = list()
+		for k in range(1, n_ls+1):  # VE k = VE :k - VE :k-1
+			trace_reduced_to_k = np.zeros_like(trace_reduced)
+			trace_reduced_to_k[:, :k] = trace_reduced[:, :k]
+			behavior_reduced_to_k = np.zeros_like(behavior_reduced)
+			behavior_reduced_to_k[:, :k] = behavior_reduced[:, :k]
+
+			trace_reconstructed_to_k, _ = plsc.inverse_transform(trace_reduced_to_k, behavior_reduced_to_k)
+
+			var_ratio_cumulative.append(get_variance_explained(trace_reconstructed_to_k, trace))
+			var_ratio_k = var_ratio_cumulative[k-1] - (var_ratio_cumulative[k-1-1] if k > 1 else 0)
+
+			var_ratio.append(var_ratio_k)
+
+		vars_expl.append(var_ratio)
+
+	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl
+
+
+def get_manifolds_cca(traces, behavior, n_cv=3, n_pc=0):
+	modes_neural, modes_behavioral = list(), list()
+	recon_neural, recon_behavioral = list(), list()
+	loadings_neural, loadings_behavioral = list(), list()
+	vars_expl, vars_expl_rs = list(), list()
+	for trace, behavior in zip(traces, behavior):
+		# pca preprocessing
+		if n_pc > 0:
 			pca = PCA(n_components=n_pc)
 			trace_reduced_pca = pca.fit_transform(trace.values)
 			trace_reconstructed_pca = pca.inverse_transform(trace_reduced_pca)
+		else:
+			trace_reconstructed_pca = trace
 
-		cca = CCA(n_components=n_cc, scale=True)
+		# reduction
+		cca = CCA(n_components=n_cv, scale=True)
 		trace_reduced, behavior_reduced = cca.fit_transform(trace_reconstructed_pca, behavior.values)
 		trace_reconstructed, behavior_reconstructed = cca.inverse_transform(trace_reduced, behavior_reduced)
 
-		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
-		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'CC{n + 1}' for n in range(n_cc)]))
+		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'CV{n + 1}' for n in range(n_cv)]))
+		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'CV{n + 1}' for n in range(n_cv)]))
 
 		recon_neural.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
 		recon_behavioral.append(pd.DataFrame(data=behavior_reconstructed, columns=behavior.columns))
@@ -34,33 +78,56 @@ def get_manifolds(traces, behavior, n_cc=2, n_pc=5):
 		loadings_neural.append(cca.x_loadings_)
 		loadings_behavioral.append(cca.y_loadings_)
 
-		var_ratio = get_variance_explained(trace_reconstructed, trace)
-		var_ratio_rs = get_variance_explained(trace_reconstructed, trace_reconstructed_pca)
+		# variance explained
+		var_ratio = list()
+		var_ratio_rs = list()
+
+		var_ratio_cumulative = list()
+		var_ratio_rs_cumulative = list()
+		for k in range(1, n_cv+1):  # VE k = VE :k - VE :k-1
+			trace_reduced_to_k = np.zeros_like(trace_reduced)
+			trace_reduced_to_k[:, :k] = trace_reduced[:, :k]
+			behavior_reduced_to_k = np.zeros_like(behavior_reduced)
+			behavior_reduced_to_k[:, :k] = behavior_reduced[:, :k]
+
+			trace_reconstructed_to_k, _ = cca.inverse_transform(trace_reduced_to_k, behavior_reduced_to_k)
+
+			var_ratio_cumulative.append(get_variance_explained(trace_reconstructed_to_k, trace))
+			var_ratio_rs_cumulative.append(get_variance_explained(trace_reconstructed_to_k, trace_reconstructed_pca))
+
+			var_ratio_k = var_ratio_cumulative[k-1] - (var_ratio_cumulative[k-1-1] if k > 1 else 0)
+			var_ratio_rs_k = var_ratio_rs_cumulative[k-1] - (var_ratio_rs_cumulative[k-1-1] if k > 1 else 0)
+
+			var_ratio.append(var_ratio_k)
+			var_ratio_rs.append(var_ratio_rs_k)
+
 		vars_expl.append(var_ratio)
 		vars_expl_rs.append(var_ratio_rs)
 
 	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl, vars_expl_rs
 
 
-def get_manifolds_pca(traces, n_pc=2):
-	modes_manifold = list()
-	traces_manifold = list()
+def get_manifolds_pca(traces, n_pc=3):
+	modes = list()
+	recon = list()
 	loadings = list()
 	vars_expl = list()
 	for trace in traces:
+		# reduction
 		pca = PCA(n_components=n_pc)
 		trace_reduced = pca.fit_transform(trace)
 		trace_reconstructed = pca.inverse_transform(trace_reduced)
 
-		modes_manifold.append(pd.DataFrame(data=trace_reduced, columns=[f'PC{n + 1}' for n in range(2)]))
-		traces_manifold.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
+		modes.append(pd.DataFrame(data=trace_reduced, columns=[f'PC{n + 1}' for n in range(n_pc)]))
+		recon.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
 
 		loadings.append(pca.components_)
 
-		var_ratio = sum(pca.explained_variance_ratio_)
-		vars_expl.append(var_ratio)
+		# variance explained
+		vars_expl.append(pca.explained_variance_ratio_)
 
-	return modes_manifold, traces_manifold, loadings, vars_expl
+	return modes, recon, loadings, vars_expl
+
 
 
 def get_variance_explained(X_rec, X):
@@ -81,6 +148,7 @@ def get_variance_explained_alt(X_rec, X):
 	X_var_ratio = X_rec_var / X_var
 
 	return X_var_ratio
+
 
 
 def save_params(filenames, params, save_name):
@@ -126,6 +194,7 @@ def load_losses(load_name, filenames=None):
 	for filename in filenames:
 		losses.append(np.load(f'{indir_path}/{filename}'))
 	return losses
+
 
 
 def get_good_neuron_labels():

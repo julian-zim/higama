@@ -76,10 +76,14 @@ def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None
 
 		# training loop ==============================
 		params_per_split = list()
-		losses_per_split = list()
-		losses_train_per_split = list()
-		mpe_losses_per_split = list()
-		mpe_losses_train_per_split = list()
+		(losses_per_split,
+		 man_losses_per_split,
+		 res_losses_per_split,
+		 mpe_losses_per_split) = list(), list(), list(), list()
+		(losses_train_per_split,
+		 man_losses_train_per_split,
+		 res_losses_train_per_split,
+		 mpe_losses_train_per_split) = list(), list(), list(), list()
 		scores_per_split_per_neuron = list()
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
@@ -101,40 +105,76 @@ def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None
 			opt_state = optimizer.init(params)
 			#endregion ========================================================================================
 
-			losses, _, _, mpe_losses = tuple([l.item()] for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
-			losses_train, _, _, mpe_losses_train = tuple([l.item()] for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
+			(losses,
+			 man_losses,
+			 res_losses,
+			 mpe_losses) = tuple([l.item()] for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+			(losses_train,
+			 man_losses_train,
+			 res_losses_train,
+			 mpe_losses_train) = tuple([l.item()] for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
 
 			best_params = params
-			best_loss, best_mpe_loss = sys.float_info.max, sys.float_info.max
-			best_loss_train, best_mpe_loss_train = sys.float_info.max, sys.float_info.max
+			(best_loss,
+			 best_man_loss,
+			 best_res_loss,
+			 best_mpe_loss) = sys.float_info.max, sys.float_info.max, sys.float_info.max, sys.float_info.max
+			(best_loss_train,
+			 best_man_loss_train,
+			 best_res_loss_train,
+			 best_mpe_loss_train) = sys.float_info.max, sys.float_info.max, sys.float_info.max, sys.float_info.max
 
 			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
 				params, opt_state = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas)
 
-				loss, _, _, mpe_loss = tuple(l.item() for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
-				loss_train, _, _, mpe_loss_train = tuple(l.item() for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
+				(loss,
+				 man_loss,
+				 res_loss,
+				 mpe_loss) = tuple(l.item() for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+				(loss_train,
+				 man_loss_train,
+				 res_loss_train,
+				 mpe_loss_train) = tuple(l.item() for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
 
 				#region early stopping ===========================================================================
 				if epoch >= max_patience:  # give it an initial time
 					if loss < best_loss:
 						patience = 0
 
-						best_params = params
-						best_loss, best_mpe_loss = loss, mpe_loss
-						best_loss_train, best_mpe_loss_train = loss_train, mpe_loss_train
+						(best_loss,
+						 best_man_loss,
+						 best_res_loss,
+						 best_mpe_loss) = loss, man_loss, res_loss, mpe_loss
+						(best_loss_train,
+						 best_man_loss_train,
+						 best_res_loss_train,
+						 best_mpe_loss_train) = loss_train, man_loss_train, res_loss_train, mpe_loss_train
 					else:
 						patience += 1
 						if patience > max_patience:
 							params = best_params
 							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
+							man_losses = man_losses + [best_man_loss for _ in range(max_epochs - epoch)]
+							res_losses = res_losses + [best_res_loss for _ in range(max_epochs - epoch)]
 							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
+
 							losses_train = losses_train + [best_loss_train for _ in range(max_epochs - epoch)]
+							man_losses_train = man_losses_train + [best_man_loss_train for _ in range(max_epochs - epoch)]
+							res_losses_train = res_losses_train + [best_res_loss_train for _ in range(max_epochs - epoch)]
 							mpe_losses_train = mpe_losses_train + [best_mpe_loss_train for _ in range(max_epochs - epoch)]
 
 							for rest_epoch in range(epoch + 1, max_epochs):
-								wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_train_s{s_id}': best_loss_train, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_train_s{s_id}': best_mpe_loss_train})
+								wandb.log({f'epoch_s{s_id}': rest_epoch,
+										   f'loss_s{s_id}': best_loss,
+										   f'man_loss_s{s_id}': best_man_loss,
+										   f'res_loss_s{s_id}': best_res_loss,
+										   f'mpe_loss_s{s_id}': best_mpe_loss,
+										   f'loss_train_s{s_id}': best_loss_train,
+										   f'man_loss_train_s{s_id}': best_man_loss_train,
+										   f'res_loss_train_s{s_id}': best_res_loss_train,
+										   f'mpe_loss_train_s{s_id}': best_mpe_loss_train})
 							break
 
 							# lr_step += 1
@@ -145,36 +185,61 @@ def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None
 				#endregion =======================================================================================
 
 				losses.append(loss)
+				man_losses.append(man_loss)
+				res_losses.append(res_loss)
 				mpe_losses.append(mpe_loss)
+
 				losses_train.append(loss_train)
+				man_losses_train.append(man_loss_train)
+				res_losses_train.append(res_loss_train)
 				mpe_losses_train.append(mpe_loss_train)
-				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_train_s{s_id}': loss_train, f'mpe_loss_s{s_id}': mpe_loss, f'mpe_loss_train_s{s_id}': mpe_loss_train})
+
+				wandb.log({f'epoch_s{s_id}': epoch,
+						   f'loss_s{s_id}': loss,
+						   f'man_loss_s{s_id}': man_loss,
+						   f'res_loss_s{s_id}': res_loss,
+						   f'mpe_loss_s{s_id}': mpe_loss,
+						   f'loss_train_s{s_id}': loss_train,
+						   f'man_loss_train_s{s_id}': man_loss_train,
+						   f'res_loss_train_s{s_id}': res_loss_train,
+						   f'mpe_loss_train_s{s_id}': mpe_loss_train})
+
 
 			params_per_split.append(params)
+
 			losses_per_split.append(losses)
+			man_losses_per_split.append(man_losses)
+			res_losses_per_split.append(res_losses)
 			mpe_losses_per_split.append(mpe_losses)
+
 			losses_train_per_split.append(losses_train)
+			man_losses_train_per_split.append(man_losses_train)
+			res_losses_train_per_split.append(res_losses_train)
 			mpe_losses_train_per_split.append(mpe_losses_train)
 
 			print(f'Split {s_id} completed. ', end='')
 
-			# predicting and scoring ========================================================================
+			#region predicting and scoring ==================================================================
 			score_per_neuron, _, _, _, _ = model.score_fn(params, N_eval, B_ll_eval)
 			scores_per_split_per_neuron.append(score_per_neuron)
-			# ===============================================================================================
+			#endregion ======================================================================================
 
 		wandb.log({'score': np.mean(np.mean(np.array(scores_per_split_per_neuron), axis=1)),
 				   'loss': np.mean(np.array(losses_per_split)[:, -1]),
-				   'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
+				   'man_loss': np.mean(np.array(man_losses_per_split)[:, -1]),
+				   'res_loss': np.mean(np.array(res_losses_per_split)[:, -1]),
 				   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1]),
+				   'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
+				   'man_loss_train': np.mean(np.array(man_losses_train_per_split)[:, -1]),
+				   'res_loss_train': np.mean(np.array(res_losses_train_per_split)[:, -1]),
 				   'mpe_loss_train': np.mean(np.array(mpe_losses_train_per_split)[:, -1])})
 
 		# ============================================
 
 	# return (this also moves the data to the CPU)
 	return (params_per_split,
-			np.array(losses_per_split), np.array(losses_train_per_split),
-			np.array(mpe_losses_per_split), np.array(mpe_losses_train_per_split),
+			np.array(losses_per_split), np.array(man_losses_per_split), np.array(res_losses_per_split), np.array(mpe_losses_per_split),
+			np.array(losses_train_per_split), np.array(man_losses_train_per_split), np.array(res_losses_train_per_split), np.array(mpe_losses_train_per_split),
 			np.array(scores_per_split_per_neuron))
 
 
