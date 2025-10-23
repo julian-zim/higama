@@ -18,9 +18,13 @@ import optax
 import wandb
 
 sys.path.append(os.path.join(os.getcwd(), 'import'))
+# noinspection PyUnresolvedReferences
 from utils import read_utils
+# noinspection PyUnresolvedReferences
 # from utils import plot_utils
+# noinspection PyUnresolvedReferences
 from utils import artificializer
+# noinspection PyUnresolvedReferences
 from models import hgm
 #endregion
 
@@ -29,12 +33,6 @@ class Lambdas(NamedTuple):
 	loss_lambdas: tuple[float, float]
 	reg_lambdas: tuple[float, float]
 	cca_lambdas: tuple[float, float]
-
-class PrepData(NamedTuple):
-	N_mean: tuple[float, ...]
-	N_std: tuple[float, ...]
-	B_hl_mean: tuple[float, ...] | None = None
-	B_hl_std: tuple[float, ...] | None = None
 
 
 def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None):
@@ -46,13 +44,13 @@ def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None
 
 		if hyperparameters is None:
 			hyperparameters = {
-				'max_epochs': 3000,
-				'max_patience': 3000 / 4,
+				'max_epochs': 2048,
+				'max_patience': 2048 / 4,
 				'learning_rate': config.learning_rate,
 				'w1_reg_lambda': config.w1_reg_lambda,
 				'w2_reg_lambda': config.w2_reg_lambda,
 				'ccadiag_lambda': 0.6,
-				'ccaunit_lambda': 1. - 0.6,
+				'ccaunit_lambda': 1 - 0.6,
 				'loss1_lambda': 0.5,
 				'loss2_lambda': 1. - 0.5,
 				'dimensions': 2
@@ -76,67 +74,47 @@ def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None
 		n_behaviors_hl = B_hl.shape[1]
 		n_behaviors_ll = B_ll.shape[1]
 
-		# training loop =======================================
+		# training loop ==============================
 		params_per_split = list()
-		neuron_scores_per_split = list()
 		losses_per_split = list()
-		losses_tr_per_split = list()
+		losses_train_per_split = list()
 		mpe_losses_per_split = list()
-		mpe_losses_tr_per_split = list()
+		mpe_losses_train_per_split = list()
+		scores_per_split_per_neuron = list()
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_eval = jnp.array(N[train]), jnp.array(N[eval])
 			B_hl_train, B_hl_eval = jnp.array(B_hl[train]), jnp.array(B_hl[eval])
 			B_ll_train, B_ll_eval = jnp.array(B_ll[train]), jnp.array(B_ll[eval])
 
-			prep_data_train = PrepData(
-				N_mean=tuple((map(float, N_train.mean(axis=0)))),
-				N_std=tuple((map(float, jnp.where((N_std := jnp.std(N_train, axis=0)) == 0.0, 1.0, N_std)))),
-				B_hl_mean=tuple((map(float, B_hl_train.mean(axis=0)))),
-				B_hl_std=tuple((map(float, jnp.where((B_hl_std := jnp.std(B_hl_train, axis=0)) == 0.0, 1.0, B_hl_std))))
-			)
-			prep_data_eval = PrepData(
-				N_mean=tuple((map(float, N_eval.mean(axis=0)))),
-				N_std=tuple((map(float, jnp.where((N_std := jnp.std(N_eval, axis=0)) == 0.0, 1.0, N_std)))),
-				B_hl_mean=tuple((map(float, B_hl_eval.mean(axis=0)))),
-				B_hl_std=tuple((map(float, jnp.where((B_hl_std := jnp.std(B_hl_eval, axis=0)) == 0.0, 1.0, B_hl_std))))
-			)
-
-			params = model.init_params(seeds,
+			params = model.init_params(N_train, B_hl_train,
+									   seeds,
 									   (n_neurons, n_dimensions),
 									   (n_behaviors_hl, n_dimensions),
 									   (n_behaviors_ll, n_neurons),
-									   * ((n_dimensions, n_neurons),) if model.get_type() else ())
+									   * ((n_dimensions, n_neurons),) if model.get_type() else (),
+									  )
 
-			# optimizer = optax.adam(learning_rate=optax.cosine_decay_schedule(
-			# 	init_value=learning_rate,
-			# 	decay_steps=max_epochs,
-			# 	alpha=1E-2
-			# ))
+			# optimizer = optax.adam(learning_rate=optax.cosine_decay_schedule(init_value=learning_rate, decay_steps=max_epochs, alpha=1E-2))
 			optimizer = optax.adam(learning_rate)
+			optimizer = optax.masked(optimizer, {'prep': False, 'model': True})
 			opt_state = optimizer.init(params)
 			#endregion ========================================================================================
 
-			losses = [model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas, prep_data_eval).item()]
-			losses_tr = [model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()]
-			mpe_losses = [model.mpe_loss_fn(params, N_eval, B_ll_eval, prep_data_eval).item()]
-			mpe_losses_tr = [model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()]
+			losses, _, _, mpe_losses = tuple([l.item()] for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+			losses_train, _, _, mpe_losses_train = tuple([l.item()] for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
 
 			best_params = params
-			best_loss = sys.float_info.max
-			best_loss_tr = sys.float_info.max
-			best_mpe_loss = sys.float_info.max
-			best_mpe_loss_tr = sys.float_info.max
+			best_loss, best_mpe_loss = sys.float_info.max, sys.float_info.max
+			best_loss_train, best_mpe_loss_train = sys.float_info.max, sys.float_info.max
 
 			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
-				params, opt_state = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train)
+				params, opt_state = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas)
 
-				loss = model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas, prep_data_eval).item()
-				loss_tr = model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas, prep_data_train).item()
-				mpe_loss = model.mpe_loss_fn(params, N_eval, B_ll_eval, prep_data_eval).item()
-				mpe_loss_tr = model.mpe_loss_fn(params, N_train, B_ll_train, prep_data_train).item()
+				loss, _, _, mpe_loss = tuple(l.item() for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+				loss_train, _, _, mpe_loss_train = tuple(l.item() for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
 
 				#region early stopping ===========================================================================
 				if epoch >= max_patience:  # give it an initial time
@@ -144,55 +122,60 @@ def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None
 						patience = 0
 
 						best_params = params
-						best_loss = loss
-						best_loss_tr = loss_tr
-						best_mpe_loss = mpe_loss
-						best_mpe_loss_tr = mpe_loss_tr
+						best_loss, best_mpe_loss = loss, mpe_loss
+						best_loss_train, best_mpe_loss_train = loss_train, mpe_loss_train
 					else:
 						patience += 1
 						if patience > max_patience:
 							params = best_params
 							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
-							losses_tr = losses_tr + [best_loss_tr for _ in range(max_epochs - epoch)]
 							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
-							mpe_losses_tr = mpe_losses_tr + [best_mpe_loss_tr for _ in range(max_epochs - epoch)]
+							losses_train = losses_train + [best_loss_train for _ in range(max_epochs - epoch)]
+							mpe_losses_train = mpe_losses_train + [best_mpe_loss_train for _ in range(max_epochs - epoch)]
 
 							for rest_epoch in range(epoch + 1, max_epochs):
-								wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_tr_s{s_id}': best_loss_tr, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_tr_s{s_id}': best_mpe_loss_tr})
+								wandb.log({f'epoch_s{s_id}': rest_epoch, f'loss_s{s_id}': best_loss, f'loss_train_s{s_id}': best_loss_train, f'mpe_loss_s{s_id}': best_mpe_loss, f'mpe_loss_train_s{s_id}': best_mpe_loss_train})
 							break
 
 							# lr_step += 1
 							# optimizer = optax.adam(learning_rate / (10 ** lr_step))
+							# optimizer = optax.masked(optimizer, {'prep': False, 'model': True})
 							# patience = 0
 							# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
 				#endregion =======================================================================================
 
 				losses.append(loss)
-				losses_tr.append(loss_tr)
 				mpe_losses.append(mpe_loss)
-				mpe_losses_tr.append(mpe_loss_tr)
-				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_tr_s{s_id}': loss_tr, f'mpe_loss_s{s_id}': mpe_loss, f'mpe_loss_tr_s{s_id}': mpe_loss_tr})
+				losses_train.append(loss_train)
+				mpe_losses_train.append(mpe_loss_train)
+				wandb.log({f'epoch_s{s_id}': epoch, f'loss_s{s_id}': loss, f'loss_train_s{s_id}': loss_train, f'mpe_loss_s{s_id}': mpe_loss, f'mpe_loss_train_s{s_id}': mpe_loss_train})
 
 			params_per_split.append(params)
 			losses_per_split.append(losses)
-			losses_tr_per_split.append(losses_tr)
 			mpe_losses_per_split.append(mpe_losses)
-			mpe_losses_tr_per_split.append(mpe_losses_tr)
+			losses_train_per_split.append(losses_train)
+			mpe_losses_train_per_split.append(mpe_losses_train)
+
+			print(f'Split {s_id} completed. ', end='')
 
 			# predicting and scoring ========================================================================
-			score_per_neuron = model.score_fn(params, N_eval, B_ll_eval, prep_data_eval)
-			neuron_scores_per_split.append(score_per_neuron)
+			score_per_neuron, _, _, _, _ = model.score_fn(params, N_eval, B_ll_eval)
+			scores_per_split_per_neuron.append(score_per_neuron)
 			# ===============================================================================================
 
-		# =====================================================
-
-		wandb.log({'score': np.mean(np.mean(np.array(neuron_scores_per_split), axis=1)),
+		wandb.log({'score': np.mean(np.mean(np.array(scores_per_split_per_neuron), axis=1)),
 				   'loss': np.mean(np.array(losses_per_split)[:, -1]),
-				   'loss_tr': np.mean(np.array(losses_tr_per_split)[:, -1]),
+				   'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
 				   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1]),
-				   'mpe_loss_tr': np.mean(np.array(mpe_losses_tr_per_split)[:, -1])})
+				   'mpe_loss_train': np.mean(np.array(mpe_losses_train_per_split)[:, -1])})
 
-	return params_per_split, np.array(neuron_scores_per_split), np.array(losses_per_split), np.array(losses_tr_per_split), np.array(mpe_losses_per_split), np.array(mpe_losses_tr_per_split)
+		# ============================================
+
+	# return (this also moves the data to the CPU)
+	return (params_per_split,
+			np.array(losses_per_split), np.array(losses_train_per_split),
+			np.array(mpe_losses_per_split), np.array(mpe_losses_train_per_split),
+			np.array(scores_per_split_per_neuron))
 
 
 def read(artificial=False):
@@ -203,19 +186,27 @@ def read(artificial=False):
 	# selection_n = ['DD01', 'VB02', 'SMDDR', 'AVAR']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
+	# read
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_gcamp')
-	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read_utils.get_data(path, read_ids)
+	(file_ids, filenames,
+	 traces,
+	 continuous_behaviors,
+	 discrete_states, eigenworms,
+	 kymographs) = read_utils.get_data(path, read_ids)
 
-	for i in range(len(filenames)):
+	# clear nan values
+	for i in range(len(file_ids)):
 		mask = eigenworms[i].notna().all(axis=1)
-		#continuous_behaviors[i] = continuous_behaviors[i][mask]
-		discrete_states[i] = discrete_states[i][mask]
-		eigenworms[i] = eigenworms[i][mask]
+
 		traces[i] = traces[i][mask]
+		#continuous_behaviors[i] = continuous_behaviors[i][mask]
+		eigenworms[i] = eigenworms[i][mask]
+		discrete_states[i] = discrete_states[i][mask]
 
 		#kymographs[i] = kymographs[i][mask]
 		#filenames[i] = filenames[i][mask]
 
+	# remove unused discrete state labels
 	discrete_states = [ds[selection_bhl] for ds in discrete_states]
 
 
@@ -226,12 +217,16 @@ def read(artificial=False):
 
 		file_ids_art = file_ids.copy()
 		filenames_art = list()
+
 		discrete_states_art = discrete_states.copy()
 		eigenworms_art = eigenworms.copy()
+
 		neural_modes_art = list()
 		traces_reconstructed_art = list()
 		traces_residual_art = list()
+
 		traces_art = list()
+
 		for i in range(len(filenames)):
 			(filename_art,
 			 neural_modes_art_,

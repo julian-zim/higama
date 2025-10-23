@@ -42,9 +42,9 @@ def generate_reconstructed_traces(N_man, cca_weights):
 
 def generate_residual_traces(model, B_ll, N_man, W1, W2):
 	if model.get_type():
-		traces = model.predict(B_ll.values, N_man.values, W1, W2)
+		traces = model.predict_res(B_ll.values, N_man.values, W1, W2)
 	else:
-		traces = model.predict(B_ll.values, W1)
+		traces = model.predict_res(B_ll.values, W1)
 	return traces
 
 def generate_traces(N_rec, N_res):

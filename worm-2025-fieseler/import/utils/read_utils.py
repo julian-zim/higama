@@ -16,12 +16,12 @@ def get_data(path, ids=None):
 	file_ids = ids if ids is not None else list(range(len(os.listdir(path))))
 	hdf5files = get_hdf5_files(path, file_ids)
 	filenames = [get_filename(file) for file in hdf5files]
+	traces = [get_neuronal_traces(file) for file in hdf5files]
 	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
 	discrete_states = [get_discrete_states(file) for file in hdf5files]
 	eigenworms = [get_eigenworms(file) for file in hdf5files]
 	kymographs = [get_kymograph(file) for file in hdf5files]
-	traces = [get_neuronal_traces(file) for file in hdf5files]
-	return file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
+	return file_ids, filenames, traces, continuous_behaviors, discrete_states, eigenworms, kymographs,
 
 
 def get_hdf5_files(path, file_ids):
@@ -34,6 +34,16 @@ def get_filename(file_handle):
 	if filename.endswith('_no_image_data'):
 		filename = filename[:-len('_no_image_data')]
 	return filename
+
+
+def get_neuronal_traces(file_handle):
+	try:
+		data = pd.DataFrame(file_handle[f'/processing/CalciumActivity/SignalDFoF/SignalCalciumImResponseSeries/data'][:],
+							 columns=[n_id.decode('utf-8') for n_id in file_handle[f'/processing/CalciumActivity/NeuronIDs/labels'][:]])
+	except KeyError:
+		print(f'No neuronal trace data for {os.path.basename(file_handle.filename)}')
+		data = None
+	return data
 
 
 def get_continuous_behaviors(file_handle):
@@ -70,17 +80,6 @@ def get_kymograph(file_handle):
 		print(f'No kymograph data for {os.path.basename(file_handle.filename)}')
 		data = None
 	return data
-
-
-def get_neuronal_traces(file_handle):
-	try:
-		data = pd.DataFrame(file_handle[f'/processing/CalciumActivity/SignalDFoF/SignalCalciumImResponseSeries/data'][:],
-							 columns=[n_id.decode('utf-8') for n_id in file_handle[f'/processing/CalciumActivity/NeuronIDs/labels'][:]])
-	except KeyError:
-		print(f'No neuronal trace data for {os.path.basename(file_handle.filename)}')
-		data = None
-	return data
-
 
 
 def check_neuron_contents(file_ids, traces, selection_n, sort=True):

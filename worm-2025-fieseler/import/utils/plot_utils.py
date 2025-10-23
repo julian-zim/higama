@@ -717,7 +717,7 @@ def plot_mcos(bars, bar_labels, labels, order,
 
 #region score
 def plot_performance_plot(neuron_scores, neuron_scores_control=None,
-						  limits=None, plot_size=30, save_name=None):
+						  title='scores', limits=None, plot_size=30, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
@@ -726,6 +726,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 	plt.grid(False)
 	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25/60, labelpad=50)
 	plt.ylabel('HGM r2 score (median)', fontsize=plot_size * 25/60)
+	plt.title(title)
 
 	if limits is None:
 		x_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_glm])
@@ -871,7 +872,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 
 
 def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
-						  limits=None, plot_size=30, save_name=None):
+						  title='scores', limits=None, plot_size=30, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
@@ -881,6 +882,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 	plt.grid(False)
 	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25/60, labelpad=50)
 	plt.ylabel('HGM-BOM r2 score improvement (median)', fontsize=plot_size * 25/60)
+	plt.title(title)
 
 	if limits is None:
 		x_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_glm])
@@ -1031,7 +1033,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 
 # temp
 def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
-						  limits=None, plot_size=30, save_name=None):
+						  title='scores', limits=None, plot_size=30, save_name=None):
 	if neuron_scores_control is None: neuron_scores_control = dict()
 
 	threshold = 0.95
@@ -1041,6 +1043,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 	plt.grid(False)
 	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25/60, labelpad=50)
 	plt.ylabel('HGM-BOM r2 score improvement (median)', fontsize=plot_size * 25/60)
+	plt.title(title)
 
 	if limits is None:
 		x_all = np.array([score for scores_glm, scores_hgm in neuron_scores.values() for score in scores_glm])
