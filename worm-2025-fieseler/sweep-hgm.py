@@ -37,9 +37,9 @@ default_hyperparameters = {
 	'w2_reg_lambda': 1E-5,
 	'ccadiag_lambda': 0.6,
 	'ccaunit_lambda': 1 - 0.6,
-	'loss1_lambda': 0.5,
-	'loss2_lambda': 1. - 0.5,
-	'dimensions': 2
+	'loss1_lambda': 0.0,
+	'loss2_lambda': 1. - 0.0,
+	'dimensions': 1
 }
 
 
@@ -362,10 +362,9 @@ if __name__ == '__main__':
 		'method': 'bayes',
 		'metric': {
 			'name': 'mpe_loss',
-			'goal': 'minimize'
+			'goal': 'minimize',
 		},
 		'parameters': {
-			'learning_rate': {'min': 1E-3, 'max': 1.},
 			'w1_reg_lambda': {'min': 1E-4, 'max': 1E-2},
 			'w2_reg_lambda': {'min': 1E-6, 'max': 1E-3},
 		}

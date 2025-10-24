@@ -32,7 +32,9 @@ def subplot(title, datas,
 	fig, axes = plt.subplots(plots_per_col, plots_per_row,
 							 figsize=(figwidth, figheight), squeeze=False)
 	for ax in axes.ravel():
+		# ax.set_xticks([])
 		# ax.set_xticklabels([])
+		# ax.set_yticks([])
 		# ax.set_yticklabels([])
 		ax.grid(False)
 		for spine in ax.spines.values():
@@ -254,7 +256,7 @@ def plot_manifolds_3d_sep(filenames, modes, states, vars_expl, vars_expl_rs=None
 	for i in range(n_plots):
 		plot_manifolds_3d([filenames[i]], [modes[i]], [states[i]], [vars_expl[i]], vars_expl_rs=[vars_expl_rs[i]] if vars_expl_rs is not None else None,
 						  title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
-						  save_name=f'{save_name}/{filenames[i]}')
+						  save_name=f'{save_name}/{filenames[i]}' if save_name is not None else None)
 #endregion
 
 
