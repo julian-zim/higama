@@ -280,8 +280,10 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 	fig, axes = plt.subplots(plots_per_col, plots_per_row,
 							 figsize=(figwidth, figheight), squeeze=False)
 	for ax in axes.ravel():
-		ax.set_xticklabels([])
-		ax.set_yticklabels([])
+		# ax.set_xticks([])
+		# ax.set_xticklabels([])
+		# ax.set_yticks([])
+		# ax.set_yticklabels([])
 		ax.grid(False)
 		for spine in ax.spines.values():
 			spine.set_visible(False)
