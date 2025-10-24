@@ -29,32 +29,39 @@ from models import hgm
 #endregion
 
 
+default_hyperparameters = {
+	'max_epochs': 2048,
+	'max_patience': 2048 / 4,
+	'learning_rate': 1E-1,
+	'w1_reg_lambda': 1E-3,
+	'w2_reg_lambda': 1E-5,
+	'ccadiag_lambda': 0.6,
+	'ccaunit_lambda': 1 - 0.6,
+	'loss1_lambda': 0.5,
+	'loss2_lambda': 1. - 0.5,
+	'dimensions': 2
+}
+
+
 class Lambdas(NamedTuple):
 	loss_lambdas: tuple[float, float]
 	reg_lambdas: tuple[float, float]
 	cca_lambdas: tuple[float, float]
 
 
-def train_model(project_name, model, splits, N, B_ll, B_hl, hyperparameters=None):
-	with wandb.init(project=project_name):
+def train_model( model, splits, N, B_ll, B_hl, hyperparameters=None):
+	with wandb.init():
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
 
 		if hyperparameters is None:
-			hyperparameters = {
-				'max_epochs': 2048,
-				'max_patience': 2048 / 4,
-				'learning_rate': config.learning_rate,
-				'w1_reg_lambda': config.w1_reg_lambda,
-				'w2_reg_lambda': config.w2_reg_lambda,
-				'ccadiag_lambda': 0.6,
-				'ccaunit_lambda': 1 - 0.6,
-				'loss1_lambda': 0.5,
-				'loss2_lambda': 1. - 0.5,
-				'dimensions': 2
-			}
+			global default_hyperparameters
+			hyperparameters = default_hyperparameters
+
+		for key in config:
+			hyperparameters[key] = config[key]
 
 		max_epochs = hyperparameters['max_epochs']
 		max_patience = hyperparameters['max_patience']
@@ -332,34 +339,35 @@ def sweep(config):
 
 	wandb.login()
 
-	for _id in file_ids:
-		project_name = f'hgm {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {_id}-{filenames[file_ids.index(_id)]}'
-		print(f'{_id}: {filenames[file_ids.index(_id)]}  ', end='')
+	for file_id in file_ids:
+		project_name = f'hgm {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {file_id}-{filenames[file_ids.index(file_id)]}'
+		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
-		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(_id)].values.shape[0]), discrete_states[file_ids.index(_id)]['REV'].values))
+		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
 
 		def train_model_wrapper():
-			return train_model(project_name, hgm, splits,
-							   traces[file_ids.index(_id)].values,
-							   eigenworms[file_ids.index(_id)].values,
-							   discrete_states[file_ids.index(_id)].values)
+			return train_model(hgm, splits,
+							   traces[file_ids.index(file_id)].values,
+							   eigenworms[file_ids.index(file_id)].values,
+							   discrete_states[file_ids.index(file_id)].values,
+							   )
 
-		sweep_id = wandb.sweep(config, project=project_name)
+		sweep_id = wandb.sweep(sweep=config, project=project_name)
 		wandb.agent(sweep_id, function=train_model_wrapper)
 
 
-
-print('Visible devices: ', jax.devices())  
-sweep_config = {
-	'method': 'bayes',
-    'metric': {
-        'name': 'mpe_loss',
-        'goal': 'minimize'
-    },
-	'parameters': {
-		'learning_rate': {'min': 1E-3, 'max': 1.},
-		'w1_reg_lambda': {'min': 1E-4, 'max': 1E-2},
-		'w2_reg_lambda': {'min': 1E-6, 'max': 1E-3},
+if __name__ == '__main__':
+	print('Visible devices: ', jax.devices())
+	sweep_config = {
+		'method': 'bayes',
+		'metric': {
+			'name': 'mpe_loss',
+			'goal': 'minimize'
+		},
+		'parameters': {
+			'learning_rate': {'min': 1E-3, 'max': 1.},
+			'w1_reg_lambda': {'min': 1E-4, 'max': 1E-2},
+			'w2_reg_lambda': {'min': 1E-6, 'max': 1E-3},
+		}
 	}
-}
-sweep(sweep_config)
+	sweep(sweep_config)
