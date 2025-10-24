@@ -49,8 +49,8 @@ class Lambdas(NamedTuple):
 	cca_lambdas: tuple[float, float]
 
 
-def train_model( model, splits, N, B_ll, B_hl, hyperparameters=None):
-	with wandb.init():
+def train_model(log_path, model, splits, N, B_ll, B_hl, hyperparameters=None):
+	with wandb.init(dir=log_path):
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
@@ -332,7 +332,7 @@ def read(artificial=False):
 	return file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
 
 
-def sweep(config):
+def sweep(config, log_path):
 	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read(artificial=False)
 
 	print('sweeping...')
@@ -340,13 +340,13 @@ def sweep(config):
 	wandb.login()
 
 	for file_id in file_ids:
-		project_name = f'hgm {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {file_id}-{filenames[file_ids.index(file_id)]}'
+		project_name = f'bom {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {file_id}-{filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
 
 		def train_model_wrapper():
-			return train_model(bom, splits,
+			return train_model(log_path, bom, splits,
 							   traces[file_ids.index(file_id)].values,
 							   eigenworms[file_ids.index(file_id)].values,
 							   discrete_states[file_ids.index(file_id)].values,
@@ -357,6 +357,10 @@ def sweep(config):
 
 
 if __name__ == '__main__':
+	log_path = '/lisc/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
+	if not (os.path.exists(log_path) and os.access(log_path, os.W_OK)):
+		log_path = './out/'
+
 	print('Visible devices: ', jax.devices())
 	sweep_config = {
 		'method': 'bayes',
@@ -369,4 +373,4 @@ if __name__ == '__main__':
 			'w2_reg_lambda': {'min': 1E-6, 'max': 1E-3},
 		}
 	}
-	sweep(sweep_config)
+	sweep(sweep_config, log_path)
