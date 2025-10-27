@@ -425,18 +425,19 @@ def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces
 	keys = [key for key in traces_first.columns if key != '']
 	if n_plots is None:
 		n_plots = len(keys)
-	if ylimits is None: ylimits = (
-		np.array(
-			([traces_first[keys].values] if plot_first else []) +
-			([trace_splits[keys].values for trace_splits in traces_splits] if traces_splits is not None else []) +
-			([trace_splits_ref[keys].values for trace_splits_ref in traces_splits_ref] if traces_splits_ref is not None else [])
-		).min(),
-		np.array(
-			([traces_first[keys].values] if plot_first else []) +
-			([trace_splits[keys].values for trace_splits in traces_splits] if traces_splits is not None else []) +
-			([trace_splits_ref[keys].values for trace_splits_ref in traces_splits_ref] if traces_splits_ref is not None else [])
-		).max()
-	)
+	if ylimits is None:
+		ylimits = (
+			np.array(
+				([traces_first[keys].values] if plot_first else []) +
+				([trace_splits[keys].values for trace_splits in traces_splits] if traces_splits is not None else []) +
+				([trace_splits_ref[keys].values for trace_splits_ref in traces_splits_ref] if traces_splits_ref is not None else [])
+			).min(),
+			np.array(
+				([traces_first[keys].values] if plot_first else []) +
+				([trace_splits[keys].values for trace_splits in traces_splits] if traces_splits is not None else []) +
+				([trace_splits_ref[keys].values for trace_splits_ref in traces_splits_ref] if traces_splits_ref is not None else [])
+			).max()
+		)
 	#endregion
 
 	#region plot setup

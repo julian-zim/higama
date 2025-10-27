@@ -59,7 +59,7 @@ def predict(params, N, B_ll):
 
 	return N_man, N_rec, N_res, N_res_pred
 
-@jax.jit
+#@jax.jit
 def r2_score(y, y_pred):
 	ss_res = jnp.sum((y - y_pred) ** 2)  # ^p?
 	ss_tot = jnp.sum((y - jnp.mean(y)) ** 2)  # ^p?
@@ -76,15 +76,15 @@ def score_fn(params, N, B_ll):
 
 #region TRAINING
 
-@jax.jit
-def norming(X_proj):
+#@jax.jit
+def norm(X_proj):
 	X_proj = X_proj - jnp.mean(X_proj, axis=0)
 	X_proj = X_proj / (jnp.linalg.norm(X_proj, axis=0) + 1e-6)
 	return X_proj
 
 @jax.jit
 def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
-	corr = norming(X_proj).T @ norming(Y_proj)
+	corr = norm(X_proj).T @ norm(Y_proj)
 
 	corr_diag = jnp.diag(jnp.diag(corr))
 	corr_nondiag = corr - corr_diag
@@ -92,6 +92,7 @@ def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
 	return (ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag))
 			+ ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape))))
 
+#@jax.jit
 def loss_fn(params, N, B_ll, B_hl, lambdas):
 	# read hyperparams
 	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
@@ -112,7 +113,7 @@ def loss_fn(params, N, B_ll, B_hl, lambdas):
 	# B_hl_man = B_hl_zs @ V
 	#
 	# man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
-	man_loss = jnp.array(0)
+	man_loss = jnp.zeros(())
 	# =========================================
 
 	# residuals ===============================
@@ -124,15 +125,20 @@ def loss_fn(params, N, B_ll, B_hl, lambdas):
 	# =========================================
 
 	full_loss = man_loss * loss1_lambda + res_loss * loss2_lambda
+	return full_loss, (man_loss, res_loss, mpe_loss)
+
+loss_and_grads = jax.jit(jax.value_and_grad(loss_fn, has_aux=True), static_argnums=(4,))
+
+@jax.jit
+def loss_fn_flattened(params, N, B_ll, B_hl, lambdas):
+	full_loss, (man_loss, res_loss, mpe_loss) = loss_fn(params, N, B_ll, B_hl, lambdas)
 	return full_loss, man_loss, res_loss, mpe_loss
 
-loss_fn_grad = jax.jit(jax.grad(lambda *args: loss_fn(*args)[0]), static_argnums=(4,))
-
 def update(opt_update, opt_state, params, N, B_ll, B_hl, lambdas):
-	grads = loss_fn_grad(params, N, B_ll, B_hl, lambdas)
+	(loss, (man_loss, res_loss, mpe_loss)), grads = loss_and_grads(params, N, B_ll, B_hl, lambdas)
 	params_updates, opt_state = opt_update(grads, opt_state, params)
 	params_new = optax.apply_updates(params, params_updates)
-	return params_new, opt_state
+	return opt_state, params_new, (loss, man_loss, res_loss, mpe_loss)
 
 update = jax.jit(update, static_argnums=(0, 6,))
 

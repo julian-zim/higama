@@ -49,17 +49,15 @@ class Lambdas(NamedTuple):
 	cca_lambdas: tuple[float, float]
 
 
-def train_model(log_path, model, splits, N, B_ll, B_hl, hyperparameters=None):
+def train_model(model, splits, N, B_ll, B_hl, log_path):
 	with wandb.init(dir=log_path):
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
 
-		if hyperparameters is None:
-			global default_hyperparameters
-			hyperparameters = default_hyperparameters
-
+		global default_hyperparameters
+		hyperparameters = default_hyperparameters.copy()
 		for key in config:
 			hyperparameters[key] = config[key]
 
@@ -83,14 +81,14 @@ def train_model(log_path, model, splits, N, B_ll, B_hl, hyperparameters=None):
 
 		# training loop ==============================
 		params_per_split = list()
-		(losses_per_split,
-		 man_losses_per_split,
-		 res_losses_per_split,
-		 mpe_losses_per_split) = list(), list(), list(), list()
 		(losses_train_per_split,
 		 man_losses_train_per_split,
 		 res_losses_train_per_split,
 		 mpe_losses_train_per_split) = list(), list(), list(), list()
+		(losses_per_split,
+		 man_losses_per_split,
+		 res_losses_per_split,
+		 mpe_losses_per_split) = list(), list(), list(), list()
 		scores_per_split_per_neuron = list()
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
@@ -112,76 +110,79 @@ def train_model(log_path, model, splits, N, B_ll, B_hl, hyperparameters=None):
 			opt_state = optimizer.init(params)
 			#endregion ========================================================================================
 
-			(losses,
-			 man_losses,
-			 res_losses,
-			 mpe_losses) = tuple([l.item()] for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
 			(losses_train,
 			 man_losses_train,
 			 res_losses_train,
-			 mpe_losses_train) = tuple([l.item()] for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
+			 mpe_losses_train) = [], [], [], []
+			(losses,
+			 man_losses,
+			 res_losses,
+			 mpe_losses) = [], [], [], []
 
 			best_params = params
-			(best_loss,
-			 best_man_loss,
-			 best_res_loss,
-			 best_mpe_loss) = sys.float_info.max, sys.float_info.max, sys.float_info.max, sys.float_info.max
 			(best_loss_train,
 			 best_man_loss_train,
 			 best_res_loss_train,
 			 best_mpe_loss_train) = sys.float_info.max, sys.float_info.max, sys.float_info.max, sys.float_info.max
+			(best_loss,
+			 best_man_loss,
+			 best_res_loss,
+			 best_mpe_loss) = sys.float_info.max, sys.float_info.max, sys.float_info.max, sys.float_info.max
 
 			# lr_step = 0
 			patience = 0
 			for epoch in range(max_epochs):
-				params, opt_state = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas)
 
 				(loss,
 				 man_loss,
 				 res_loss,
-				 mpe_loss) = tuple(l.item() for l in model.loss_fn(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+				 mpe_loss) = tuple(l.item() for l in model.loss_fn_flattened(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+
+				(opt_state, params, loss_types_train) = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas)
+
 				(loss_train,
 				 man_loss_train,
 				 res_loss_train,
-				 mpe_loss_train) = tuple(l.item() for l in model.loss_fn(params, N_train, B_ll_train, B_hl_train, lambdas))
+				 mpe_loss_train) = tuple(l.item() for l in loss_types_train)
 
 				#region early stopping ===========================================================================
 				if epoch >= max_patience:  # give it an initial time
 					if loss < best_loss:
 						patience = 0
 
-						(best_loss,
-						 best_man_loss,
-						 best_res_loss,
-						 best_mpe_loss) = loss, man_loss, res_loss, mpe_loss
 						(best_loss_train,
 						 best_man_loss_train,
 						 best_res_loss_train,
 						 best_mpe_loss_train) = loss_train, man_loss_train, res_loss_train, mpe_loss_train
+						(best_loss,
+						 best_man_loss,
+						 best_res_loss,
+						 best_mpe_loss) = loss, man_loss, res_loss, mpe_loss
 					else:
 						patience += 1
 						if patience > max_patience:
 							params = best_params
-							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
-							man_losses = man_losses + [best_man_loss for _ in range(max_epochs - epoch)]
-							res_losses = res_losses + [best_res_loss for _ in range(max_epochs - epoch)]
-							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
 
 							losses_train = losses_train + [best_loss_train for _ in range(max_epochs - epoch)]
 							man_losses_train = man_losses_train + [best_man_loss_train for _ in range(max_epochs - epoch)]
 							res_losses_train = res_losses_train + [best_res_loss_train for _ in range(max_epochs - epoch)]
 							mpe_losses_train = mpe_losses_train + [best_mpe_loss_train for _ in range(max_epochs - epoch)]
 
+							losses = losses + [best_loss for _ in range(max_epochs - epoch)]
+							man_losses = man_losses + [best_man_loss for _ in range(max_epochs - epoch)]
+							res_losses = res_losses + [best_res_loss for _ in range(max_epochs - epoch)]
+							mpe_losses = mpe_losses + [best_mpe_loss for _ in range(max_epochs - epoch)]
+
 							for rest_epoch in range(epoch + 1, max_epochs):
 								wandb.log({f'epoch_s{s_id}': rest_epoch,
-										   f'loss_s{s_id}': best_loss,
-										   f'man_loss_s{s_id}': best_man_loss,
-										   f'res_loss_s{s_id}': best_res_loss,
-										   f'mpe_loss_s{s_id}': best_mpe_loss,
 										   f'loss_train_s{s_id}': best_loss_train,
 										   f'man_loss_train_s{s_id}': best_man_loss_train,
 										   f'res_loss_train_s{s_id}': best_res_loss_train,
-										   f'mpe_loss_train_s{s_id}': best_mpe_loss_train})
+										   f'mpe_loss_train_s{s_id}': best_mpe_loss_train,
+										   f'loss_s{s_id}': best_loss,
+										   f'man_loss_s{s_id}': best_man_loss,
+										   f'res_loss_s{s_id}': best_res_loss,
+										   f'mpe_loss_s{s_id}': best_mpe_loss})
 							break
 
 							# lr_step += 1
@@ -191,38 +192,38 @@ def train_model(log_path, model, splits, N, B_ll, B_hl, hyperparameters=None):
 							# print(f'\nReduced learning rate from {learning_rate / (10 ** (lr_step - 1))} to {learning_rate / (10 ** lr_step)} after epoch {epoch} in split {s_id}', end='')
 				#endregion =======================================================================================
 
-				losses.append(loss)
-				man_losses.append(man_loss)
-				res_losses.append(res_loss)
-				mpe_losses.append(mpe_loss)
-
 				losses_train.append(loss_train)
 				man_losses_train.append(man_loss_train)
 				res_losses_train.append(res_loss_train)
 				mpe_losses_train.append(mpe_loss_train)
 
+				losses.append(loss)
+				man_losses.append(man_loss)
+				res_losses.append(res_loss)
+				mpe_losses.append(mpe_loss)
+
 				wandb.log({f'epoch_s{s_id}': epoch,
-						   f'loss_s{s_id}': loss,
-						   f'man_loss_s{s_id}': man_loss,
-						   f'res_loss_s{s_id}': res_loss,
-						   f'mpe_loss_s{s_id}': mpe_loss,
 						   f'loss_train_s{s_id}': loss_train,
 						   f'man_loss_train_s{s_id}': man_loss_train,
 						   f'res_loss_train_s{s_id}': res_loss_train,
-						   f'mpe_loss_train_s{s_id}': mpe_loss_train})
+						   f'mpe_loss_train_s{s_id}': mpe_loss_train,
+						   f'loss_s{s_id}': loss,
+						   f'man_loss_s{s_id}': man_loss,
+						   f'res_loss_s{s_id}': res_loss,
+						   f'mpe_loss_s{s_id}': mpe_loss})
 
 
 			params_per_split.append(params)
-
-			losses_per_split.append(losses)
-			man_losses_per_split.append(man_losses)
-			res_losses_per_split.append(res_losses)
-			mpe_losses_per_split.append(mpe_losses)
 
 			losses_train_per_split.append(losses_train)
 			man_losses_train_per_split.append(man_losses_train)
 			res_losses_train_per_split.append(res_losses_train)
 			mpe_losses_train_per_split.append(mpe_losses_train)
+
+			losses_per_split.append(losses)
+			man_losses_per_split.append(man_losses)
+			res_losses_per_split.append(res_losses)
+			mpe_losses_per_split.append(mpe_losses)
 
 			print(f'Split {s_id} completed. ', end='')
 
@@ -232,21 +233,21 @@ def train_model(log_path, model, splits, N, B_ll, B_hl, hyperparameters=None):
 			#endregion ======================================================================================
 
 		wandb.log({'score': np.mean(np.mean(np.array(scores_per_split_per_neuron), axis=1)),
-				   'loss': np.mean(np.array(losses_per_split)[:, -1]),
-				   'man_loss': np.mean(np.array(man_losses_per_split)[:, -1]),
-				   'res_loss': np.mean(np.array(res_losses_per_split)[:, -1]),
-				   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1]),
 				   'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
 				   'man_loss_train': np.mean(np.array(man_losses_train_per_split)[:, -1]),
 				   'res_loss_train': np.mean(np.array(res_losses_train_per_split)[:, -1]),
-				   'mpe_loss_train': np.mean(np.array(mpe_losses_train_per_split)[:, -1])})
+				   'mpe_loss_train': np.mean(np.array(mpe_losses_train_per_split)[:, -1]),
+				   'loss': np.mean(np.array(losses_per_split)[:, -1]),
+				   'man_loss': np.mean(np.array(man_losses_per_split)[:, -1]),
+				   'res_loss': np.mean(np.array(res_losses_per_split)[:, -1]),
+				   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1])})
 
 		# ============================================
 
 	# return (this also moves the data to the CPU)
 	return (params_per_split,
-			np.array(losses_per_split), np.array(man_losses_per_split), np.array(res_losses_per_split), np.array(mpe_losses_per_split),
 			np.array(losses_train_per_split), np.array(man_losses_train_per_split), np.array(res_losses_train_per_split), np.array(mpe_losses_train_per_split),
+			np.array(losses_per_split), np.array(man_losses_per_split), np.array(res_losses_per_split), np.array(mpe_losses_per_split),
 			np.array(scores_per_split_per_neuron))
 
 
@@ -346,11 +347,11 @@ def sweep(config, log_path):
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
 
 		def train_model_wrapper():
-			return train_model(log_path, hgm, splits,
+			return train_model(hgm, splits,
 							   traces[file_ids.index(file_id)].values,
 							   eigenworms[file_ids.index(file_id)].values,
 							   discrete_states[file_ids.index(file_id)].values,
-							   )
+							   log_path)
 
 		sweep_id = wandb.sweep(sweep=config, project=project_name)
 		wandb.agent(sweep_id, function=train_model_wrapper)
