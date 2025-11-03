@@ -33,12 +33,11 @@ def init_params(N, B_hl, seeds, shape_U, shape_V, shape_bn):
 
 @jax.jit
 def predict_res(B_ll, W):
-	# B_ll_mean, B_ll_std = prep['mean'], prep['std']
 	return B_ll @ W
 
 @jax.jit
-def predict_man(prep, N, U):
-	N_mean, N_std = prep['mean'], prep['std']
+def predict_man(prep_n, N, U):
+	N_mean, N_std = prep_n['mean'], prep_n['std']
 
 	N_zs = (N - N_mean) / N_std
 	N_man = N_zs @ U
@@ -50,10 +49,10 @@ def predict_man(prep, N, U):
 
 @jax.jit
 def predict(params, N, B_ll):
-	prep = params['prep']
+	prep_n = jax.lax.stop_gradient(params['prep']['N'])
 	U, W = params['model']['U'], params['model']['W']
 
-	N_man, N_rec, N_res = predict_man(prep['N'], N, U)
+	N_man, N_rec, N_res = predict_man(prep_n, N, U)
 
 	N_res_pred = predict_res(B_ll, W)
 
@@ -63,6 +62,7 @@ def predict(params, N, B_ll):
 def r2_score(y, y_pred):
 	ss_res = jnp.sum((y - y_pred) ** 2)  # ^p?
 	ss_tot = jnp.sum((y - jnp.mean(y)) ** 2)  # ^p?
+	# ss_tot = jnp.sum((y - jnp.array(0)) ** 2)  # ^p?
 	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
 
 @jax.jit
@@ -98,31 +98,30 @@ def loss_fn(params, N, B_ll, B_hl, lambdas):
 	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
 
 	loss1_lambda, loss2_lambda = loss_lambdas
-	w_reg_lambda = reg_lambdas[0]
+	w_reg_lambda, _ = reg_lambdas
 	ccadiag_lambda, ccaunit_lambda = cca_lambdas
 
-	# read params
-	prep = jax.lax.stop_gradient(params['prep'])
-	U, V, W = params['model']['U'], params['model']['V'], params['model']['W']
+	# predict
+	N_man, N_rec, N_res, N_res_pred = predict(params, N, B_ll)
 
-	# manifold ================================
-	N_man, N_rec, N_res = predict_man(prep['N'], N, U)
+	# manifold loss =================================
+	prep_b_hl = jax.lax.stop_gradient(params['prep']['B_hl'])
+	B_hl_mean, B_hl_std = prep_b_hl['mean'], prep_b_hl['std']
+	V = params['model']['V']
 
-	# B_hl_mean, B_hl_std = prep['B_hl']['mean'], prep['B_hl']['std']
-	# B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
-	# B_hl_man = B_hl_zs @ V
-	#
-	# man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
-	man_loss = jnp.zeros(())
-	# =========================================
+	B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
+	B_hl_man = B_hl_zs @ V
+	man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
+	# man_loss = jnp.array(0)
+	# ===============================================
 
-	# residuals ===============================
-	N_res_pred = predict_res(B_ll, W)
+	# residuals loss ================================
+	W = params['model']['W']
+
 	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
 	w_reg_loss = jnp.linalg.norm(W) ** 2
-
 	res_loss = mpe_loss + w_reg_loss * w_reg_lambda
-	# =========================================
+	# ===============================================
 
 	full_loss = man_loss * loss1_lambda + res_loss * loss2_lambda
 	return full_loss, (man_loss, res_loss, mpe_loss)
@@ -141,5 +140,38 @@ def update(opt_update, opt_state, params, N, B_ll, B_hl, lambdas):
 	return opt_state, params_new, (loss, man_loss, res_loss, mpe_loss)
 
 update = jax.jit(update, static_argnums=(0, 6,))
+
+#endregion
+
+
+#region OLD
+
+from sklearn.metrics import r2_score as r2_score_sklearn
+
+@jax.jit
+def predict_OLD(B_ll, W):
+	return B_ll @ W
+
+@jax.jit
+def obtain_OLD(params, N, B_ll, prep_data):
+	N_mean, N_std = jnp.asarray(prep_data.N_mean), jnp.asarray(prep_data.N_std)
+
+	U, V, W = params['U'], params['V'], params['W']
+	# U, V, W = params['model']['U'], params['model']['V'], params['model']['W']
+
+	N_zs = (N - N_mean) / N_std
+	N_man = N_zs @ U
+	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # got'em	N_man @ jax.numpy.linalg.pinv(U)
+	N_rec = N_zs_rec * N_std + N_mean
+	N_res = N - N_rec
+
+	N_res_pred = predict_OLD(B_ll, W)
+
+	return N_res_pred, N_res, N_rec
+
+def score_fn_OLD(params, N, B_ll, prep_data):
+	N_res_pred, N_res, _ = obtain_OLD(params, N, B_ll, prep_data)
+	score_per_neuron = [(r2_score_sklearn(trace, trace_pred) if trace.var() > 0 else 0) for trace, trace_pred in zip(N_res.T, N_res_pred.T)]
+	return score_per_neuron
 
 #endregion
