@@ -31,15 +31,15 @@ from models import hgm
 
 default_hyperparameters = {
 	'max_epochs': 2048,
-	'max_patience': 2048 / 4,
+	'max_patience': 2048 / 3,
 	'learning_rate': 1E-1,
 	'w1_reg_lambda': 1E-3,
 	'w2_reg_lambda': 1E-5,
 	'ccadiag_lambda': 0.6,
 	'ccaunit_lambda': 1.0 - 0.6,
-	'loss1_lambda': 0.0,
-	'loss2_lambda': 1.0 - 0.0,
-	'dimensions': 1
+	'loss1_lambda': 0.67,
+	'loss2_lambda': 1.0 - 0.67,
+	'dimensions': 2
 }
 
 
@@ -89,7 +89,6 @@ def train_model(model, splits, N, B_ll, B_hl, log_path):
 		 man_losses_per_split,
 		 res_losses_per_split,
 		 mpe_losses_per_split) = list(), list(), list(), list()
-		scores_per_split_per_neuron = list()
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_eval = jnp.array(N[train]), jnp.array(N[eval])
@@ -150,6 +149,7 @@ def train_model(model, splits, N, B_ll, B_hl, log_path):
 					if loss < best_loss:
 						patience = 0
 
+						best_params = params
 						(best_loss_train,
 						 best_man_loss_train,
 						 best_res_loss_train,
@@ -227,13 +227,7 @@ def train_model(model, splits, N, B_ll, B_hl, log_path):
 
 			print(f'Split {s_id} completed. ', end='')
 
-			#region predicting and scoring ==================================================================
-			score_per_neuron, _, _, _, _ = model.score_fn(params, N_eval, B_ll_eval)
-			scores_per_split_per_neuron.append(score_per_neuron)
-			#endregion ======================================================================================
-
-		wandb.log({'score': np.mean(np.mean(np.array(scores_per_split_per_neuron), axis=1)),
-				   'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
+		wandb.log({'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
 				   'man_loss_train': np.mean(np.array(man_losses_train_per_split)[:, -1]),
 				   'res_loss_train': np.mean(np.array(res_losses_train_per_split)[:, -1]),
 				   'mpe_loss_train': np.mean(np.array(mpe_losses_train_per_split)[:, -1]),
@@ -247,60 +241,60 @@ def train_model(model, splits, N, B_ll, B_hl, log_path):
 	# return (this also moves the data to the CPU)
 	return (params_per_split,
 			np.array(losses_train_per_split), np.array(man_losses_train_per_split), np.array(res_losses_train_per_split), np.array(mpe_losses_train_per_split),
-			np.array(losses_per_split), np.array(man_losses_per_split), np.array(res_losses_per_split), np.array(mpe_losses_per_split),
-			np.array(scores_per_split_per_neuron))
+			np.array(losses_per_split), np.array(man_losses_per_split), np.array(res_losses_per_split), np.array(mpe_losses_per_split))
 
 
 def read(artificial=False):
 	print('reading...')
 
+	# read_ids = list(range(0, 33+1))
 	# read_ids = [0, 12, 14, 23, 29, 32]
 	read_ids = [14]
-	# selection_n = ['DD01', 'VB02', 'SMDDR', 'AVAR']
+
+	# selection_n = ['DD01', 'VB02', 'AVAR', 'ALA']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	# read
 	path = os.path.join(read_utils.get_data_path(), 'worm-2025-fieseler', 'exported_data_gcamp')
-	(file_ids, filenames,
-	 traces,
-	 continuous_behaviors,
-	 discrete_states, eigenworms,
-	 kymographs) = read_utils.get_data(path, read_ids)
+	(file_ids_gcamp, filenames_gcamp,
+	 traces_gcamp,
+	 continuous_behaviors_gcamp,
+	 discrete_states_gcamp, eigenworms_gcamp,
+	 kymographs_gcamp) = read_utils.get_data(path, read_ids)
 
 	# clear nan values
-	for i in range(len(file_ids)):
-		mask = eigenworms[i].notna().all(axis=1)
+	for i in range(len(file_ids_gcamp)):
+		mask = eigenworms_gcamp[i].notna().all(axis=1)
 
-		traces[i] = traces[i][mask]
-		#continuous_behaviors[i] = continuous_behaviors[i][mask]
-		eigenworms[i] = eigenworms[i][mask]
-		discrete_states[i] = discrete_states[i][mask]
+		traces_gcamp[i] = traces_gcamp[i][mask]
+		# continuous_behaviors_gcamp[i] = continuous_behaviors_gcamp[i][mask]
+		eigenworms_gcamp[i] = eigenworms_gcamp[i][mask]
+		discrete_states_gcamp[i] = discrete_states_gcamp[i][mask]
 
-		#kymographs[i] = kymographs[i][mask]
-		#filenames[i] = filenames[i][mask]
+		# kymographs_gcamp[i] = kymographs_gcamp[i][mask]
+		# filenames_gcamp[i] = filenames_gcamp[i][mask]
 
 	# remove unused discrete state labels
-	discrete_states = [ds[selection_bhl] for ds in discrete_states]
+	discrete_states_gcamp = [ds[selection_bhl] for ds in discrete_states_gcamp]
 
 
 	# artificialize
 	if artificial:
 		dims_generation = 2
-		weights = (0.5, 2.)
+		weights = (0.01, -2.)
 
-		file_ids_art = file_ids.copy()
+		file_ids_art = list()
 		filenames_art = list()
 
-		discrete_states_art = discrete_states.copy()
-		eigenworms_art = eigenworms.copy()
+		discrete_states_art = list()
+		eigenworms_art = list()
 
-		neural_modes_art = list()
+		modes_art = list()
 		traces_reconstructed_art = list()
 		traces_residual_art = list()
-
 		traces_art = list()
 
-		for i in range(len(filenames)):
+		for i in range(len(file_ids_gcamp)):
 			(filename_art,
 			 neural_modes_art_,
 			 traces_reconstructed_art_,
@@ -308,33 +302,39 @@ def read(artificial=False):
 			 traces_art_,
 			 params_art_,
 			 params_cca_art_) = artificializer.artificialize(weights, hgm,
-															 filenames[i],
-															 traces[i].columns,
-															 eigenworms_art[i],
-															 discrete_states_art[i],
+															 filenames_gcamp[i],
+															 traces_gcamp[i].columns,
+															 eigenworms_gcamp[i],
+															 discrete_states_gcamp[i],
 															 n_dimensions=dims_generation)
 			filenames_art.append(filename_art)
-			neural_modes_art.append(neural_modes_art_)
+
+			modes_art.append(neural_modes_art_)
 			traces_reconstructed_art.append(traces_reconstructed_art_)
 			traces_residual_art.append(traces_residual_art_)
 			traces_art.append(traces_art_)
 
+			file_ids_art.append(file_ids_gcamp[i])
+
+			discrete_states_art.append(discrete_states_gcamp[i].copy())
+			eigenworms_art.append(eigenworms_gcamp[i].copy())
+
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
 		# 					   discrete_states_art[0]['REV'],
 		# 					   traces_art[0][selection_n],
-		# 					   plots_per_row=2, ylimits=(-8, 8))
-		return file_ids_art, filenames_art, continuous_behaviors, discrete_states_art, eigenworms_art, kymographs, traces_art
+		# 					   plots_per_row=2, ylimits=None)
+		return file_ids_art, filenames_art, discrete_states_art, eigenworms_art, traces_art
 
 
 	# plot_utils.plot_traces(f'[{filenames[0]}] traces',
 	# 					   discrete_states[0]['REV'],
 	# 					   traces[0][selection_n],
-	# 					   plots_per_row=2, ylimits=(-2, 2))
-	return file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces
+	# 					   plots_per_row=2, ylimits=None)
+	return file_ids_gcamp, filenames_gcamp, discrete_states_gcamp, eigenworms_gcamp, traces_gcamp
 
 
 def sweep(config, log_path):
-	file_ids, filenames, continuous_behaviors, discrete_states, eigenworms, kymographs, traces = read(artificial=False)
+	file_ids, filenames, discrete_states, eigenworms, traces = read(artificial=False)
 
 	print('sweeping...')
 

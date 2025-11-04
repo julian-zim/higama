@@ -12,14 +12,17 @@ def generate_params(weights, model, seeds, shape_B_ll, shape_N_man):
 	if model.get_type():
 		return {
 			'W1': hgm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1)),
-			'W2': -hgm_sig * jnp.ones((shape_N_man[0], shape_B_ll[1])),
-			# 'W2': -hgm_sig * jnp.tile(jnp.abs(jax.random.normal(seeds[1], (shape_B_ll[1],))), (shape_N_man[0], 1))
+			'W2': hgm_sig * jnp.ones((shape_N_man[0], shape_B_ll[1])),
 		}
 	else:
 		return {
 			'W': bom_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1))
-			# 'W': bom_lin * jnp.ones(shape_B_ll),
 		}
+
+def generate_manifold(discrete_states, n_dimensions):
+	# define the neuronal manifold as the high level behavior
+	manifold = np.array((discrete_states.values[:, :n_dimensions] * 2 - 0.1), dtype=float)
+	return manifold
 
 def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=0.25):
 	# (dimensions x neurons)
@@ -32,13 +35,8 @@ def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=0.25):
 
 	return cca_weights
 
-def generate_manifold(discrete_states, n_dimensions):
-	# define the neuronal manifold as the high level behavior
-	manifold = np.array((discrete_states.values[:, :n_dimensions] * 2 - 1), dtype=float)
-	return manifold
-
 def generate_reconstructed_traces(N_man, cca_weights):
-	return N_man.values @ cca_weights
+	return N_man.values @ cca_weights  # normalize
 
 def generate_residual_traces(model, B_ll, N_man, W1, W2):
 	if model.get_type():
@@ -53,7 +51,7 @@ def generate_traces(N_rec, N_res):
 def artificialize(weights, model, filename, neurons, eigenworms, discrete_states, n_dimensions=2):
 	assert n_dimensions <= 4
 
-	cyber_name = '_'.join(['ZIMMERMANN_artificial'] + filename.split('_')[2:])
+	cyber_name = '_'.join(['ZIMANN_artificial'] + filename.split('_')[2:])
 	seeds = jax.random.PRNGKey(69), jax.random.PRNGKey(420)
 
 	n_neurons = len(neurons) # ~100
