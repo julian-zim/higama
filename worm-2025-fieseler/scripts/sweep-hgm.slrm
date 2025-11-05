@@ -16,8 +16,8 @@ python --version
 echo "${VIRTUAL_ENV}"
 
 
-OUT_DIR="/lisc/scratch/neurobiology/zimmer/zimmermann/workspace/msc_thesis/worm-2025-fieseler/out/slurm/"
-WANDB_DIR="${HOME}/Files/Cloud/OneDrive/OneFiles/Linux/Work/ZimmerLab/MSc_Thesis/Workspace/hobe/worm-2025-fieseler/out/wandb"
+OUT_DIR="/lisc/scratch/neurobiology/zimmer/zimmermann/Slurm"
+WANDB_DIR="/lisc/home/user/zimmermann/Files/Workspace/hobe/worm-2025-fieseler/out/wandb"
 mkdir -p "${OUT_DIR}"
 mkdir -p "${WANDB_DIR}"
 
