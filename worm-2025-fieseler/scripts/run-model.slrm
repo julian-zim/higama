@@ -19,14 +19,11 @@ echo "${VIRTUAL_ENV}"
 
 
 OUT_DIR="/lisc/scratch/neurobiology/zimmer/zimmermann/Slurm"
-WANDB_DIR="/lisc/home/user/zimmermann/Files/Workspace/hobe/worm-2025-fieseler/out/wandb"
 mkdir -p "${OUT_DIR}"
-mkdir -p "${WANDB_DIR}"
 
 
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform
-export WANDB_DIR="${WANDB_DIR}"
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
 srun --cpu-bind=none jupyter nbconvert --to notebook --execute model-runall.ipynb --output model-runall.ipynb
