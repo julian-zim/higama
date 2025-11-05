@@ -372,9 +372,9 @@ if __name__ == '__main__':
 			'goal': 'minimize',
 		},
 		'parameters': {
-			'w1_reg_lambda': {'min': 1E-6, 'max': 1},
-			'w2_reg_lambda': {'min': 1E-6, 'max': 1},
-			'loss1_lambda': {'min': 1., 'max': 0.},
+			'w1_reg_lambda': {'min': 1E-6, 'max': 1.0},
+			'w2_reg_lambda': {'min': 1E-6, 'max': 1.0},
+			'loss1_lambda': {'min': 1.0, 'max': 0.0},
 		}
 	}
 	sweep(sweep_config, log_path)
