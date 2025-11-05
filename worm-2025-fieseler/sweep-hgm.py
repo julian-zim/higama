@@ -370,8 +370,8 @@ if __name__ == '__main__':
 			'goal': 'minimize',
 		},
 		'parameters': {
-			'w1_reg_lambda': {'min': 1E-5, 'max': 1E-1},
-			'w2_reg_lambda': {'min': 1E-6, 'max': 1E-1},
+			'w1_reg_lambda': {'distribution': 'log_uniform', 'min': 1E-6, 'max': 1E-0},
+			'w2_reg_lambda': {'distribution': 'log_uniform', 'min': 1E-6, 'max': 1E-0},
 		}
 	}
 	sweep(sweep_config, log_path)
