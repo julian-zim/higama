@@ -374,7 +374,7 @@ if __name__ == '__main__':
 		'parameters': {
 			'w1_reg_lambda': {'min': 1E-6, 'max': 1.0},
 			'w2_reg_lambda': {'min': 1E-6, 'max': 1.0},
-			'loss1_lambda': {'min': 1.0, 'max': 0.0},
+			'loss1_lambda': {'min': 0.0, 'max': 1.0},
 		}
 	}
 	sweep(sweep_config, log_path)
