@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 #SBATCH --job-name run-model
+#SBATCH --partition=gpu
+#SBATCH --qos=gpu-01h
 #SBATCH --gres=gpu:1
-#SBATCH --mem=16G
 #SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
 #SBATCH --time=01:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
