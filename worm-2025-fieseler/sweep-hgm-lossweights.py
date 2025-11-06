@@ -372,8 +372,8 @@ if __name__ == '__main__':
 			'goal': 'minimize',
 		},
 		'parameters': {
-			'w1_reg_lambda': {'distribution': 'log_uniform', 'min': 1E-6, 'max': 1E-0},
-			'w2_reg_lambda': {'distribution': 'log_uniform', 'min': 1E-6, 'max': 1E-0},
+			'w1_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-6, 'max': 1E-0},
+			'w2_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-6, 'max': 1E-0},
 			'loss1_lambda': {'distribution': 'uniform', 'min': 0.0, 'max': 1.0},
 		}
 	}

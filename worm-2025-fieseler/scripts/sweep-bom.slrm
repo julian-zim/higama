@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #SBATCH --job-name sweep-bom
 #SBATCH --partition=gpu
-#SBATCH --qos=gpu-lim
+# --qos=gpu-lim
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
-#SBATCH --time=24:00:00
+#SBATCH --time=48:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/worm-2025-fieseler/out/slurm/sweep-bom.%A.out
