@@ -59,7 +59,7 @@ def generate_traces(N_rec, N_res):
 def artificialize(weights, model, filename, neurons, eigenworms, discrete_states, n_dimensions=2):
 	assert n_dimensions <= 4
 
-	cyber_name = '_'.join(['ZIMANN_artificial'] + filename.split('_')[2:])
+	cyber_name = filename.replace('worm', 'wyrm')
 	seeds = jax.random.PRNGKey(69), jax.random.PRNGKey(420)
 
 	n_neurons = len(neurons) # ~100

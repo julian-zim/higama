@@ -13,7 +13,7 @@ def get_data_path():
 
 
 def get_data(path, ids=None):
-	file_ids = ids if ids is not None else list(range(len(os.listdir(path))))
+	file_ids = ids if ids is not None else list(range(len(sorted(os.listdir(path)))))
 	hdf5files = get_hdf5_files(path, file_ids)
 	filenames = [get_filename(file) for file in hdf5files]
 	traces = [get_neuronal_traces(file) for file in hdf5files]

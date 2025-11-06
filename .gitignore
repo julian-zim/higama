@@ -1,41 +1,92 @@
-# byte
+# ===============================
+# PYTHON BYTE-CODE & CACHES
+# ===============================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyd
+*.pyo
+*.pdb
 
-# virtual environments
+# ===============================
+# VIRTUAL ENVIRONMENTS
+# ===============================
 .venv/
 venv/
-ENV/
 env/
+ENV/
 env.bak/
 venv.bak/
 
-# jupyter Notebook checkpoints
-.ipynb_checkpoints
+# ===============================
+# NOTEBOOKS
+# ===============================
+.ipynb_checkpoints/
+.jupyter/
 
-# IDE settings
-.vscode/
-.idea/
-
-# distribution
+# ===============================
+# BUILD / PACKAGING
+# ===============================
 build/
 dist/
-*.egg-info/
+downloads/
 .eggs/
+*.egg-info/
+*.egg
 MANIFEST
+wheels/
+pip-wheel-metadata/
+*.whl
 
-# out
-worm-2025-fieseler/out/slurm/
-worm-2025-fieseler/out/wandb/
+# ===============================
+# TEST / COVERAGE
+# ===============================
+.tox/
+.nox/
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+.cache/
+htmlcov/
 
+# ===============================
+# LOGS / TEMP
+# ===============================
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# ===============================
+# EDITORS / OS
+# ===============================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ===============================
+# MISC PYTHON TOOLS
+# ===============================
+__pypackages__/
+.mypy_cache/
+.pyre/
+.pytype/
+.dmypy.json
+
+
+# ============= OUT ==============
 worm-2025-fieseler/out/models/*
-worm-2025-fieseler/out/models/keep/
-worm-2025-fieseler/out/models/keep/**
+!worm-2025-fieseler/out/models/keep/
 worm-2025-fieseler/out/plots/*
 !worm-2025-fieseler/out/plots/keep/
-!worm-2025-fieseler/out/plots/keep/**
 
-# logs
-*.log
+worm-2025-fieseler/out/slurm/*
+worm-2025-fieseler/out/wandb/*
+
+worm-2025-fieseler/data_exploration/manifold/out/*
+
+fly-2023-schaffner/data_exploration/manifold/out/*
