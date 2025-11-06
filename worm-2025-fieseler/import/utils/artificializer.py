@@ -28,8 +28,6 @@ def generate_params(weights, model, seeds, shape_B_ll, shape_N_man, scaling=0.1)
 
 def generate_manifold(discrete_states, n_dimensions):
 	# define the neuronal manifold as a smoothed high level behavior
-	# manifold = np.array((discrete_states.values[:, :n_dimensions] * 2 - 1), dtype=float)
-	# manifold = np.array((discrete_states.values[:, :n_dimensions] - 0.1), dtype=float)
 	manifold = discrete_states.values[:, :n_dimensions] - np.mean(discrete_states.values[:, :n_dimensions], axis=0)
 	return gaussian_filter1d(manifold, sigma=2.0, axis=0)
 
