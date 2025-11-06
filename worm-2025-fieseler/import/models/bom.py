@@ -59,16 +59,16 @@ def predict(params, N, B_ll):
 	return N_man, N_rec, N_res, N_res_pred
 
 #@jax.jit
-def r2_score(y, y_pred):
-	ss_res = jnp.sum((y - y_pred) ** 2)  # ^p?
-	ss_tot = jnp.sum((y - jnp.mean(y)) ** 2)  # ^p?
-	# ss_tot = jnp.sum((y - jnp.array(0)) ** 2)  # ^p?
+def r2_score(y_eval, y_pred, baseline):
+	ss_res = jnp.sum((y_eval - y_pred) ** 2)  # ^p?
+	ss_tot = jnp.sum((y_eval - baseline) ** 2)  # ^p?
 	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
 
 @jax.jit
 def score_fn(params, N, B_ll):
 	N_man, N_rec, N_res, N_res_pred = predict(params, N, B_ll)
-	score_per_neuron = jax.vmap(r2_score, in_axes=(1, 1))(N_res, N_res_pred)
+	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # TDL
+	score_per_neuron = jax.vmap(r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
 	return score_per_neuron, N_man, N_rec, N_res, N_res_pred
 
 #endregion

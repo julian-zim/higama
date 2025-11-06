@@ -281,7 +281,7 @@ def read(artificial=False):
 	# artificialize
 	if artificial:
 		dims_generation = 2
-		weights = (0.01, -2.)
+		weights = (0.1, -0.25)
 
 		file_ids_art = list()
 		filenames_art = list()

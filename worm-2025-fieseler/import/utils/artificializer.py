@@ -2,41 +2,49 @@ import numpy as np
 import pandas as pd
 import jax
 import jax.numpy as jnp
+import math
+from scipy.ndimage import gaussian_filter1d
 
 
-def generate_params(weights, model, seeds, shape_B_ll, shape_N_man):
+def generate_params(weights, model, seeds, shape_B_ll, shape_N_man, scaling=0.1):
 	bom_lin = weights[0]
-	hgm_sig = weights[1]
-	hgm_lin = bom_lin / jax.nn.sigmoid(hgm_sig)
 
 	if model.get_type():
+		gating = abs(weights[1])
+		hgm_lin = (1.0 + gating) * bom_lin
+		hgm_sig = -math.log(gating) * np.sign(weights[1])
+
 		return {
-			'W1': hgm_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1)),
-			'W2': hgm_sig * jnp.ones((shape_N_man[0], shape_B_ll[1])),
+			'W1': hgm_lin * jnp.tile(jnp.ones((shape_N_man[1],)),(shape_B_ll[0], 1))
+				  + scaling * jax.random.normal(seeds[0], (shape_B_ll[0], shape_N_man[1])),
+			'W2': hgm_sig * jnp.tile(jnp.ones((shape_N_man[1],)),(shape_N_man[0], 1))
+				  + scaling * jax.random.normal(seeds[0], (shape_N_man[0], shape_N_man[1])),
 		}
 	else:
 		return {
-			'W': bom_lin * jnp.tile(jax.random.normal(seeds[0], (shape_B_ll[1],)), (shape_B_ll[0], 1))
+			'W': bom_lin * jnp.tile(jnp.ones((shape_N_man[1],)), (shape_B_ll[0], 1))
+				 + scaling * jax.random.normal(seeds[0], (shape_B_ll[0], shape_N_man[1])),
 		}
 
 def generate_manifold(discrete_states, n_dimensions):
-	# define the neuronal manifold as the high level behavior
-	manifold = np.array((discrete_states.values[:, :n_dimensions] * 2 - 0.1), dtype=float)
-	return manifold
+	# define the neuronal manifold as a smoothed high level behavior
+	# manifold = np.array((discrete_states.values[:, :n_dimensions] * 2 - 1), dtype=float)
+	# manifold = np.array((discrete_states.values[:, :n_dimensions] - 0.1), dtype=float)
+	manifold = discrete_states.values[:, :n_dimensions] - np.mean(discrete_states.values[:, :n_dimensions], axis=0)
+	return gaussian_filter1d(manifold, sigma=2.0, axis=0)
 
-def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=0.25):
+def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=1):
 	# (dimensions x neurons)
-	# cca_weights = np.tile(np.array([math.e ** (1-d) for d in range(0, n_dimensions)]).reshape(-1, 1), (1, n_neurons))
-	# cca_weights @= np.diag(np.array([(i+1) * scaling + (1. - scaling) for i in range(n_neurons)]))
-
-	cca_weights = 0.1 * np.abs(jax.random.normal(seeds[0], (n_dimensions, n_neurons)))
-	cca_weights @= (np.diag(np.array([(i+1) * scaling + (1. - scaling) for i in range(n_neurons)]))
-					+ 0.1 * np.abs(jax.random.normal(seeds[1], (n_neurons, n_neurons))))
+	cca_weights = np.tile(
+		np.array([d / n_dimensions for d in range(n_dimensions, 0, -1)], dtype=np.float32).reshape(-1, 1),
+		(1, n_neurons)
+	) + scaling * jax.random.normal(seeds[0], (n_dimensions, n_neurons))
+	# cca_weights @= scaling * np.abs(jax.random.normal(seeds[1], (n_neurons, n_neurons)))
 
 	return cca_weights
 
 def generate_reconstructed_traces(N_man, cca_weights):
-	return N_man.values @ cca_weights  # normalize
+	return N_man.values @ cca_weights  # normalize?
 
 def generate_residual_traces(model, B_ll, N_man, W1, W2):
 	if model.get_type():
