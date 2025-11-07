@@ -841,7 +841,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		x = np.median(scores_glm)
 		# if x < high_score_glm_gfp: continue
 		y = np.median(scores_hgm)
-		if y < high_score_hgm_gfp: continue
+		if y <= high_score_hgm_gfp: continue
 
 		plt.scatter(scores_glm, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
@@ -998,7 +998,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		x = np.median(scores_glm)
 		# if x < high_score_glm_gfp: continue
 		y = np.median(scores_hgm - scores_glm)
-		if y < high_score_hgm_impr_gfp: continue
+		if y <= high_score_hgm_impr_gfp: continue
 
 		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
@@ -1160,7 +1160,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 		x = np.median(scores_glm)
 		# if x < high_score_glm_gfp: continue
 		y = np.median(scores_hgm - scores_glm)
-		if y < high_score_hgm_impr_gfp: continue
+		if y <= high_score_hgm_impr_gfp: continue
 
 		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
 
