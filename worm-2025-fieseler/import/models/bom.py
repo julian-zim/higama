@@ -105,14 +105,14 @@ def loss_fn(params, N, B_ll, B_hl, lambdas):
 	N_man, N_rec, N_res, N_res_pred = predict(params, N, B_ll)
 
 	# manifold loss =================================
-	# prep_b_hl = jax.lax.stop_gradient(params['prep']['B_hl'])
-	# B_hl_mean, B_hl_std = prep_b_hl['mean'], prep_b_hl['std']
-	# V = params['model']['V']
-	#
-	# B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
-	# B_hl_man = B_hl_zs @ V
-	# man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
-	man_loss = jnp.array(0)
+	prep_b_hl = jax.lax.stop_gradient(params['prep']['B_hl'])
+	B_hl_mean, B_hl_std = prep_b_hl['mean'], prep_b_hl['std']
+	V = params['model']['V']
+
+	B_hl_zs = (B_hl - B_hl_mean) / B_hl_std
+	B_hl_man = B_hl_zs @ V
+	man_loss = cca_loss(N_man, B_hl_man, ccadiag_lambda, ccaunit_lambda)
+	# man_loss = jnp.array(0)
 	# ===============================================
 
 	# residuals loss ================================
