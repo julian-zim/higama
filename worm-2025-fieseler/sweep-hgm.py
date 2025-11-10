@@ -30,8 +30,8 @@ from models import hgm
 
 
 default_hyperparameters = {
-	'max_epochs': 2048,
-	'max_patience': 2048 / 3,
+	'max_epochs': 3000,
+	'max_patience': 3000 / 3,
 	'learning_rate': 1E-1,
 	'w1_reg_lambda': 1E-3,
 	'w2_reg_lambda': 1E-5,
@@ -247,9 +247,16 @@ def train_model(model, splits, N, B_ll, B_hl, log_path):
 def read(artificial=False):
 	print('reading...')
 
-	# read_ids = list(range(0, 33+1))
-	# read_ids = [0, 12, 14, 23, 29, 32]
-	read_ids = [14]
+	# read_ids_gcamp = list(range(0, 33+1))
+	# read_ids_gcamp = [0,  # minrevs
+	# 				  1,  # minswitch
+	# 				  7,  # maxswitch
+	# 				  11,  # median
+	# 				  12,  # maxrevs
+	# 				  17,  # mean
+	# 				  19,  # paper
+	# 				  21]  # clean
+	read_ids_gcamp = [19]
 
 	# selection_n = ['DD01', 'VB02', 'AVAR', 'ALA']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
@@ -260,22 +267,29 @@ def read(artificial=False):
 	 traces_gcamp,
 	 continuous_behaviors_gcamp,
 	 discrete_states_gcamp, eigenworms_gcamp,
-	 kymographs_gcamp) = read_utils.get_data(path, read_ids)
+	 kymographs_gcamp) = read_utils.get_data(path, read_ids_gcamp)
 
 	# clear nan values
 	for i in range(len(file_ids_gcamp)):
 		mask = eigenworms_gcamp[i].notna().all(axis=1)
 
 		traces_gcamp[i] = traces_gcamp[i][mask]
-		# continuous_behaviors_gcamp[i] = continuous_behaviors_gcamp[i][mask]
+		#continuous_behaviors_gcamp[i] = continuous_behaviors_gcamp[i][mask]
 		eigenworms_gcamp[i] = eigenworms_gcamp[i][mask]
 		discrete_states_gcamp[i] = discrete_states_gcamp[i][mask]
 
-		# kymographs_gcamp[i] = kymographs_gcamp[i][mask]
-		# filenames_gcamp[i] = filenames_gcamp[i][mask]
+		#kymographs_gcamp[i] = kymographs_gcamp[i][mask]
+		#filenames_gcamp[i] = filenames_gcamp[i][mask]
 
 	# remove unused discrete state labels
 	discrete_states_gcamp = [ds[selection_bhl] for ds in discrete_states_gcamp]
+
+	# naive ID unknown neurons
+	for i in range(len(file_ids_gcamp)):
+		traces_gcamp[i].columns = pd.Index([
+			f'{file_ids_gcamp[i]:02d}_{n_id:03d}' if empty else label for n_id, (label, empty) in
+			enumerate(zip(traces_gcamp[i].columns, traces_gcamp[i].columns == ''))
+		])
 
 
 	# artificialize
@@ -320,14 +334,14 @@ def read(artificial=False):
 			eigenworms_art.append(eigenworms_gcamp[i].copy())
 
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
-		# 					   discrete_states_art[0]['REV'],
+		# 					   discrete_states_art[0][['REV']],
 		# 					   traces_art[0][selection_n],
 		# 					   plots_per_row=2, ylimits=None)
 		return file_ids_art, filenames_art, discrete_states_art, eigenworms_art, traces_art
 
 
 	# plot_utils.plot_traces(f'[{filenames[0]}] traces',
-	# 					   discrete_states[0]['REV'],
+	# 					   discrete_states[0][['REV']],
 	# 					   traces[0][selection_n],
 	# 					   plots_per_row=2, ylimits=None)
 	return file_ids_gcamp, filenames_gcamp, discrete_states_gcamp, eigenworms_gcamp, traces_gcamp
@@ -372,6 +386,7 @@ if __name__ == '__main__':
 		'parameters': {
 			'w1_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-6, 'max': 1E-0},
 			'w2_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-6, 'max': 1E-0},
+			'loss1_lambda': {'distribution': 'uniform', 'min': 0.0, 'max': 1.0},
 		}
 	}
 	sweep(sweep_config, log_path)
