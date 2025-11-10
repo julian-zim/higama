@@ -43,4 +43,4 @@ if __name__ == '__main__':
 		}
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
-	sweep_utils.sweep(prefix, bom, sweep_config, log_path)
+	sweep_utils.sweep(prefix, bom, sweep_config, default_hyperparameters, log_path)

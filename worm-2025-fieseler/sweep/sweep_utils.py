@@ -35,14 +35,13 @@ class Lambdas(NamedTuple):
 	cca_lambdas: tuple[float, float]
 
 
-def train_model(model, splits, N, B_ll, B_hl, log_path):
+def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path):
 	with wandb.init(dir=log_path):
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
 
-		global default_hyperparameters
 		hyperparameters = default_hyperparameters.copy()
 		for key in config:
 			hyperparameters[key] = config[key]
@@ -332,7 +331,7 @@ def read(artificial=False):
 	return file_ids_gcamp, filenames_gcamp, discrete_states_gcamp, eigenworms_gcamp, traces_gcamp
 
 
-def sweep(prefix, model, config, log_path):
+def sweep(prefix, model, config, default_hyperparameters, log_path):
 	file_ids, filenames, discrete_states, eigenworms, traces = read(artificial=False)
 
 	print('sweeping...')
@@ -350,6 +349,7 @@ def sweep(prefix, model, config, log_path):
 							   traces[file_ids.index(file_id)].values,
 							   eigenworms[file_ids.index(file_id)].values,
 							   discrete_states[file_ids.index(file_id)].values,
+							   default_hyperparameters,
 							   log_path)
 
 		sweep_id = wandb.sweep(sweep=config, project=project_name)
