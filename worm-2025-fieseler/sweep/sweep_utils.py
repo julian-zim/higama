@@ -15,7 +15,7 @@ import jax.numpy as jnp
 import optax
 import wandb
 
-sys.path.append(os.path.join(os.getcwd(), '../import'))
+sys.path.append(os.path.join(os.getcwd(), './import'))
 # noinspection PyUnresolvedReferences
 from utils import read_utils
 # noinspection PyUnresolvedReferences
@@ -340,7 +340,7 @@ def sweep(prefix, model, config, log_path):
 	wandb.login()
 
 	for file_id in file_ids:
-		project_name = f'{prefix} {time.strftime("%d.%m %H:%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
+		project_name = f'{prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
