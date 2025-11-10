@@ -400,9 +400,9 @@ def plot_traces(title, states, traces,
 															   plt.get_cmap('binary')(np.linspace(0, 1/2, 256))),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
-			ax.plot(traces[0][key], color='black', linewidth=0.5)
+			ax.plot(traces[0][key], color='black', linewidth=1.0)
 			for trace in traces[1:]:
-				ax.plot(trace[key], linewidth=0.5)
+				ax.plot(trace[key], linewidth=1.0)
 
 			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
 				spine.set_visible(True)
