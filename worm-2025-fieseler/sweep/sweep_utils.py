@@ -5,19 +5,17 @@ import math
 import time
 from typing import NamedTuple
 
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
-os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = 'false'
 import jax
 import jax.numpy as jnp
 import optax
 import wandb
 
-sys.path.append(os.path.join(os.getcwd(), 'import'))
+sys.path.append(os.path.join(os.getcwd(), '../import'))
 # noinspection PyUnresolvedReferences
 from utils import read_utils
 # noinspection PyUnresolvedReferences
@@ -26,21 +24,9 @@ from utils import read_utils
 from utils import artificializer
 # noinspection PyUnresolvedReferences
 from models import hgm
+# noinspection PyUnresolvedReferences
+from models import bom
 #endregion
-
-
-default_hyperparameters = {
-	'max_epochs': 3000,
-	'max_patience': 3000 / 3,
-	'learning_rate': 1E-1,
-	'w1_reg_lambda': 1E-3,
-	'w2_reg_lambda': 1E-5,
-	'ccadiag_lambda': 0.6,
-	'ccaunit_lambda': 1.0 - 0.6,
-	'loss1_lambda': 0.0,
-	'loss2_lambda': 1.0 - 0.0,
-	'dimensions': 1
-}
 
 
 class Lambdas(NamedTuple):
@@ -248,17 +234,16 @@ def read(artificial=False):
 	print('reading...')
 
 	# read_ids_gcamp = list(range(0, 33+1))
-	# read_ids_gcamp = [0,  # minrevs
-	# 				  1,  # minswitch
-	# 				  7,  # maxswitch
-	# 				  11,  # median
-	# 				  12,  # maxrevs
-	# 				  17,  # mean
-	# 				  19,  # paper
-	# 				  21]  # clean
-	read_ids_gcamp = [19]
+	read_ids_gcamp = [19,  # paper
+					  0,   # minrevs
+					  1,   # minswitch
+					  7,   # maxswitch
+					  11,  # median
+					  12,  # maxrevs
+					  17,  # mean
+					  21]  # clean
+	# read_ids_gcamp = [19]
 
-	# selection_n = ['DD01', 'VB02', 'AVAR', 'ALA']
 	selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
 	# read
@@ -335,19 +320,19 @@ def read(artificial=False):
 
 		# plot_utils.plot_traces(f'[{filenames_art[0]}] traces artificial',
 		# 					   discrete_states_art[0][['REV']],
-		# 					   traces_art[0][selection_n],
+		# 					   traces_art[0][['DD01', 'VB02', 'AVAR', 'ALA']],
 		# 					   plots_per_row=2, ylimits=None)
 		return file_ids_art, filenames_art, discrete_states_art, eigenworms_art, traces_art
 
 
 	# plot_utils.plot_traces(f'[{filenames[0]}] traces',
 	# 					   discrete_states[0][['REV']],
-	# 					   traces[0][selection_n],
+	# 					   traces[0][['DD01', 'VB02', 'AVAR', 'ALA']],
 	# 					   plots_per_row=2, ylimits=None)
 	return file_ids_gcamp, filenames_gcamp, discrete_states_gcamp, eigenworms_gcamp, traces_gcamp
 
 
-def sweep(config, log_path):
+def sweep(prefix, model, config, log_path):
 	file_ids, filenames, discrete_states, eigenworms, traces = read(artificial=False)
 
 	print('sweeping...')
@@ -355,13 +340,13 @@ def sweep(config, log_path):
 	wandb.login()
 
 	for file_id in file_ids:
-		project_name = f'hgm nm1d {time.strftime("%Y-%m-%d %Hh%M", time.localtime())} DATASET {file_id}-{filenames[file_ids.index(file_id)]}'
+		project_name = f'{prefix} {time.strftime("%d.%m %H:%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
 
 		def train_model_wrapper():
-			return train_model(hgm, splits,
+			return train_model(model, splits,
 							   traces[file_ids.index(file_id)].values,
 							   eigenworms[file_ids.index(file_id)].values,
 							   discrete_states[file_ids.index(file_id)].values,
@@ -369,23 +354,3 @@ def sweep(config, log_path):
 
 		sweep_id = wandb.sweep(sweep=config, project=project_name)
 		wandb.agent(sweep_id, function=train_model_wrapper)
-
-
-if __name__ == '__main__':
-	log_path = '/lisc/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
-	if not (os.path.exists(log_path) and os.access(log_path, os.W_OK)):
-		log_path = './out/'
-
-	print('Visible devices: ', jax.devices())
-	sweep_config = {
-		'method': 'bayes',
-		'metric': {
-			'name': 'mpe_loss',
-			'goal': 'minimize',
-		},
-		'parameters': {
-			'w1_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-6, 'max': 1E-0},
-			'w2_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-6, 'max': 1E-0},
-		}
-	}
-	sweep(sweep_config, log_path)
