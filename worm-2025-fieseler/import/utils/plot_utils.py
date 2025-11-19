@@ -489,14 +489,14 @@ def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces
 															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
-			ax.plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=0.5)
+			ax.plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=1.0)
 			if traces_splits is not None:
 				colors = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
 				for j in range(len(traces_splits)):
 					color = next(colors)
-					ax.plot(traces_splits[j][key], color=color, linewidth=0.5)
+					ax.plot(traces_splits[j][key], color=color, linewidth=1.0)
 					if traces_splits_ref is not None:
-						ax.plot(traces_splits_ref[j][key], color=color, alpha=0.5, linewidth=0.5)
+						ax.plot(traces_splits_ref[j][key], color=color, alpha=0.5, linewidth=1.0)
 
 			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
 				spine.set_visible(True)
@@ -583,13 +583,105 @@ def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref
 															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
 			)
-			ax.plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=0.5)
+			ax.plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=1.0)
 			if traces is not None:
-				ax.plot(traces[0][key], color='C0', linewidth=0.5)
-				ax.plot(traces[1][key], color='green', linewidth=0.5)
+				ax.plot(traces[0][key], color='C0', linewidth=1.0)
+				ax.plot(traces[1][key], color='green', linewidth=1.0)
 			if traces_ref is not None:
-				ax.plot(traces_ref[0][key], color='C0', alpha=0.5, linewidth=0.5)
-				ax.plot(traces_ref[1][key], color='green', alpha=0.5, linewidth=0.5)
+				ax.plot(traces_ref[0][key], color='C0', alpha=0.5, linewidth=1.0)
+				ax.plot(traces_ref[1][key], color='green', alpha=0.5, linewidth=1.0)
+
+			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+				spine.set_visible(True)
+
+			i += 1
+	#endregion
+
+	fig.subplots_adjust(top=1. - top_space_rel, hspace=0.5)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+
+	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300, bbox_inches='tight')
+	plt.show()
+
+
+
+"""
+Plots two pairs of traces in red and green black, with the respective first one being opaque and the second transparent
+"""
+def plot_traces_comparisons_sep(title, states, traces_first, traces=None, traces_ref=None, plot_first=True,
+							n_plots=None, plots_per_row=2, top_space=1, ylimits=None, save_name=None):
+	#region setup
+	keys = [key for key in traces_first.columns if key != '']
+	if n_plots is None:
+		n_plots = len(keys)
+	if ylimits is None: ylimits = (
+		np.array(
+			([traces_first[keys].values] if plot_first else []) +
+			([traces[keys].values] if traces is not None else []) +
+			([traces_ref[keys].values] if traces_ref is not None else [])
+		).min(),
+		np.array(
+			([traces_first[keys].values] if plot_first else []) +
+			([traces[keys].values] if traces is not None else []) +
+			([traces_ref[keys].values] if traces_ref is not None else [])
+		).max()
+	)
+	#endregion
+
+	#region plot setup
+	fig_size = (15, 3)
+
+	plots_per_row = min(n_plots, plots_per_row)
+	plots_per_col = math.ceil(n_plots / plots_per_row)
+	figheight = fig_size[1] * plots_per_col + top_space
+	figwidth = fig_size[0] * plots_per_row
+	fig, axes = plt.subplots(plots_per_col, plots_per_row,
+							 figsize=(figwidth, figheight), squeeze=False)
+	for ax in axes.ravel():
+		# ax.set_xticklabels([])
+		# ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
+	for i in range(n_plots):
+		axes[i // plots_per_row, i % plots_per_row].plot(np.zeros(traces_first.shape), color='gray', linewidth=0.25)
+		axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits[0], ylimits[1])
+
+	top_space_rel = top_space / figheight
+	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
+	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', va='center', fontsize=20)
+
+	fig.legend(
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		loc='center',
+		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
+		ncol=1,
+		fontsize='large'
+	)
+
+	heatmap = states.values.reshape(-1, 1) * 0.1
+	#endregion
+
+	#region plot
+	i = 0
+	for key in keys[:n_plots]:
+		if key != '':
+			min_val, max_val = ylimits
+
+			ax = axes[i // plots_per_row, i % plots_per_row]
+			ax.set_title(f'{key}', fontsize=12)
+
+			ax.imshow(
+				heatmap.T, aspect='auto',
+				cmap=mcolors.LinearSegmentedColormap.from_list('middle_third',
+															   plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))),
+				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], min_val, max_val]
+			)
+			ax.plot(traces_first[key], color='black', alpha=1.0 if plot_first else 0.0, linewidth=1.0)
+			if traces is not None:
+				ax.plot(traces[key], color='green', linewidth=1.0)
+			if traces_ref is not None:
+				ax.plot(traces_ref[key], color='green', alpha=0.5, linewidth=1.0)
 
 			for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
 				spine.set_visible(True)
@@ -708,7 +800,7 @@ def plot_mcos(bars, bar_labels, labels, order,
 
 	plt.gca().set_axisbelow(False)
 	plt.grid(False)
-	plt.grid(axis='y', linestyle='--', linewidth=0.5, color=(0.0, 0.0, 0.0))
+	plt.grid(axis='y', linestyle='--', linewidth=1.0, color=(0.0, 0.0, 0.0))
 
 	for key in bars.T.columns:
 		print(f'Average {key}: {np.mean(bars.T[key].values) * 100:.1f}%')
@@ -790,7 +882,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm)
@@ -843,7 +935,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		y = np.median(scores_hgm)
 		if y <= high_score_hgm_gfp: continue
 
-		plt.scatter(scores_glm, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
@@ -946,7 +1038,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm - scores_glm)
@@ -1000,7 +1092,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		y = np.median(scores_hgm - scores_glm)
 		if y <= high_score_hgm_impr_gfp: continue
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
@@ -1107,7 +1199,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 			scores_glm = scores_glm.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		x = np.median(scores_glm)
 		y = np.median(scores_hgm - scores_glm)
@@ -1162,7 +1254,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 		y = np.median(scores_hgm - scores_glm)
 		if y <= high_score_hgm_impr_gfp: continue
 
-		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=0.5, alpha=0.5)
+		plt.scatter(scores_glm, scores_hgm - scores_glm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')

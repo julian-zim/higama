@@ -29,7 +29,7 @@ def init_params(N, B_hl, seeds, shape_U, shape_V, shape_bn):
 	}
 
 
-#region EVALUATING
+#region PREDICTING
 
 @jax.jit
 def predict_res(B_ll, W):
@@ -57,19 +57,6 @@ def predict(params, N, B_ll):
 	N_res_pred = predict_res(B_ll, W)
 
 	return N_man, N_rec, N_res, N_res_pred
-
-#@jax.jit
-def r2_score(y_eval, y_pred, baseline):
-	ss_res = jnp.sum((y_eval - y_pred) ** 2)  # ^p?
-	ss_tot = jnp.sum((y_eval - baseline) ** 2)  # ^p?
-	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
-
-@jax.jit
-def score_fn(params, N, B_ll):
-	N_man, N_rec, N_res, N_res_pred = predict(params, N, B_ll)
-	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # TDL
-	score_per_neuron = jax.vmap(r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
-	return score_per_neuron, N_man, N_rec, N_res, N_res_pred
 
 #endregion
 
@@ -140,6 +127,24 @@ def update(opt_update, opt_state, params, N, B_ll, B_hl, lambdas):
 	return opt_state, params_new, (loss, man_loss, res_loss, mpe_loss)
 
 update = jax.jit(update, static_argnums=(0, 6,))
+
+#endregion
+
+
+#region EVALUATING
+
+#@jax.jit
+def r2_score(y_eval, y_pred, baseline):
+	ss_res = jnp.sum((y_eval - y_pred) ** 2)  # ^p?
+	ss_tot = jnp.sum((y_eval - baseline) ** 2)  # ^p?
+	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
+
+@jax.jit
+def score_fn(params, N, B_ll):
+	N_man, N_rec, N_res, N_res_pred = predict(params, N, B_ll)
+	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # TDL
+	score_per_neuron = jax.vmap(r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
+	return score_per_neuron, N_man, N_rec, N_res, N_res_pred
 
 #endregion
 

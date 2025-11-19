@@ -16,17 +16,17 @@ def generate_params(weights, model, seeds, shape_B_ll, shape_N_man, scaling=0.1)
 
 		return {
 			# (eigenworms x neurons)
-			'W1': hgm_lin * jnp.tile(jnp.ones((shape_N_man[1],)),(shape_B_ll[0], 1))
-				  + scaling * jax.random.normal(seeds[0], (shape_B_ll[0], shape_N_man[1])),
+			'W1': hgm_lin * jnp.tile(jnp.ones((shape_B_ll[1],)),(shape_B_ll[0], 1))
+				  + scaling * jax.random.normal(seeds[0], (shape_B_ll[0], shape_B_ll[1])),
 			# (dimensions x neurons)
-			'W2': hgm_sig * jnp.tile(jnp.ones((shape_N_man[1],)),(shape_N_man[0], 1))
-				  + scaling * jax.random.normal(seeds[1], (shape_N_man[0], shape_N_man[1])),
+			'W2': hgm_sig * jnp.tile(jnp.ones((shape_B_ll[1],)),(shape_N_man[0], 1))
+				  + scaling * jax.random.normal(seeds[1], (shape_N_man[0], shape_B_ll[1])),
 		}
 	else:
 		return {
 			# (eigenworms x neurons)
-			'W': bom_lin * jnp.tile(jnp.ones((shape_N_man[1],)), (shape_B_ll[0], 1))
-				 + scaling * jax.random.normal(seeds[0], (shape_B_ll[0], shape_N_man[1])),
+			'W': bom_lin * jnp.tile(jnp.ones((shape_B_ll[1],)), (shape_B_ll[0], 1))
+				 + scaling * jax.random.normal(seeds[0], (shape_B_ll[0], shape_B_ll[1])),
 		}
 
 def generate_manifold(discrete_states, n_dimensions):
@@ -36,11 +36,11 @@ def generate_manifold(discrete_states, n_dimensions):
 
 def generate_cca_params(seeds, n_dimensions, n_neurons, scaling=1):
 	# (dimensions x neurons)
-	cca_weights = np.tile(
+	weights = np.tile(
 		np.array([d / n_dimensions for d in range(n_dimensions, 0, -1)], dtype=np.float32).reshape(-1, 1),
 		(1, n_neurons)
 	) + scaling * jax.random.normal(seeds[2], (n_dimensions, n_neurons))
-	return cca_weights
+	return weights
 
 def generate_reconstructed_traces(N_man, cca_weights):
 	return N_man.values @ cca_weights  # normalize?
