@@ -160,7 +160,7 @@ def get_variance_explained_alt(X_rec, X):
 #region models
 
 def save_params(filenames, params, save_name):
-	outdir_path = f'./out/models/{save_name}/params'
+	outdir_path = f'./out/keep/models/{save_name}/params'
 	os.makedirs(outdir_path, exist_ok=True)
 	for filename, param in zip(filenames, params):
 		with open(f'{outdir_path}/{filename}.msgpack', 'wb') as f:
@@ -169,7 +169,7 @@ def save_params(filenames, params, save_name):
 
 def load_params(load_name, filenames=None):
 	params = list()
-	indir_path = f'./out/models/{load_name}/params'
+	indir_path = f'./out/keep/models/{load_name}/params'
 	if filenames is None:
 		filenames = sorted(os.listdir(indir_path))
 	else:
@@ -186,7 +186,7 @@ def load_params(load_name, filenames=None):
 
 def save_losses(filenames, losses, save_name):
 	# format: dataset x array(type x split x epoch)
-	outdir_path = f'./out/models/{save_name}/hist'
+	outdir_path = f'./out/keep/models/{save_name}/hist'
 	os.makedirs(outdir_path, exist_ok=True)
 	for filename, loss in zip(filenames, losses):
 		np.save(f'{outdir_path}/{filename}.npy', loss)
@@ -194,7 +194,7 @@ def save_losses(filenames, losses, save_name):
 
 def load_losses(load_name, filenames=None):
 	losses = list()
-	indir_path = f'./out/models/{load_name}/hist'
+	indir_path = f'./out/keep/models/{load_name}/hist'
 	if filenames is None:
 		filenames = sorted(os.listdir(indir_path))
 	else:
