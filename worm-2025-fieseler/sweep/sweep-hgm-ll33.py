@@ -22,8 +22,8 @@ default_hyperparameters = {
 	'ccaunit_lambda': 1.0 - 0.6,
 	'loss1_lambda': 0.33,
 	'loss2_lambda': 1.0 - 0.33,
-	'w1_reg_lambda': 1E-3,
-	'w2_reg_lambda': 1E-5,
+	'w1_reg_lambda': 0.0,	#1E-3,
+	'w2_reg_lambda': 0.0,	#1E-5,
 }
 
 if __name__ == '__main__':
@@ -41,7 +41,8 @@ if __name__ == '__main__':
 		'parameters': {
 			'w1_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 			'w2_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-		}
+		},
+		'max_runs': 200,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
 	sweep_utils.sweep(prefix, hgm, sweep_config, default_hyperparameters, log_path)
