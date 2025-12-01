@@ -88,8 +88,8 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 									   * ((n_dimensions, n_neurons),) if model.get_type() else (),
 									  )
 
-			# optimizer = optax.adam(learning_rate=optax.cosine_decay_schedule(init_value=learning_rate, decay_steps=max_epochs, alpha=1E-2))
-			optimizer = optax.adam(learning_rate)
+			optimizer = optax.adam(learning_rate=optax.cosine_decay_schedule(init_value=learning_rate, decay_steps=max_epochs, alpha=1E-4))
+			# optimizer = optax.adam(learning_rate)
 			optimizer = optax.masked(optimizer, {'prep': False, 'model': True})
 			opt_state = optimizer.init(params)
 			#endregion ========================================================================================
