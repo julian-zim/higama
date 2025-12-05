@@ -87,4 +87,4 @@ worm-2025-fieseler/out/wandb/*
 
 worm-2025-fieseler/data_exploration/manifold/out/*
 
-fly-2023-schaffner/data_exploration/manifold/out/*
+#fly-2023-schaffer-(flygenvector)/data_exploration/manifold/out/*
