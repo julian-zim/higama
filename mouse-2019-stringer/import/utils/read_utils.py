@@ -1,7 +1,7 @@
 import os
+import numpy as np
 import pandas as pd
-import pynwb
-import h5py
+import scipy as sp
 
 
 def get_data_path():
@@ -13,87 +13,57 @@ def get_data_path():
 
 
 def get_data(path, ids=None):
-	file_ids = ids if ids is not None else list(range(len(sorted(os.listdir(path)))))
-	hdf5files = get_hdf5_files(path, file_ids)
-	filenames = [get_filename(file) for file in hdf5files]
-	traces = [get_neuronal_traces(file) for file in hdf5files]
-	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
-	discrete_states = [get_discrete_states(file) for file in hdf5files]
-	eigenworms = [get_eigenworms(file) for file in hdf5files]
-	kymographs = [get_kymograph(file) for file in hdf5files]
-	return file_ids, filenames, traces, continuous_behaviors, discrete_states, eigenworms, kymographs,
-
-
-def get_hdf5_files(path, file_ids):
-	filenames = [sorted(os.listdir(path))[file_id] for file_id in file_ids]
-	return [h5py.File(os.path.join(path, filename), 'r') for filename in filenames]
-
-
-def get_filename(file_handle):
-	filename = file_handle.filename.split('/')[-1].split('.')[0]
-	if filename.endswith('_no_image_data'):
-		filename = filename[:-len('_no_image_data')]
-	return filename
-
-
-def get_neuronal_traces(file_handle):
-	try:
-		data = pd.DataFrame(file_handle[f'/processing/CalciumActivity/SignalDFoF/SignalCalciumImResponseSeries/data'][:],
-							 columns=[n_id.decode('utf-8') for n_id in file_handle[f'/processing/CalciumActivity/NeuronIDs/labels'][:]])
-	except KeyError:
-		print(f'No neuronal trace data for {os.path.basename(file_handle.filename)}')
-		data = None
-	return data
-
-
-def get_continuous_behaviors(file_handle):
-	try:
-		data = pd.DataFrame({key: file_handle[f'/processing/Behavior/continuous_behaviors/{key}/data'][:] for key in file_handle[f'/processing/Behavior/continuous_behaviors'].keys()})
-	except KeyError:
-		print(f'No continuous behavior data for {os.path.basename(file_handle.filename)}')
-		data = None
-	return data
-
-
-def get_discrete_states(file_handle):
-	try:
-		data = pd.DataFrame({key: file_handle[f'/processing/Behavior/discrete_states/{key}/data'][:] for key in file_handle[f'/processing/Behavior/discrete_states'].keys()})
-	except KeyError:
-		print(f'No discrete state data for {os.path.basename(file_handle.filename)}')
-		data = None
-	return data
-
-
-def get_eigenworms(file_handle):
-	try:
-		data = pd.DataFrame({key: file_handle[f'/processing/Behavior/eigenworms/{key}/data'][:] for key in file_handle[f'/processing/Behavior/eigenworms'].keys()})
-	except KeyError:
-		print(f'No eigenworm data for {os.path.basename(file_handle.filename)}')
-		data = None
-	return data
-
-
-def get_kymograph(file_handle):
-	try:
-		data = pd.DataFrame({key: file_handle[f'/processing/Behavior/kymograph/{key}/data'][:] for key in file_handle[f'/processing/Behavior/kymograph'].keys()})
-	except KeyError:
-		print(f'No kymograph data for {os.path.basename(file_handle.filename)}')
-		data = None
-	return data
-
-
-def check_neuron_contents(file_ids, traces, selection_n, sort=True):
-	scores = list()
-	for i in range(len(traces)):
-		scores.append(list())
-		for label in selection_n:
-			if label in traces[i].columns:
-				scores[i].append(label)
-
-	if sort:
-		ids_sorted = sorted(file_ids, key=lambda _id: len(scores[_id]), reverse=True)
-		scores_sorted = [scores[_id] for _id in ids_sorted]
-		return ids_sorted, scores_sorted
-
+	filenames_all = sorted(os.listdir(path))
+	if ids is not None:
+		file_ids = ids
+		filenames = [filenames_all[file_id] for file_id in file_ids]
 	else:
-		return file_ids, scores
+		file_ids = list(range(len(filenames_all)))
+		filenames = filenames_all
+
+	traces = [get_traces(os.path.join(path, filenames_all[file_id])) for file_id in file_ids]
+	behaviors = [get_behaviors(os.path.join(path, filenames_all[file_id])) for file_id in file_ids]
+
+	return file_ids, filenames, traces, [b[0] for b in behaviors], [b[1] for b in behaviors]
+
+
+def get_traces(filepath):
+	traces = sp.io.loadmat(filepath, variable_names=['Fsp'])['Fsp'].T
+	traces_df = pd.DataFrame(data=traces)
+	return traces_df
+
+
+def get_behaviors(filepath):
+	behaviors = sp.io.loadmat(filepath, variable_names=['beh'])['beh']
+
+	motion_pcs = get_motion_pcs(behaviors)
+	continuous_behaviors = get_continuous_behaviors(behaviors)
+
+	# TODO: get whisking signal
+
+	return motion_pcs, continuous_behaviors
+
+
+def get_motion_pcs(behaviors):
+	face = behaviors['face'][0][0]['motionSVD'][0][0]
+	face_df = pd.DataFrame(data=face, columns=[f'PC{i+1}' for i in range(face.shape[1])])
+
+	whisker = behaviors['whisker'][0][0]['motionSVD'][0][0]
+	whisker_df = pd.DataFrame(data=whisker, columns=[f'PC{i+1}' for i in range(whisker.shape[1])])
+
+	eye = behaviors['eye'][0][0]['motionSVD'][0][0]
+	eye_df = pd.DataFrame(data=eye, columns=[f'PC{i+1}' for i in range(eye.shape[1])])
+
+	return [face_df, whisker_df, eye_df]
+
+
+def get_continuous_behaviors(behaviors):
+	area = behaviors['pupil'][0][0]['area'][0][0]
+	com = behaviors['pupil'][0][0]['com'][0][0]
+	speed = behaviors['runSpeed'][0][0]
+	# angle = behaviors['runAngle'][0][0]
+
+	behaviors_df = pd.DataFrame(data=np.concat([area, com, speed], axis=1), columns=['pupil_area', 'pupil_com_x', 'pupil_com_y', 'running_speed'])
+	# angle_df = pd.DataFrame(data=angle, columns=[])
+
+	return behaviors_df

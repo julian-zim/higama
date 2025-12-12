@@ -204,23 +204,3 @@ def load_losses(load_name, filenames=None):
 	return losses
 
 #endregion
-
-
-def get_good_neuron_labels():
-	return [
-		"VB02",
-		"DB01",
-		"DD01",
-		"RMDDR",
-		"RMDDL",
-		"SMDDR",
-		"SMDDL",
-		"RMED",
-		"RMEV",
-		"RMDVR",
-		"DB02",
-		"SIADR",
-		"URXL",
-		"URYVR",
-		"RID",
-	]
