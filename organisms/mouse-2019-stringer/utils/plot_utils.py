@@ -573,7 +573,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		boxplot_xticks_gfp.append(x)
 		boxplot_xtick_labels_gfp.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 0 to enable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
@@ -623,7 +623,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 0 to enable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
@@ -729,7 +729,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		boxplot_xticks_gfp.append(x)
 		boxplot_xtick_labels_gfp.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 0 to enable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
@@ -780,7 +780,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 0 to enable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
@@ -890,7 +890,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 		boxplot_xticks_gfp.append(x)
 		boxplot_xtick_labels_gfp.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 0 to enable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
@@ -944,7 +944,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 		boxplot_yticks.append(y)
 		boxplot_ytick_labels.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 0 to enable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
