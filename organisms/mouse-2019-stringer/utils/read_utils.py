@@ -12,7 +12,7 @@ def get_data_path():
 		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/'
 
 
-def get_data(path, ids=None, with_whisking=False):
+def get_data(path, ids=None, with_whisking=True, median_center=True):
 	filenames_all = sorted(os.listdir(path))
 	if ids is not None:
 		file_ids = ids
@@ -21,14 +21,16 @@ def get_data(path, ids=None, with_whisking=False):
 		file_ids = list(range(len(filenames_all)))
 		filenames = filenames_all
 
-	traces = [get_traces(os.path.join(path, filenames_all[file_id])) for file_id in file_ids]
-	behaviors = [get_behaviors(os.path.join(path, filenames_all[file_id]), with_whisking=with_whisking) for file_id in file_ids]
+	traces = [get_traces(os.path.join(path, filenames_all[file_id]), median_center) for file_id in file_ids]
+	behaviors = [get_behaviors(os.path.join(path, filenames_all[file_id]), with_whisking) for file_id in file_ids]
 
 	return file_ids, filenames, traces, *([b[i] for b in behaviors] for i in range(3))
 
 
-def get_traces(filepath):
+def get_traces(filepath, median_center=False):
 	traces = sp.io.loadmat(filepath, variable_names=['Fsp'])['Fsp'].T
+	if median_center:
+		traces -= np.median(traces, axis=0)
 	traces_df = pd.DataFrame(data=traces)
 	return traces_df
 
