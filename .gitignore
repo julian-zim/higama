@@ -79,20 +79,20 @@ __pypackages__/
 
 
 # ============= OUT ==============
-worm-2025-fieseler/out/_old
-worm-2025-fieseler/out/models/*
-worm-2025-fieseler/out/plots/*
-worm-2025-fieseler/out/slurm/*
-worm-2025-fieseler/out/wandb/*
+organisms/worm-2025-fieseler/out/_old
+organisms/worm-2025-fieseler/out/models/*
+organisms/worm-2025-fieseler/out/plots/*
+organisms/worm-2025-fieseler/out/slurm/*
+organisms/worm-2025-fieseler/out/wandb/*
 
-worm-2025-fieseler/data_exploration/manifold/out/*
+organisms/worm-2025-fieseler/data_exploration/manifold/out/*
 
 
-mouse-2019-stringer/out/_old
-mouse-2019-stringer/out/models/*
-mouse-2019-stringer/out/keep/models/*
-mouse-2019-stringer/out/plots/*
-mouse-2019-stringer/out/slurm/*
-mouse-2019-stringer/out/wandb/*
+organisms/mouse-2019-stringer/out/_old
+organisms/mouse-2019-stringer/out/models/*
+organisms/mouse-2019-stringer/out/keep/models/*
+organisms/mouse-2019-stringer/out/plots/*
+organisms/mouse-2019-stringer/out/slurm/*
+organisms/mouse-2019-stringer/out/wandb/*
 
-mouse-2019-stringer/data_exploration/manifold/out/*
+organisms/mouse-2019-stringer/data_exploration/manifold/out/*
