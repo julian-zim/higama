@@ -354,7 +354,7 @@ def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', va='center', fontsize=20)
 
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='running_speed')],
 		loc='center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
@@ -448,7 +448,7 @@ def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', va='center', fontsize=20)
 
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='running_speed')],
 		loc='center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
