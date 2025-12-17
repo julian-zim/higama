@@ -21,8 +21,8 @@ def get_data(path, ids=None, with_whisking=True, median_center=True):
 		file_ids = list(range(len(filenames_all)))
 		filenames = filenames_all
 
-	traces = [get_traces(os.path.join(path, filenames_all[file_id]), median_center) for file_id in file_ids]
-	behaviors = [get_behaviors(os.path.join(path, filenames_all[file_id]), with_whisking) for file_id in file_ids]
+	traces = [get_traces(os.path.join(path, filenames[file_ids.index(file_id)]), median_center) for file_id in file_ids]
+	behaviors = [get_behaviors(os.path.join(path, filenames[file_ids.index(file_id)]), with_whisking) for file_id in file_ids]
 
 	return file_ids, filenames, traces, *([b[i] for b in behaviors] for i in range(3))
 

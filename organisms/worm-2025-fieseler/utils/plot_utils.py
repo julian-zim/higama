@@ -286,7 +286,12 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 		for spine in ax.spines.values():
 			spine.set_visible(False)
 	for i in range(n_plots):
-		if ylimits is not None: axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits)
+		if ylimits is not None:
+			if type(ylimits) is tuple:
+				axes[i // plots_per_row, i % plots_per_row].set_ylim(ylimits)
+			else:
+				# axes[i // plots_per_row, i % plots_per_row].set_ylim(losses[i])
+				pass  # TODO: 20th percentile plot
 
 	top_space_rel = top_space / figheight
 	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
