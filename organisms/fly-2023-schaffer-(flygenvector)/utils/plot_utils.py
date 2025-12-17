@@ -332,7 +332,7 @@ def plot_losses_splits(title, filenames, losses, losses_reference=None,
 """
 Plots traces cycling color according to pyplots policy, with the first one black
 """
-def plot_traces(title, states, traces,
+def plot_traces(title, states, traces, label='still',
 				n_plots=None, plots_per_row=2, top_space=1, ylimits=None, save_name=None):
 	#region setup
 	if type(traces) is pd.DataFrame:
@@ -375,7 +375,7 @@ def plot_traces(title, states, traces,
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', va='center', fontsize=20)
 
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label=label)],
 		loc='center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
@@ -607,14 +607,16 @@ def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref
 
 
 def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4),
-					   ylimits=None, save_name=None):
-	if ylimits is None:
-		ylimits = -0.3, 0.8
+					   ylimits_bot=None, ylimits_top=None, save_name=None):
+	if ylimits_bot is None:
+		ylimits_bot = -0.3, 0.8
+	if ylimits_top is None:
+		ylimits_top = ylimits_bot
 
 	fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=(12, 6), sharex=True, gridspec_kw={'height_ratios': height_ratios})
 
 	if states is not None:
-		im_top = ax_top.imshow(np.clip(states.values.T, ylimits[0], ylimits[1]),
+		im_top = ax_top.imshow(np.clip(states.values.T, ylimits_top[0], ylimits_top[1]),
 							   aspect='auto', cmap='rainbow', interpolation='nearest')
 		ax_top.set_ylabel(label_top)
 		ax_top.set_yticks(np.arange(len(states.values.T)))
@@ -623,7 +625,7 @@ def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4
 		fig.colorbar(im_top, ax=ax_top, orientation='vertical', fraction=0.05)
 		ax_top.grid(False)
 
-	im_bottom = ax_bottom.imshow(np.clip(traces.values.T, ylimits[0], ylimits[1]), aspect='auto',
+	im_bottom = ax_bottom.imshow(np.clip(traces.values.T, ylimits_bot[0], ylimits_bot[1]), aspect='auto',
 								 cmap='rainbow', interpolation='nearest')
 	ax_bottom.set_ylabel(label_bot)
 	ax_bottom.set_yticks(np.arange(len(traces.values.T)))

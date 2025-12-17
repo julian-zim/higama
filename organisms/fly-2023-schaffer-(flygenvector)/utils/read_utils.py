@@ -35,7 +35,8 @@ def get_traces(filepath):
 	with h5py.File(filepath, 'r') as file_handle:
 		data = pd.DataFrame(file_handle[f'/processing/ophys/DfOverF/RoiResponseSeries/data'][:])
 		try:
-			data.columns = [str(n_id) for n_id in file_handle[f'/processing/ophys/DfOverF/RoiResponseSeries/rois'][:]]
+			# data.columns = [str(n_id) for n_id in file_handle[f'/processing/ophys/DfOverF/RoiResponseSeries/rois'][:]]
+			data.columns = ['' for _ in file_handle[f'/processing/ophys/DfOverF/RoiResponseSeries/rois'][:]]
 		except ValueError:
 			data.columns = ['?' for _ in range(data.shape[1])]
 	return data
@@ -45,7 +46,7 @@ def get_states(filepath):
 	with h5py.File(filepath, 'r') as file_handle:
 		data = pd.DataFrame(file_handle[f'/processing/behavioral state/behavioral state/data'][:].round(0).astype(int))
 		try:
-			data.columns = ['undefined', 'quiescence', 'ab_bending', 'grooming_b', 'grooming_f', 'running']
+			data.columns = ['background', 'still', 'walk', 'front-groom', 'back-groom', 'abdomen-move']  # labels from pickle file
 		except ValueError:
 			data.columns = ['?']
 	return data
@@ -55,8 +56,20 @@ def get_markers(filepath):
 	with open(filepath, 'rb') as file:
 		data = pickle.load(file)
 
-	marker_names = data['marker_names']
-	beh_markers_x = pd.DataFrame(data=data['beh_markers_x'], columns=marker_names)
-	beh_markers_y = pd.DataFrame(data=data['beh_markers_y'], columns=marker_names)
+	marker_names = list(data['marker_names'])
+	markers_x, markers_y = data['beh_markers_x'], data['beh_markers_y']
+	markers_xy = np.stack((markers_x, markers_y), axis=2).reshape(markers_x.shape[0], -1)
+	columns = [f'{name}_{ax}' for name in marker_names for ax in ['x', 'y']]
+	behavior_df = pd.DataFrame(data=markers_xy, columns=columns)
 
-	return [beh_markers_x, beh_markers_y]
+	return behavior_df
+
+
+# def get_states_pickle(filepath):
+# 	with open(filepath, 'rb') as file:
+# 		data = pickle.load(file)
+# 	labels = data['beh_labels']
+# 	names = data['state_labels'].item()
+# 	states_alt = pd.DataFrame(data=(labels == labels.max(axis=1, keepdims=True)).astype(int),
+# 							   columns=[names[i] for i in range(len(names))])
+# 	return states_alt
