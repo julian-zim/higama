@@ -13,14 +13,14 @@ import jax.numpy as jnp
 import optax
 import wandb
 
-sys.path.append(os.path.join(os.getcwd(), '../'))
+sys.path.append(os.path.join(os.getcwd()))
 from utils import read_utils
 from utils import plot_utils
 from utils import train_utils
 
-sys.path.append(os.path.join(os.getcwd(), '../../../'))
-from models import bom
-from models import hgm
+# sys.path.append(os.path.join(os.getcwd(), '../../'))
+# from models import bom
+# from models import hgm
 #endregion
 
 
