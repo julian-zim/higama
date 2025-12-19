@@ -1,5 +1,7 @@
+#region imports
 import sys
 import os
+import time
 from typing import NamedTuple
 import math
 import numpy as np
@@ -336,7 +338,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 		project_name = f'{prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
-		splits = list(StratifiedKFold(n_splits=5).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
+		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
 
 		def train_model_wrapper():
 			return train_model(model, splits,

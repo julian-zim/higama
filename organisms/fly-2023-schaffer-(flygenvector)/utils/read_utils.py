@@ -28,7 +28,7 @@ def get_data(path, ids=None):
 	states = [get_states(os.path.join(path, 'nwb', filenames[file_ids.index(file_id)])) for file_id in file_ids]
 	markers = [get_markers(os.path.join(path, 'pickle', f'{filenames[file_ids.index(file_id)].split('.')[0]}_dict.pkl')) for file_id in file_ids]
 
-	return file_ids, filenames, traces, states, markers
+	return file_ids, [name.split('.')[0] for name in filenames], traces, states, markers
 
 
 def get_traces(filepath):
