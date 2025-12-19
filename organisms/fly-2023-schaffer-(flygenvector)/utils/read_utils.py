@@ -57,6 +57,12 @@ def get_markers(filepath):
 		data = pickle.load(file)
 
 	marker_names = list(data['marker_names'])
+
+	# fix typo
+	for i in range(len(marker_names)):
+		if marker_names[i].startswith('addomen'):
+			marker_names[i] = marker_names[i].replace('addomen', 'abdomen')
+
 	markers_x, markers_y = data['beh_markers_x'], data['beh_markers_y']
 	markers_xy = np.stack((markers_x, markers_y), axis=2).reshape(markers_x.shape[0], -1)
 	columns = [f'{name}_{ax}' for name in marker_names for ax in ['x', 'y']]
