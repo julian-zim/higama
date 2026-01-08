@@ -609,7 +609,7 @@ def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref
 def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4),
 					   ylimits_bot=None, ylimits_top=None, save_name=None):
 	if ylimits_bot is None:
-		ylimits_bot = -0.3, 0.8
+		ylimits_bot = -0.015, 0.015
 	if ylimits_top is None:
 		ylimits_top = ylimits_bot
 
@@ -617,7 +617,8 @@ def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4
 
 	if states is not None:
 		im_top = ax_top.imshow(np.clip(states.values.T, ylimits_top[0], ylimits_top[1]),
-							   aspect='auto', cmap='rainbow', interpolation='nearest')
+							   aspect='auto', interpolation='nearest',
+							   cmap=mcolors.ListedColormap(plt.cm.get_cmap('Grays', 256)(np.linspace(0.2, 0.8, 256))))
 		ax_top.set_ylabel(label_top)
 		ax_top.set_yticks(np.arange(len(states.values.T)))
 		ax_top.set_yticklabels(states.columns, fontsize=8)
@@ -626,10 +627,10 @@ def plot_heatmap_stack(traces, states, label_bot, label_top, height_ratios=(1, 4
 		ax_top.grid(False)
 
 	im_bottom = ax_bottom.imshow(np.clip(traces.values.T, ylimits_bot[0], ylimits_bot[1]), aspect='auto',
-								 cmap='rainbow', interpolation='nearest')
+								 cmap='plasma')
 	ax_bottom.set_ylabel(label_bot)
-	ax_bottom.set_yticks(np.arange(len(traces.values.T)))
-	ax_bottom.set_yticklabels(traces.columns, fontsize=4)
+	ax_bottom.set_yticks(np.arange(0, len(traces.values.T), 100))
+	ax_bottom.set_yticklabels([traces.columns[i] for i in np.arange(0, len(traces.values.T), 100)], fontsize=4)
 	ax_bottom.set_xticks(np.arange(0, len(traces.values), 1000))
 	fig.colorbar(im_bottom, ax=ax_bottom, orientation='vertical', fraction=0.05)
 	ax_bottom.grid(False)

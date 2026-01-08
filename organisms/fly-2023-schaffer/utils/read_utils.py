@@ -14,9 +14,10 @@ def get_data_path():
 		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/'
 
 
-def get_data(path, ids=None):
+def get_data(path, ids=None, with_markers=True):
 	# filenames_all = sorted('_'.join(filename.split('.')[0].split('_')[:-1]) for filename in os.listdir(os.path.join(path, 'pickles')))
-	filenames_all = sorted(os.listdir(os.path.join(path, 'nwb')))
+	filenames_all = sorted([name.split('.')[0] for name in os.listdir(path) if
+						not os.path.isdir(os.path.join(path, name)) and not name.endswith('.pkl')])
 	if ids is not None:
 		file_ids = ids
 		filenames = [filenames_all[file_id] for file_id in file_ids]
@@ -24,15 +25,15 @@ def get_data(path, ids=None):
 		file_ids = list(range(len(filenames_all)))
 		filenames = filenames_all
 
-	traces = [get_traces(os.path.join(path, 'nwb', filenames[file_ids.index(file_id)])) for file_id in file_ids]
-	states = [get_states(os.path.join(path, 'nwb', filenames[file_ids.index(file_id)])) for file_id in file_ids]
-	markers = [get_markers(os.path.join(path, 'pickle', f'{filenames[file_ids.index(file_id)].split('.')[0]}_dict.pkl')) for file_id in file_ids]
+	traces = [get_traces(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id in file_ids]
+	states = [get_states(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id in file_ids]
+	markers = [get_markers(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id in file_ids] if with_markers else None
 
-	return file_ids, [name.split('.')[0] for name in filenames], traces, states, markers
+	return file_ids, filenames, traces, states, markers
 
 
 def get_traces(filepath):
-	with h5py.File(filepath, 'r') as file_handle:
+	with h5py.File(filepath + '.nwb', 'r') as file_handle:
 		data = pd.DataFrame(file_handle[f'/processing/ophys/DfOverF/RoiResponseSeries/data'][:])
 		try:
 			# data.columns = [str(n_id) for n_id in file_handle[f'/processing/ophys/DfOverF/RoiResponseSeries/rois'][:]]
@@ -43,7 +44,7 @@ def get_traces(filepath):
 
 
 def get_states(filepath):
-	with h5py.File(filepath, 'r') as file_handle:
+	with h5py.File(filepath + '.nwb', 'r') as file_handle:
 		data = pd.DataFrame(file_handle[f'/processing/behavioral state/behavioral state/data'][:].round(0).astype(int))
 		try:
 			data.columns = ['background', 'still', 'walk', 'front-groom', 'back-groom', 'abdomen-move']  # labels from pickle file
@@ -53,7 +54,7 @@ def get_states(filepath):
 
 
 def get_markers(filepath):
-	with open(filepath, 'rb') as file:
+	with open(filepath + '_dict.pkl', 'rb') as file:
 		data = pickle.load(file)
 
 	marker_names = list(data['marker_names'])
