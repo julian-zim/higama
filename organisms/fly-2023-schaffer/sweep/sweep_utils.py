@@ -5,6 +5,7 @@ import time
 from typing import NamedTuple
 import math
 import numpy as np
+import scipy as sp
 import pandas as pd
 
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
@@ -272,6 +273,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 		return sp.signal.sosfiltfilt(sp.signal.butter(order, cutoff_hz, btype='highpass', fs=fs, output='sos'), x,
 									 axis=axis)
 
+	path = os.path.join(read_utils.get_data_path(), 'fly-2023-schaffer/brain')
 	sampling_rates = [read_utils.get_sampling_rate(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id
 					  in file_ids]
 
