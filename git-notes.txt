@@ -1,0 +1,9 @@
+Remove shit form last commit:
+git rebase -i HEAD~1
+git rm --cached path/to/file
+git commit --amend
+git push --force
+
+Remote:
+git pull --rebase
+

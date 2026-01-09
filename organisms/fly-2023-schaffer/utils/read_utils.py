@@ -11,7 +11,7 @@ def get_data_path():
 	if os.path.exists(local_path):
 		return local_path
 	else:
-		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/'
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA/'
 
 
 def get_data(path, ids=None, with_markers=True):
