@@ -227,13 +227,16 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 def read():
 	print('reading...')
 
-	read_ids = list(range(0, 13+1))
-	# read_ids = [3]
+	# read_ids = list(range(0, 13+1))
+	# read_ids = [0, 2, 3, 8, 9]
+	read_ids = [0]
+	plot_id = 0
 
 	selection_bhl = ['still', 'walk', 'front-groom', 'back-groom', 'abdomen-move']
 
 	# read
-	path = os.path.join(read_utils.get_data_path(), 'fly-2023-schaffer-(flygenvector)')
+
+	path = os.path.join(read_utils.get_data_path(), 'fly-2023-schaffer/brain')
 
 	(file_ids, filenames,
 	 traces,
@@ -264,6 +267,14 @@ def read():
 
 def sweep(prefix, model, config, default_hyperparameters, log_path):
 	file_ids, filenames, states, markers, traces = read()
+	markers_me = [pd.DataFrame(data=marker.values[1:, :] - marker.values[:-1, :], columns=marker.columns) for marker in
+				  markers]
+	# markers_me_zs = [
+	# 	pd.DataFrame(
+	# 		data=(marker_me.values - marker_me.values.mean(axis=0)) / np.where((marker_std := np.std(marker_me.values, axis=0)) == 0.0, 1.0, marker_std),
+	# 		columns=marker_me.columns)
+	# 	for marker_me in markers_me
+	# ]
 
 	print('sweeping...')
 
@@ -278,7 +289,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 		def train_model_wrapper():
 			return train_model(model, splits,
 							   traces[file_ids.index(file_id)].values,
-							   markers[file_ids.index(file_id)].values,
+							   markers_me[file_ids.index(file_id)].values,
 							   states[file_ids.index(file_id)].values,
 							   default_hyperparameters,
 							   log_path)
