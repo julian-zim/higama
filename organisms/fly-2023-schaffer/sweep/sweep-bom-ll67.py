@@ -26,7 +26,7 @@ default_hyperparameters = {
 }
 
 if __name__ == '__main__':
-	log_path = '/lisc/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
+	log_path = '/lisc/data/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
 	if not (os.path.exists(log_path) and os.access(log_path, os.W_OK)):
 		log_path = './out/'
 

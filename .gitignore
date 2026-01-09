@@ -96,3 +96,13 @@ organisms/mouse-2019-stringer/out/slurm/*
 organisms/mouse-2019-stringer/out/wandb/*
 
 organisms/mouse-2019-stringer/data_exploration/manifold/out/*
+
+
+organisms/fly-2023-schaffer/out/_old
+organisms/fly-2023-schaffer/out/models/*
+organisms/fly-2023-schaffer/out/keep/models/*
+organisms/fly-2023-schaffer/out/plots/*
+organisms/fly-2023-schaffer/out/slurm/*
+organisms/fly-2023-schaffer/out/wandb/*
+
+organisms/fly-2023-schaffer/data_exploration/manifold/out/*
