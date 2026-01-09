@@ -72,6 +72,12 @@ def get_markers(filepath):
 	return behavior_df
 
 
+def get_sampling_rate(filepath):
+	with h5py.File(filepath + '.nwb', 'r') as file_handle:
+		ts = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
+	return 1 / np.mean(ts[1:] - ts[:-1])
+
+
 # def get_states_pickle(filepath):
 # 	with open(filepath, 'rb') as file:
 # 		data = pickle.load(file)

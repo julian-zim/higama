@@ -267,16 +267,29 @@ def read():
 
 def sweep(prefix, model, config, default_hyperparameters, log_path):
 	file_ids, filenames, states, markers, traces = read()
+
+	def highpass_butter(x, fs, cutoff_hz, order=4, axis=0):
+		return sp.signal.sosfiltfilt(sp.signal.butter(order, cutoff_hz, btype='highpass', fs=fs, output='sos'), x,
+									 axis=axis)
+
+	sampling_rates = [read_utils.get_sampling_rate(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id
+					  in file_ids]
+
 	traces = [pd.DataFrame(data=trace.values[1:, :], columns=trace.columns) for trace in traces]
+	traces = [pd.DataFrame(highpass_butter(trace.values, sr, 1 / 100), columns=trace.columns) for trace, sr in
+			  zip(traces, sampling_rates)]
+
 	states = [pd.DataFrame(data=state.values[1:, :], columns=state.columns) for state in states]
-	markers_me = [pd.DataFrame(data=marker.values[1:, :] - marker.values[:-1, :], columns=marker.columns) for marker in
-				  markers]
-	# markers_me_zs = [
-	# 	pd.DataFrame(
-	# 		data=(marker_me.values - marker_me.values.mean(axis=0)) / np.where((marker_std := np.std(marker_me.values, axis=0)) == 0.0, 1.0, marker_std),
-	# 		columns=marker_me.columns)
-	# 	for marker_me in markers_me
-	# ]
+
+	markers = [pd.DataFrame(data=marker.values[1:, :] - marker.values[:-1, :], columns=marker.columns) for marker in
+			   markers]
+	markers = [
+		pd.DataFrame(
+			data=(marker.values - marker.values.mean(axis=0)) / np.where(
+				(marker_std := np.std(marker.values, axis=0)) == 0.0, 1.0, marker_std),
+			columns=marker.columns)
+		for marker in markers
+	]
 
 	print('sweeping...')
 
@@ -291,7 +304,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 		def train_model_wrapper():
 			return train_model(model, splits,
 							   traces[file_ids.index(file_id)].values,
-							   markers_me[file_ids.index(file_id)].values,
+							   markers[file_ids.index(file_id)].values,
 							   states[file_ids.index(file_id)].values,
 							   default_hyperparameters,
 							   log_path)

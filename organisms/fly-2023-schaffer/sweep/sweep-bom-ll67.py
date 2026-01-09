@@ -21,7 +21,7 @@ default_hyperparameters = {
 	'ccaunit_lambda': 1.0 - 0.6,
 	'loss1_lambda': 0.67,
 	'loss2_lambda': 1.0 - 0.67,
-	'w1_reg_lambda': 0.0,	#1E-3,
+	'w1_reg_lambda': 0.0,
 	'w2_reg_lambda': -1.0,  # unused by the BOM
 }
 
