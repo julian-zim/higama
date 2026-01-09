@@ -8,8 +8,8 @@
 #SBATCH --time=28-00:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer-(flygenvector)/out/slurm/sweep-hgm-ll67.%A.out
-#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer-(flygenvector)/out/slurm/sweep-hgm-ll67.%A.err
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/sweep-bom-ll67.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/sweep-bom-ll67.%A.err
 
 module load Python/3.12.3-GCCcore-13.3.0
 source "${HOME}/.venv/hgm/bin/activate"
@@ -18,8 +18,8 @@ python --version
 echo "${VIRTUAL_ENV}"
 
 
-OUT_DIR="/lisc/scratch/neurobiology/zimmer/zimmermann/Slurm"
-WANDB_DIR="/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer-(flygenvector)/out/"
+OUT_DIR="/lisc/data/scratch/neurobiology/zimmer/zimmermann/Slurm"
+WANDB_DIR="/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/"
 mkdir -p "${OUT_DIR}"
 mkdir -p "${WANDB_DIR}"
 
