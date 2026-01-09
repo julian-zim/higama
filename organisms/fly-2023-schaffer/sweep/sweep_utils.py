@@ -267,6 +267,8 @@ def read():
 
 def sweep(prefix, model, config, default_hyperparameters, log_path):
 	file_ids, filenames, states, markers, traces = read()
+	traces = [pd.DataFrame(data=trace.values[1:, :], columns=trace.columns) for trace in traces]
+	states = [pd.DataFrame(data=state.values[1:, :], columns=state.columns) for state in states]
 	markers_me = [pd.DataFrame(data=marker.values[1:, :] - marker.values[:-1, :], columns=marker.columns) for marker in
 				  markers]
 	# markers_me_zs = [
