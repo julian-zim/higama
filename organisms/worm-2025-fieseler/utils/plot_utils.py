@@ -109,7 +109,11 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 	scale = [] #[-1, 0, 1]
 	normalizer = plt.Normalize(0, len(states[0].columns))
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
-		lc_points = np.array([modes_[f'{key}1'], modes_[f'{key}2']]).T.reshape(-1, 1, 2)
+		i0 = 1
+		if f'{key}0' in modes_.columns:
+			i0 = 0
+
+		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}']]).T.reshape(-1, 1, 2)
 		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
 		lc_colors = np.argmax(states_.values, axis=1)[:-1]
 		lc = LineCollection(lc_segments, cmap=colormap, norm=normalizer)

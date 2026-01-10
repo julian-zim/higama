@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#SBATCH --job-name train-model-ll00
+#SBATCH --partition=gpu
+# --qos=gpu-01h
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=25:00:00
+#SBATCH --mail-user=a12144285@unet.univie.ac.at
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/train-model-ll00.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/train-model-ll00.%A.err
+
+module load Python/3.12.3-GCCcore-13.3.0
+source "${HOME}/.venv/hgm/bin/activate"
+
+python --version
+echo "${VIRTUAL_ENV}"
+
+
+OUT_DIR="/lisc/data/scratch/neurobiology/zimmer/zimmermann/Slurm"
+mkdir -p "${OUT_DIR}"
+
+
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export XLA_PYTHON_CLIENT_ALLOCATOR=platform
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+# srun --cpu-bind=none jupyter nbconvert --to notebook --execute model-ll00.ipynb --output model-ll00.ipynb --log-level=DEBUG
+srun --cpu-bind=none papermill model-ll00.ipynb model-ll00.ipynb --log-output

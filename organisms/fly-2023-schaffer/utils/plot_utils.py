@@ -419,7 +419,7 @@ def plot_traces(title, states, traces, label='still',
 """
 Plots single trace in black and optional splits in cycling colors, with the first being opaques and the second transparents
 """
-def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces_splits_ref=None, plot_first=True,
+def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces_splits_ref=None, label='still', plot_first=True,
 						 n_plots=None, plots_per_row=2, top_space=1, ylimits=None, save_name=None):
 	#region setup
 	keys = [key for key in traces_first.columns if key != '']
@@ -464,7 +464,7 @@ def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', va='center', fontsize=20)
 
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label=label)],
 		loc='center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
@@ -514,7 +514,7 @@ def plot_traces_x_splits(title, states, traces_first, traces_splits=None, traces
 """
 Plots two pairs of traces in red and green black, with the respective first one being opaque and the second transparent
 """
-def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref=None, plot_first=True,
+def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref=None, label='still', plot_first=True,
 							n_plots=None, plots_per_row=2, top_space=1, ylimits=None, save_name=None):
 	#region setup
 	keys = [key for key in traces_first.columns if key != '']
@@ -558,7 +558,7 @@ def plot_traces_comparisons(title, states, traces_first, traces=None, traces_ref
 	fig.text(0.5, 1. - top_space_rel * 1 / 4, title, ha='center', va='center', fontsize=20)
 
 	fig.legend(
-		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label='reversal')],
+		handles=[patches.Patch(color=plt.get_cmap('binary')(0.5), alpha=0.3, label=label)],
 		loc='center',
 		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 4),
 		ncol=1,
@@ -874,9 +874,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 	#endregion =================================================================================================================
 
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
-	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
+	plt.xticks(x_ticks_pos, [f'{val:.2E}' for val in x_ticks_pos])
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
-	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
+	plt.yticks(y_ticks_pos, [f'{val:.2E}' for val in y_ticks_pos])
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300, bbox_inches='tight')
 	plt.show()
@@ -1175,7 +1175,7 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 		boxplot_yticks.append(y)
 		boxplot_ytick_labels.append(f'{key}')
 
-		if len(scores_hgm) > 0:  # change this to 1 to disable median lines for one-neuron points
+		if len(scores_hgm) > 1:  # change this to 1 to disable median lines for one-neuron points
 			boxplot_v = plt.boxplot(scores_hgm - scores_glm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			boxplot_h = plt.boxplot(scores_glm, positions=[y], widths=bp_pxs[1], patch_artist=True,
@@ -1210,9 +1210,9 @@ def plot_improvement_plot_y(neuron_scores, neuron_scores_control=None,
 	#endregion =================================================================================================================
 
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
-	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
+	plt.xticks(x_ticks_pos, [f'{val:.2E}' for val in x_ticks_pos])
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
-	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
+	plt.yticks(y_ticks_pos, [f'{val:.2E}' for val in y_ticks_pos])
 
 	if save_name is not None: plt.savefig(f'./out/plots/{save_name}.png', dpi=300, bbox_inches='tight')
 	plt.show()
