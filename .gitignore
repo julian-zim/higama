@@ -79,30 +79,19 @@ __pypackages__/
 
 
 # ============= OUT ==============
-organisms/worm-2025-fieseler/out/_old
-organisms/worm-2025-fieseler/out/models/*
-organisms/worm-2025-fieseler/out/plots/*
-organisms/worm-2025-fieseler/out/slurm/*
-organisms/worm-2025-fieseler/out/wandb/*
 
-organisms/worm-2025-fieseler/data_exploration/manifold/out/*
+# worm
+organisms/worm-2025-fieseler/out/*
+!organisms/worm-2025-fieseler/out/keep/
+!organisms/worm-2025-fieseler/out/keep/**
 
+# fly
+organisms/fly-2023-schaffer/out/*
+!organisms/fly-2023-schaffer/out/keep/
+!organisms/fly-2023-schaffer/out/keep/**
 
-organisms/mouse-2019-stringer/out/_old
-organisms/mouse-2019-stringer/out/models/*
-organisms/mouse-2019-stringer/out/keep/models/*
-organisms/mouse-2019-stringer/out/plots/*
-organisms/mouse-2019-stringer/out/slurm/*
-organisms/mouse-2019-stringer/out/wandb/*
+# mouse
+organisms/mouse-2019-stringer/out/*
+!organisms/mouse-2019-stringer/out/keep/
+!organisms/mouse-2019-stringer/out/keep/**
 
-organisms/mouse-2019-stringer/data_exploration/manifold/out/*
-
-
-organisms/fly-2023-schaffer/out/_old
-organisms/fly-2023-schaffer/out/models/*
-organisms/fly-2023-schaffer/out/keep/models/*
-organisms/fly-2023-schaffer/out/plots/*
-organisms/fly-2023-schaffer/out/slurm/*
-organisms/fly-2023-schaffer/out/wandb/*
-
-organisms/fly-2023-schaffer/data_exploration/manifold/out/*
