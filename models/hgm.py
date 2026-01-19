@@ -41,10 +41,9 @@ def predict_res(prep_b, B, N_man, WB, WM):
 	B_mean, B_std = prep_b['mean'], prep_b['std']
 	B_zs = (B - B_mean) / B_std
 
-	N_man -= N_man.mean(axis=0)
-	N_man /= jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
+	N_man_zs = (N_man - N_man.mean(axis=0)) / jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
 
-	return B_zs @ WB * jax.nn.sigmoid(N_man @ WM)
+	return B_zs @ WB * jax.nn.sigmoid(N_man_zs @ WM)
 
 @jax.jit
 def predict_man(prep_n, N, UN):

@@ -1,0 +1,13 @@
+Immutable Data types (copy when changed):
+
+int
+float
+bool
+complex
+str
+tuple
+frozenset
+bytes
+
+
+ALL OTHERS ARE REFERENCED ONLY. Use obj.copy().
