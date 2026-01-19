@@ -4,7 +4,7 @@ import os
 
 import jax
 
-import sweep_utils
+import sweep_utils_rs
 
 sys.path.append(os.path.join(os.getcwd(), '../../'))
 from models import bom_rs as bom
@@ -44,4 +44,4 @@ if __name__ == '__main__':
 		'run_cap': 200,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
-	sweep_utils.sweep(prefix, hgm, sweep_config, default_hyperparameters, log_path)
+	sweep_utils_rs.sweep(prefix, hgm, sweep_config, default_hyperparameters, log_path)
