@@ -74,7 +74,7 @@ def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 			S_train, S_eval = jnp.array(S[train]), jnp.array(S[eval])
 			B_train, B_eval = jnp.array(B[train]), jnp.array(B[eval])
 
-			params = model.init_params(N_train, S_train,
+			params = model.init_params(N_train, B_train, S_train,
 									   seeds,
 									   (n_neurons, n_dimensions),
 									   (n_states, n_dimensions),

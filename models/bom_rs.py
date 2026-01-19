@@ -37,8 +37,11 @@ def init_params(N, B, S, seeds, shape_UN, shape_US, shape_VB, shape_WB):
 #region PREDICTING
 
 @jax.jit
-def predict_res(B, WB, VB):
-	B_ss = B @ WB
+def predict_res(prep_b, B, WB, VB):
+	B_mean, B_std = prep_b['mean'], prep_b['std']
+	B_zs = (B - B_mean) / B_std
+
+	B_ss = B_zs @ WB
 	return B_ss @ VB, B_ss
 
 @jax.jit
@@ -56,11 +59,12 @@ def predict_man(prep_n, N, UN):
 @jax.jit
 def predict(params, N, B):
 	prep_n = jax.lax.stop_gradient(params['prep']['N'])
+	prep_b = jax.lax.stop_gradient(params['prep']['B'])
 	UN, VB, WB = params['model']['UN'], params['model']['VB'], params['model']['WB']
 
 	N_man, N_rec, N_res = predict_man(prep_n, N, UN)
 
-	N_res_pred, B_ss = predict_res(B, WB, VB)
+	N_res_pred, B_ss = predict_res(prep_b, B, WB, VB)
 
 	return N_man, N_rec, N_res, N_res_pred, B_ss
 

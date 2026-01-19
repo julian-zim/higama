@@ -37,10 +37,11 @@ def init_params(N, B, S, seeds, shape_UN, shape_US, shape_WB):
 #region PREDICTING
 
 @jax.jit
-def predict_res(B, WB):
-	# ToDo: zscore behavior
+def predict_res(prep_b, B, WB):
+	B_mean, B_std = prep_b['mean'], prep_b['std']
+	B_zs = (B - B_mean) / B_std
 
-	return B @ WB
+	return B_zs @ WB
 
 @jax.jit
 def predict_man(prep_n, N, UN):
@@ -57,11 +58,12 @@ def predict_man(prep_n, N, UN):
 @jax.jit
 def predict(params, N, B):
 	prep_n = jax.lax.stop_gradient(params['prep']['N'])
+	prep_b = jax.lax.stop_gradient(params['prep']['B'])
 	UN, WB = params['model']['UN'], params['model']['WB']
 
 	N_man, N_rec, N_res = predict_man(prep_n, N, UN)
 
-	N_res_pred = predict_res(B, WB)
+	N_res_pred = predict_res(prep_b, B, WB)
 
 	return N_man, N_rec, N_res, N_res_pred
 
