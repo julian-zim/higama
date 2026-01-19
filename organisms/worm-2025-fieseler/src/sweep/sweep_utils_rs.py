@@ -14,11 +14,11 @@ import optax
 import wandb
 
 
-sys.path.append(os.path.join(os.getcwd(), '../'))
+sys.path.append(os.path.join(os.getcwd(), './src/'))
 from utils_worm import artificializer
 from utils_worm import read_utils
 
-sys.path.append(os.path.join(os.getcwd(), '../../../../'))
+sys.path.append(os.path.join(os.getcwd(), '../../'))
 from models import hgm_rs as hgm_gen
 #endregion
 
@@ -48,7 +48,7 @@ def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 		n_dimensions = hyperparameters['dimensions']
 
 		lambdas = Lambdas(
-			loss_lambdas=(hyperparameters['loss1_lambda'], hyperparameters['loss2_lambda']),
+			loss_lambdas=(hyperparameters['loss_man_lambda'], hyperparameters['loss_res_lambda']),
 			reg_lambdas=(hyperparameters['vb_reg_lambda'], hyperparameters['wb_reg_lambda'], hyperparameters['wm_reg_lambda']),
 			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
