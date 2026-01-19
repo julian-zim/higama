@@ -290,7 +290,7 @@ def read(artificial=False):
 			 traces_residual_art_,
 			 traces_art_,
 			 params_art_,
-			 params_cca_art_) = artificializer.artificialize(weights, hgm,
+			 params_cca_art_) = artificializer.artificialize(weights, hgm_gen,
 															 filenames_gcamp[i],
 															 traces_gcamp[i].columns,
 															 eigenworms_gcamp[i],
