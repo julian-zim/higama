@@ -1,0 +1,161 @@
+import jax
+import jax.numpy as jnp
+import optax
+
+
+p = 1
+
+
+def get_type():
+	return False
+
+def init_params(N, B, S, seeds, shape_UN, shape_US, shape_VB, shape_WB):
+	return {
+		'prep': {
+			'N': {
+				'mean': N.mean(axis=0),
+				'std': jnp.where((N_std := jnp.std(N, axis=0)) == 0.0, 1.0, N_std),
+			},
+			'B': {
+				'mean': B.mean(axis=0),
+				'std': jnp.where((B_std := jnp.std(B, axis=0)) == 0.0, 1.0, B_std),
+			},
+			'S': {
+				'mean': S.mean(axis=0),
+				'std': jnp.where((S_std := jnp.std(S, axis=0)) == 0.0, 1.0, S_std),
+			},
+		},
+		'model': {
+			'UN': 1E-3 * jax.random.normal(seeds[0], shape_UN),
+			'US': 1E-3 * jax.random.normal(seeds[1], shape_US),
+			'VB': 1E-3 * jax.random.normal(seeds[2], shape_VB),
+			'WB': 1E-3 * jax.random.normal(seeds[3], shape_WB),
+		}
+	}
+
+
+#region PREDICTING
+
+@jax.jit
+def predict_res(B, WB, VB):
+	B_ss = B @ WB
+	return B_ss @ VB, B_ss
+
+@jax.jit
+def predict_man(prep_n, N, UN):
+	N_mean, N_std = prep_n['mean'], prep_n['std']
+
+	N_zs = (N - N_mean) / N_std
+	N_man = N_zs @ UN
+	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # least-squares reconstruction (NOT N_man @ jax.numpy.linalg.pinv(UN))
+	N_rec = N_zs_rec * N_std + N_mean
+	N_res = N - N_rec
+
+	return N_man, N_rec, N_res
+
+@jax.jit
+def predict(params, N, B):
+	prep_n = jax.lax.stop_gradient(params['prep']['N'])
+	UN, VB, WB = params['model']['UN'], params['model']['VB'], params['model']['WB']
+
+	N_man, N_rec, N_res = predict_man(prep_n, N, UN)
+
+	N_res_pred, B_ss = predict_res(B, WB, VB)
+
+	return N_man, N_rec, N_res, N_res_pred, B_ss
+
+#endregion
+
+
+#region TRAINING
+
+#@jax.jit
+def norm(X_proj):
+	X_proj = X_proj - jnp.mean(X_proj, axis=0)
+	X_proj = X_proj / (jnp.linalg.norm(X_proj, axis=0) + 1e-6)
+	return X_proj
+
+@jax.jit
+def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
+	corr = norm(X_proj).T @ norm(Y_proj)
+
+	corr_diag = jnp.diag(jnp.diag(corr))
+	corr_nondiag = corr - corr_diag
+
+	return (ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag))
+			+ ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape))))
+
+#@jax.jit
+def loss_fn(params, N, B, S, lambdas):
+	# read hyperparams
+	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
+
+	loss_man_lambda, loss_res_lambda = loss_lambdas
+	vb_reg_lambda, wb_reg_lambda, _ = reg_lambdas
+	ccadiag_lambda, ccaunit_lambda = cca_lambdas
+
+	# predict
+	N_man, N_rec, N_res, N_res_pred, B_ss = predict(params, N, B)
+
+	# # manifold loss =================================
+	# prep_s = jax.lax.stop_gradient(params['prep']['S'])
+	# S_mean, S_std = prep_s['mean'], prep_s['std']
+	# US = params['model']['US']
+	#
+	# S_zs = (S - S_mean) / S_std
+	# S_man = S_zs @ US
+	# man_loss = cca_loss(N_man, S_man, ccadiag_lambda, ccaunit_lambda)
+	man_loss = jnp.array(0)
+	# ===============================================
+
+	# residuals loss ================================
+	VB, WB = params['model']['VB'], params['model']['WB']
+
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
+	vb_reg_loss, wb_reg_loss = jnp.linalg.norm(VB) ** 2, jnp.linalg.norm(WB) ** 2
+	res_loss = (mpe_loss
+				+ vb_reg_loss * vb_reg_lambda
+				+ wb_reg_loss * wb_reg_lambda)
+	# ===============================================
+
+	full_loss = (man_loss * loss_man_lambda +
+				 res_loss * loss_res_lambda)
+	return full_loss, (man_loss, res_loss, mpe_loss)
+
+loss_and_grads = jax.jit(jax.value_and_grad(loss_fn, has_aux=True), static_argnums=(4,))
+
+@jax.jit
+def loss_fn_flattened(params, N, B, S, lambdas):
+	full_loss, (man_loss, res_loss, mpe_loss) = loss_fn(params, N, B, S, lambdas)
+	return full_loss, man_loss, res_loss, mpe_loss
+
+def update(opt_update, opt_state, params, N, B, S, lambdas):
+	(loss, (man_loss, res_loss, mpe_loss)), grads = loss_and_grads(params, N, B, S, lambdas)
+	params_updates, opt_state = opt_update(grads, opt_state, params)
+	params_new = optax.apply_updates(params, params_updates)
+	return opt_state, params_new, (loss, man_loss, res_loss, mpe_loss)
+
+update = jax.jit(update, static_argnums=(0, 6,))
+
+#endregion
+
+
+#region EVALUATING
+
+#@jax.jit
+def r2_score(y_eval, y_pred, baseline):
+	ss_res = jnp.sum((y_eval - y_pred) ** 2)  # ^p?
+	ss_tot = jnp.sum((y_eval - baseline) ** 2)  # ^p?
+	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
+
+@jax.jit
+def score_fn(params, N, B):
+	N_man, N_rec, N_res, N_res_pred, B_ss = predict(params, N, B)
+	N_res_ss = N_res @ jnp.linalg.inv(N_res_pred.T @ N_res_pred) @ N_res_pred.T @ B_ss
+
+	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # ToDo: Use actual train residual mean!
+	score_per_neuron = jax.vmap(r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
+
+	return score_per_neuron, N_man, N_rec, N_res, N_res_pred, N_res_ss, B_ss
+
+#endregion

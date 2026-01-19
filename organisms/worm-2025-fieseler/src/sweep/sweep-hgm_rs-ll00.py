@@ -7,8 +7,8 @@ import jax
 import sweep_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../'))
-from models import bom
-from models import hgm
+from models import bom_rs as bom
+from models import hgm_rs as hgm
 #endregion
 
 
@@ -16,13 +16,13 @@ default_hyperparameters = {
 	'max_epochs': 3000,
 	'max_patience': 3000 / 4,
 	'learning_rate': 1E-0,
-	'dimensions': 1,
+	'dimensions': 2,
 	'ccadiag_lambda': 0.6,
 	'ccaunit_lambda': 1.0 - 0.6,
-	'loss1_lambda': 0.67,
-	'loss2_lambda': 1.0 - 0.67,
-	'w1_reg_lambda': 0.0,
-	'w2_reg_lambda': -1.0,  # unused by the BOM
+	'loss_man_lambda': 0.0,
+	'loss_res_lambda': 1.0 - 0.0,
+	'wb_reg_lambda': 0.0,
+	'wm_reg_lambda': 0.0,
 }
 
 if __name__ == '__main__':
@@ -38,9 +38,10 @@ if __name__ == '__main__':
 			'goal': 'minimize',
 		},
 		'parameters': {
-			'w1_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
+			'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
+			'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 		},
-		'run_cap': 100,
+		'run_cap': 200,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
-	sweep_utils.sweep(prefix, bom, sweep_config, default_hyperparameters, log_path)
+	sweep_utils.sweep(prefix, hgm, sweep_config, default_hyperparameters, log_path)

@@ -7,11 +7,11 @@ import pynwb
 
 
 def get_data_path():
-	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA')
+	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA/fly-2023-schaffer')
 	if os.path.exists(local_path):
 		return local_path
 	else:
-		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA/'
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA//fly-2023-schaffer'
 
 
 def get_data(path, ids=None, with_markers=True):
@@ -59,7 +59,7 @@ def get_markers(filepath):
 
 	marker_names = list(data['marker_names'])
 
-	# fix typo
+	# fix typo  :|
 	for i in range(len(marker_names)):
 		if marker_names[i].startswith('addomen'):
 			marker_names[i] = marker_names[i].replace('addomen', 'abdomen')

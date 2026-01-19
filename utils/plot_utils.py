@@ -916,8 +916,6 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 #endregion
 
 
-#region MCO
-
 def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', label_behavior='behavior', height_ratios=(1, 4),
 					   zlimits_activity=None, zlimits_behavior=None, cmap='rainbow', neuron_ids=False,
 					   save_path=None):
@@ -955,7 +953,7 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 		ax_bottom.set_yticklabels([traces.columns[i] for i in np.arange(0, traces.values.shape[1], 100)], fontsize=4)
 	else:
 		ax_bottom.set_yticks(np.arange(traces.values.shape[1]))
-		ax_bottom.set_yticklabels([column if not column[0].isdigit() else '' for column in traces.columns], fontsize=4)
+		ax_bottom.set_yticklabels([column if not (column == '' or column[0].isdigit()) else '' for column in traces.columns], fontsize=4)
 	ax_bottom.set_xticks(np.arange(0, traces.values.shape[0], traces.values.shape[0] // 10))
 	fig.colorbar(im_bottom, ax=ax_bottom, orientation='vertical', fraction=0.05)
 	ax_bottom.grid(False)
@@ -963,6 +961,7 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 	plt.tight_layout()
 	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
+
 
 def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 			  normalized=True, log_scale=False,
@@ -1054,4 +1053,43 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
-#endregion
+
+def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
+				 save_path=None):
+	fig, axes = plt.subplots(1 if join_topbot else 2, 4, figsize=(16, 6 if join_topbot else 8), squeeze=False)
+
+	if markers_reconstructed is not None:
+		for i in range(4):
+			name = markers_reconstructed.columns[i * 4].split('-')[0]
+
+			ax = axes[0, i]
+			ax.scatter(markers_reconstructed[f'{name}-top_x'].values, markers_reconstructed[f'{name}-top_y'].values, color='red', alpha=0.1, s=5)
+
+			if join_topbot:
+				ax.set_title(name)
+				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values, color='red', alpha=0.1, s=5)
+			else:
+				ax.set_title(name + '_top')
+				ax = axes[1, i]
+				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values, color='red', alpha=0.1, s=5)
+				ax.set_title(name + '_bot')
+
+	for i in range(4):
+		name = markers.columns[i * 4].split('-')[0]
+
+		ax = axes[0, i]
+		ax.scatter(markers[f'{name}-top_x'].values, markers[f'{name}-top_y'].values, color='blue', alpha=0.1, s=5)
+		ax.invert_yaxis()
+
+		if join_topbot:
+			ax.set_title(name)
+			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='green', alpha=0.1, s=5)
+		else:
+			ax.set_title(name + '_top')
+			ax = axes[1, i]
+			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='green', alpha=0.1, s=5)
+			ax.invert_yaxis()
+			ax.set_title(name + '_bot')
+
+	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	plt.show()

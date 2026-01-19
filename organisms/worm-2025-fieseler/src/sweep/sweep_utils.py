@@ -30,12 +30,12 @@ class Lambdas(NamedTuple):
 	cca_lambdas: tuple[float, float]
 
 
-def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path):
+def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 	with wandb.init(dir=log_path):
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
-		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
+		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3), jax.random.PRNGKey(4)
 
 		hyperparameters = default_hyperparameters.copy()
 		for key in config:
@@ -50,14 +50,14 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 
 		lambdas = Lambdas(
 			loss_lambdas=(hyperparameters['loss1_lambda'], hyperparameters['loss2_lambda']),
-			reg_lambdas=(hyperparameters['w1_reg_lambda'], hyperparameters['w2_reg_lambda']),
+			reg_lambdas=(hyperparameters['wb_reg_lambda'], hyperparameters['wm_reg_lambda']),
 			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
 		#endregion ===========================================================================
 
 		n_neurons = N.shape[1]
-		n_behaviors_hl = B_hl.shape[1]
-		n_behaviors_ll = B_ll.shape[1]
+		n_states = S.shape[1]
+		n_behaviors = B.shape[1]
 
 		# training loop ==============================
 		params_per_split = list()
@@ -72,14 +72,14 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_eval = jnp.array(N[train]), jnp.array(N[eval])
-			B_hl_train, B_hl_eval = jnp.array(B_hl[train]), jnp.array(B_hl[eval])
-			B_ll_train, B_ll_eval = jnp.array(B_ll[train]), jnp.array(B_ll[eval])
+			S_train, S_eval = jnp.array(S[train]), jnp.array(S[eval])
+			B_train, B_eval = jnp.array(B[train]), jnp.array(B[eval])
 
-			params = model.init_params(N_train, B_hl_train,
+			params = model.init_params(N_train, S_train,
 									   seeds,
 									   (n_neurons, n_dimensions),
-									   (n_behaviors_hl, n_dimensions),
-									   (n_behaviors_ll, n_neurons),
+									   (n_states, n_dimensions),
+									   (n_behaviors, n_neurons),
 									   * ((n_dimensions, n_neurons),) if model.get_type() else (),
 									  )
 
@@ -115,9 +115,9 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 				(loss,
 				 man_loss,
 				 res_loss,
-				 mpe_loss) = tuple(l.item() for l in model.loss_fn_flattened(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+				 mpe_loss) = tuple(l.item() for l in model.loss_fn_flattened(params, N_eval, B_eval, S_eval, lambdas))
 
-				(opt_state, params, loss_types_train) = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas)
+				(opt_state, params, loss_types_train) = model.update(optimizer.update, opt_state, params, N_train, B_train, S_train, lambdas)
 
 				(loss_train,
 				 man_loss_train,
