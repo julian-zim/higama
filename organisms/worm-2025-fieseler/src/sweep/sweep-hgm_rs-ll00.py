@@ -21,6 +21,7 @@ default_hyperparameters = {
 	'ccaunit_lambda': 1.0 - 0.6,
 	'loss_man_lambda': 0.0,
 	'loss_res_lambda': 1.0 - 0.0,
+	'vb_reg_lambda': 0.0,
 	'wb_reg_lambda': 0.0,
 	'wm_reg_lambda': 0.0,
 }
@@ -38,6 +39,7 @@ if __name__ == '__main__':
 			'goal': 'minimize',
 		},
 		'parameters': {
+			'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 			'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 			'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 		},
