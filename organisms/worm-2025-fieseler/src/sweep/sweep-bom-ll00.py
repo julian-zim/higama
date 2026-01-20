@@ -9,6 +9,9 @@ import sweep_utils
 sys.path.append(os.path.join(os.getcwd(), '../../'))
 from models import bom
 from models import hgm
+
+
+jax.config.update("jax_enable_x64", True)
 #endregion
 
 

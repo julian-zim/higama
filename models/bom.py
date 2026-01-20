@@ -32,6 +32,12 @@ def init_params(N, B, S, seeds, shape_UN, shape_US, shape_WB):
 		}
 	}
 
+def get_reconstruction_matrix(Y, X):
+	# best reconstruction matrix that reconstruct X using Y
+	# least-squares reconstruction (NOT Y @ jax.numpy.linalg.pinv(UN))
+	# return jnp.linalg.inv(Y.T @ Y) @ Y.T @ X
+	# return jnp.linalg.solve(Y.T @ Y, Y.T @ X)
+	return jnp.linalg.lstsq(Y, X, rcond=None)[0]
 
 
 #region PREDICTING
@@ -49,7 +55,7 @@ def predict_man(prep_n, N, UN):
 
 	N_zs = (N - N_mean) / N_std
 	N_man = N_zs @ UN
-	N_zs_rec = N_man @ jnp.linalg.inv(N_man.T @ N_man) @ N_man.T @ N_zs  # least-squares reconstruction (NOT N_man @ jax.numpy.linalg.pinv(UN))
+	N_zs_rec = N_man @ get_reconstruction_matrix(N_man, N_zs)
 	N_rec = N_zs_rec * N_std + N_mean
 	N_res = N - N_rec
 
