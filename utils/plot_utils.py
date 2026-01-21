@@ -118,9 +118,10 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 		lc.set_linewidth(2)
 
 		ax = axes[i // plots_per_row, i % plots_per_row]
-		ax.set_title(f'{filenames[i]}\n{sum(vars_expl[i]) * 100:.1f}%' +
-										  (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl_rs is not None else ''),
-										  fontsize=10.5)
+		ax.set_title(f'{filenames[i]}' +
+					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
+					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
+					 fontsize=10.5)
 
 		ax.plot(modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}'], alpha=0)
 		ax.add_collection(lc)
@@ -141,10 +142,11 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
-	if vars_expl_rs is not None:
-		print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
-	else:
-		print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
+	if vars_expl is not None:
+		if vars_expl_rs is not None:
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
+		else:
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
 def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
@@ -205,8 +207,9 @@ def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
 		lc.set_linewidth(1)
 
 		ax = axes[i // plots_per_row, i % plots_per_row]
-		ax.set_title(f'{filenames[i]}\n{sum(vars_expl[i]) * 100:.1f}%' +
-					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl_rs is not None else ''),
+		ax.set_title(f'{filenames[i]}' +
+					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
+					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 
 		# ax.plot(modes_[f'{key}{i0}'], modes_[f'{key}{i0 + 1}'], modes_[f'{key}{i0 + 2}'], alpha=0)
@@ -240,10 +243,11 @@ def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
 			plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
-	if vars_expl_rs is not None:
-		print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
-	else:
-		print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
+	if vars_expl is not None:
+		if vars_expl_rs is not None:
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
+		else:
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
 def plot_manifolds_3d_sep(filenames, modes, states, vars_expl, vars_expl_rs=None,
