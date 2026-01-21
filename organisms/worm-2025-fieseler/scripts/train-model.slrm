@@ -26,4 +26,4 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
-srun --cpu-bind=none jupyter nbconvert --to notebook --execute ./src/model.ipynb --output ./src/model.ipynb
+srun --cpu-bind=none papermill ./src/modelling/model.ipynb ./src/modelling/model.ipynb --log-output
