@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from flax.serialization import to_bytes, from_bytes
+from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.cross_decomposition import CCA
 from sklearn.cross_decomposition import PLSCanonical
@@ -10,19 +11,30 @@ from sklearn.cross_decomposition import PLSCanonical
 
 #region manifolds
 
-def get_manifolds_plsc(traces, behavior, n_ls=3):
+def get_manifolds_plsc(traces, behavior, zscore=(False, False), n_ls=3):
 	modes_neural, modes_behavioral = list(), list()
 	recon_neural, recon_behavioral = list(), list()
 	loadings_neural, loadings_behavioral = list(), list()
 	vars_expl = list()
 	for trace, behavior in zip(traces, behavior):
+		# zscoring
+		if zscore[0]:
+			trace_scaler = StandardScaler()
+			trace = pd.DataFrame(data=trace_scaler.fit_transform(trace.values), columns=trace.columns)
+		if zscore[1]:
+			behavior_scaler = StandardScaler()
+			behavior = pd.DataFrame(data=behavior_scaler.fit_transform(behavior.values), columns=behavior.columns)
+
 		# reduction
-		plsc = PLSCanonical(n_components=n_ls, scale=True)
+		plsc = PLSCanonical(n_components=n_ls, scale=False)
 		trace_reduced, behavior_reduced = plsc.fit_transform(trace.values, behavior.values)
 		trace_reconstructed, behavior_reconstructed = plsc.inverse_transform(trace_reduced, behavior_reduced)
 
 		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'LS{n + 1}' for n in range(n_ls)]))
 		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'LS{n + 1}' for n in range(n_ls)]))
+
+		if zscore[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
+		if zscore[1]: behavior_reconstructed = behavior_scaler.inverse_transform(behavior_reconstructed)
 
 		recon_neural.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
 		recon_behavioral.append(pd.DataFrame(data=behavior_reconstructed, columns=behavior.columns))
@@ -52,12 +64,20 @@ def get_manifolds_plsc(traces, behavior, n_ls=3):
 	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl
 
 
-def get_manifolds_cca(traces, behavior, n_cv=3, n_pc=0):
+def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
 	modes_neural, modes_behavioral = list(), list()
 	recon_neural, recon_behavioral = list(), list()
 	loadings_neural, loadings_behavioral = list(), list()
 	vars_expl, vars_expl_rs = list(), list()
 	for trace, behavior in zip(traces, behavior):
+		# zscoring
+		if zscore[0]:
+			trace_scaler = StandardScaler()
+			trace = pd.DataFrame(data=trace_scaler.fit_transform(trace.values), columns=trace.columns)
+		if zscore[1]:
+			behavior_scaler = StandardScaler()
+			behavior = pd.DataFrame(data=behavior_scaler.fit_transform(behavior.values), columns=behavior.columns)
+
 		# pca preprocessing
 		if n_pc > 0:
 			pca = PCA(n_components=n_pc)
@@ -65,9 +85,12 @@ def get_manifolds_cca(traces, behavior, n_cv=3, n_pc=0):
 			trace_reconstructed_pca = pca.inverse_transform(trace_reduced_pca)
 
 		# reduction
-		cca = CCA(n_components=n_cv, scale=True)
+		cca = CCA(n_components=n_cv, scale=False)
 		trace_reduced, behavior_reduced = cca.fit_transform(trace_reconstructed_pca if n_pc > 0 else trace.values, behavior.values)
 		trace_reconstructed, behavior_reconstructed = cca.inverse_transform(trace_reduced, behavior_reduced)
+
+		if zscore[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
+		if zscore[1]: behavior_reconstructed = behavior_scaler.inverse_transform(behavior_reconstructed)
 
 		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'CV{n + 1}' for n in range(n_cv)]))
 		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'CV{n + 1}' for n in range(n_cv)]))
@@ -111,16 +134,23 @@ def get_manifolds_cca(traces, behavior, n_cv=3, n_pc=0):
 	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl, vars_expl_rs
 
 
-def get_manifolds_pca(traces, n_pc=3):
+def get_manifolds_pca(traces, zscore=False, n_pc=3):
 	modes = list()
 	recon = list()
 	loadings = list()
 	vars_expl = list()
 	for trace in traces:
+		# zscoring
+		if zscore:
+			scaler = StandardScaler()
+			trace = pd.DataFrame(data=scaler.fit_transform(trace.values), columns=trace.columns)
+
 		# reduction
 		pca = PCA(n_components=n_pc)
-		trace_reduced = pca.fit_transform(trace)
+		trace_reduced = pca.fit_transform(trace.values)
 		trace_reconstructed = pca.inverse_transform(trace_reduced)
+
+		if zscore: trace_reconstructed = scaler.inverse_transform(trace_reconstructed)
 
 		modes.append(pd.DataFrame(data=trace_reduced, columns=[f'PC{n + 1}' for n in range(n_pc)]))
 		recon.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))

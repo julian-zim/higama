@@ -1061,6 +1061,9 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 				 save_path=None):
 	fig, axes = plt.subplots(1 if join_topbot else 2, 4, figsize=(16, 6 if join_topbot else 8), squeeze=False)
+	if join_topbot:
+		max_x, max_y = (np.max(markers[[marker for marker in markers.columns if marker[-1] == 'x']].values),
+						np.max(markers[[marker for marker in markers.columns if marker[-1] == 'y']].values))
 
 	if markers_reconstructed is not None:
 		for i in range(4):
@@ -1070,25 +1073,25 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 			ax.scatter(markers_reconstructed[f'{name}-top_x'].values, markers_reconstructed[f'{name}-top_y'].values, color='red', alpha=0.1, s=5)
 
 			if join_topbot:
-				ax.set_title(name)
 				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values, color='red', alpha=0.1, s=5)
 			else:
-				ax.set_title(name + '_top')
 				ax = axes[1, i]
 				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values, color='red', alpha=0.1, s=5)
-				ax.set_title(name + '_bot')
 
 	for i in range(4):
 		name = markers.columns[i * 4].split('-')[0]
 
 		ax = axes[0, i]
 		ax.scatter(markers[f'{name}-top_x'].values, markers[f'{name}-top_y'].values, color='blue', alpha=0.1, s=5)
-		ax.invert_yaxis()
 
 		if join_topbot:
+			# ax.set_xlim(0, max_x)
+			ax.set_ylim(0, max_y)
+			ax.invert_yaxis()
 			ax.set_title(name)
 			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='green', alpha=0.1, s=5)
 		else:
+			ax.invert_yaxis()
 			ax.set_title(name + '_top')
 			ax = axes[1, i]
 			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='green', alpha=0.1, s=5)
