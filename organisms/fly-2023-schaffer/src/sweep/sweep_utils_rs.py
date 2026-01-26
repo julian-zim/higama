@@ -286,7 +286,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 	wandb.login()
 
 	for file_id in file_ids:
-		project_name = f'{prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
+		project_name = f'FLY {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), states[file_ids.index(file_id)][['still']].values))
