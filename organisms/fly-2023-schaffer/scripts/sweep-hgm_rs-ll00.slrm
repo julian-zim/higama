@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#SBATCH --job-name sweep-hgm_rs-ll00
+#SBATCH --job-name FLY_sweep-hgm_rs-ll00
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
-#SBATCH --time=28-00:00:00
+#SBATCH --time=21-00:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/sweep-hgm_rs-ll00.%A.out
