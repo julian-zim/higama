@@ -227,11 +227,14 @@ def read_and_prep():
 	print('reading...')
 
 	# read_ids = list(range(0, 13+1))
-	read_ids = [0,
-				2,
-				3,
-				8,
-				9]
+	read_ids = [0,	# paper
+				1,	# nice states
+				2,	# nice manifold
+				5,	# variety
+				6,	# nice quiescence
+				7,	# nice states
+				9,	# nice heatmap
+				11]	# variety
 	# read_ids = [0]
 
 	# read

@@ -43,7 +43,7 @@ def subplot(datas,
 	#region plot
 	for data in datas:
 		if data is not None:
-			for i, key in enumerate(data):
+			for i, key in enumerate(data.columns[:n_plots]):
 				y = data[key]
 				ax = axes[i // plots_per_row, i % plots_per_row]
 				ax.set_title(key, fontsize=8)
