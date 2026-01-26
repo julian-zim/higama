@@ -14,7 +14,7 @@ import optax
 import wandb
 
 
-sys.path.append(os.path.join(os.getcwd(), './src/'))
+sys.path.append(os.path.join(os.getcwd(), '../'))
 from utils_worm import artificializer
 from utils_worm import read_utils
 
