@@ -312,11 +312,11 @@ def read(artificial=False):
 		return file_ids_art, filenames_art, discrete_states_art, eigenworms_art, traces_art
 
 
-	return file_ids_gcamp, filenames_gcamp, discrete_states_gcamp, eigenworms_gcamp, traces_gcamp
+	return file_ids_gcamp, filenames_gcamp, traces_gcamp, discrete_states_gcamp, eigenworms_gcamp
 
 
 def sweep(prefix, model, config, default_hyperparameters, log_path):
-	file_ids, filenames, discrete_states, eigenworms, traces = read(artificial=False)
+	file_ids, filenames, traces, discrete_states, eigenworms = read(artificial=False)
 
 	print('sweeping...')
 
@@ -326,7 +326,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 		project_name = f'{prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
-		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)]['REV'].values))
+		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)][['REV']].values))
 
 		def train_model_wrapper():
 			return train_model(model, splits,

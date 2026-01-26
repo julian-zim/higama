@@ -14,14 +14,11 @@ import jax.numpy as jnp
 import optax
 import wandb
 
-sys.path.append(os.path.join(os.getcwd()))
-from utils import read_utils
-from utils import plot_utils
-from utils import train_utils
 
-# sys.path.append(os.path.join(os.getcwd(), '../../'))
-# from models import bom
-# from models import hgm
+sys.path.append(os.path.join(os.getcwd(), '../'))
+from utils_fly import read_utils
+
+sys.path.append(os.path.join(os.getcwd(), '../../../../'))
 #endregion
 
 
@@ -31,12 +28,12 @@ class Lambdas(NamedTuple):
 	cca_lambdas: tuple[float, float]
 
 
-def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path):
+def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 	with wandb.init(dir=log_path):
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
-		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3)
+		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3), jax.random.PRNGKey(4)
 
 		hyperparameters = default_hyperparameters.copy()
 		for key in config:
@@ -50,15 +47,15 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 		n_dimensions = hyperparameters['dimensions']
 
 		lambdas = Lambdas(
-			loss_lambdas=(hyperparameters['loss1_lambda'], hyperparameters['loss2_lambda']),
-			reg_lambdas=(hyperparameters['w1_reg_lambda'], hyperparameters['w2_reg_lambda']),
+			loss_lambdas=(hyperparameters['loss_man_lambda'], hyperparameters['loss_res_lambda']),
+			reg_lambdas=(hyperparameters['wb_reg_lambda'], hyperparameters['wm_reg_lambda']),
 			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
 		#endregion ===========================================================================
 
 		n_neurons = N.shape[1]
-		n_behaviors_hl = B_hl.shape[1]
-		n_behaviors_ll = B_ll.shape[1]
+		n_states = S.shape[1]
+		n_behaviors = B.shape[1]
 
 		# training loop ==============================
 		params_per_split = list()
@@ -73,14 +70,14 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 		for s_id, (train, eval) in enumerate(splits):
 			#region splitting and initializing (this also moves the data to the GPU) ==========================
 			N_train, N_eval = jnp.array(N[train]), jnp.array(N[eval])
-			B_hl_train, B_hl_eval = jnp.array(B_hl[train]), jnp.array(B_hl[eval])
-			B_ll_train, B_ll_eval = jnp.array(B_ll[train]), jnp.array(B_ll[eval])
+			S_train, S_eval = jnp.array(S[train]), jnp.array(S[eval])
+			B_train, B_eval = jnp.array(B[train]), jnp.array(B[eval])
 
-			params = model.init_params(N_train, B_hl_train,
+			params = model.init_params(N_train, B_train, S_train,
 									   seeds,
 									   (n_neurons, n_dimensions),
-									   (n_behaviors_hl, n_dimensions),
-									   (n_behaviors_ll, n_neurons),
+									   (n_states, n_dimensions),
+									   (n_behaviors, n_neurons),
 									   * ((n_dimensions, n_neurons),) if model.get_type() else (),
 									  )
 
@@ -116,9 +113,9 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 				(loss,
 				 man_loss,
 				 res_loss,
-				 mpe_loss) = tuple(l.item() for l in model.loss_fn_flattened(params, N_eval, B_ll_eval, B_hl_eval, lambdas))
+				 mpe_loss) = tuple(l.item() for l in model.loss_fn_flattened(params, N_eval, B_eval, S_eval, lambdas))
 
-				(opt_state, params, loss_types_train) = model.update(optimizer.update, opt_state, params, N_train, B_ll_train, B_hl_train, lambdas)
+				(opt_state, params, loss_types_train) = model.update(optimizer.update, opt_state, params, N_train, B_train, S_train, lambdas)
 
 				(loss_train,
 				 man_loss_train,
@@ -225,20 +222,15 @@ def train_model(model, splits, N, B_ll, B_hl, default_hyperparameters, log_path)
 			np.array(losses_per_split), np.array(man_losses_per_split), np.array(res_losses_per_split), np.array(mpe_losses_per_split))
 
 
-def read():
+def read_and_prep():
 	print('reading...')
 
 	# read_ids = list(range(0, 13+1))
 	# read_ids = [0, 2, 3, 8, 9]
 	read_ids = [0]
-	plot_id = 0
-
-	selection_bhl = ['still', 'walk', 'front-groom', 'back-groom', 'abdomen-move']
 
 	# read
-
-	path = os.path.join(read_utils.get_data_path(), 'fly-2023-schaffer/brain')
-
+	path = os.path.join(read_utils.get_data_path(), 'brain')
 	(file_ids, filenames,
 	 traces,
 	 states, markers) = read_utils.get_data(path, read_ids)
@@ -263,45 +255,33 @@ def read():
 			enumerate(zip(traces[i].columns, traces[i].columns == ''))
 		])
 
-	return file_ids, filenames, states, markers, traces
-
-
-def sweep(prefix, model, config, default_hyperparameters, log_path):
-	file_ids, filenames, states, markers, traces = read()
-
+	# preprocess
 	def highpass_butter(x, fs, cutoff_hz, order=4, axis=0):
 		return sp.signal.sosfiltfilt(sp.signal.butter(order, cutoff_hz, btype='highpass', fs=fs, output='sos'), x,
 									 axis=axis)
-
-	path = os.path.join(read_utils.get_data_path(), 'fly-2023-schaffer/brain')
 	sampling_rates = [read_utils.get_sampling_rate(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id
 					  in file_ids]
-
-	traces = [pd.DataFrame(data=trace.values[1:, :], columns=trace.columns) for trace in traces]
 	traces = [pd.DataFrame(highpass_butter(trace.values, sr, 1 / 100), columns=trace.columns) for trace, sr in
 			  zip(traces, sampling_rates)]
+	markers_grad = [pd.DataFrame(np.gradient(marker.values, axis=0), columns=marker.columns) for marker in markers]
 
-	states = [pd.DataFrame(data=state.values[1:, :], columns=state.columns) for state in states]
 
-	markers = [pd.DataFrame(data=marker.values[1:, :] - marker.values[:-1, :], columns=marker.columns) for marker in
-			   markers]
-	markers = [
-		pd.DataFrame(
-			data=(marker.values - marker.values.mean(axis=0)) / np.where(
-				(marker_std := np.std(marker.values, axis=0)) == 0.0, 1.0, marker_std),
-			columns=marker.columns)
-		for marker in markers
-	]
+	return file_ids, filenames, traces, states, markers, markers_grad
 
+
+def sweep(prefix, model, config, default_hyperparameters, log_path):
+	file_ids, filenames, traces, states, markers, marker_grad = read_and_prep()
+
+	# sweep
 	print('sweeping...')
 
 	wandb.login()
 
 	for file_id in file_ids:
-		project_name = f'{prefix} {file_id} {filenames[file_ids.index(file_id)]} {time.strftime("%d.%m %Hh%M", time.localtime())}'
+		project_name = f'{prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
-		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), states[file_ids.index(file_id)]['still'].values))
+		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), states[file_ids.index(file_id)][['still']].values))
 
 		def train_model_wrapper():
 			return train_model(model, splits,
