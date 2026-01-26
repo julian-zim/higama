@@ -227,8 +227,12 @@ def read_and_prep():
 	print('reading...')
 
 	# read_ids = list(range(0, 13+1))
-	# read_ids = [0, 2, 3, 8, 9]
-	read_ids = [0]
+	read_ids = [0,
+				2,
+				3,
+				8,
+				9]
+	# read_ids = [0]
 
 	# read
 	path = os.path.join(read_utils.get_data_path(), 'brain')

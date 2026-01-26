@@ -229,15 +229,15 @@ def read(artificial=False):
 
 	# read
 	# read_ids_gcamp = list(range(0, 33+1))
-	# read_ids_gcamp = [0,   # minrevs
-	# 				  1,   # minswitch
-	# 				  7,   # maxswitch
-	# 				  11,  # median
-	# 				  12,  # maxrevs
-	# 				  17,  # mean
-	# 				  19,  # paper
-	# 				  21]  # clean
-	read_ids_gcamp = [19]
+	read_ids_gcamp = [0,   # minrevs
+					  1,   # minswitch
+					  7,   # maxswitch
+					  11,  # median
+					  12,  # maxrevs
+					  17,  # mean
+					  19,  # paper
+					  21]  # clean
+	# read_ids_gcamp = [19]
 
 	path = os.path.join(read_utils.get_data_path(), 'exported_data_gcamp')
 	(file_ids_gcamp, filenames_gcamp,
