@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.getcwd(), '../'))
 from utils_worm import artificializer
 from utils_worm import read_utils
 
-sys.path.append(os.path.join(os.getcwd(), '../../'))
+sys.path.append(os.path.join(os.getcwd(), '../../../../'))
 from models import hgm_rs as hgm_gen
 #endregion
 
