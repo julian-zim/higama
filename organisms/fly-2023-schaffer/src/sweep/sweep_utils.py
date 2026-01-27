@@ -225,7 +225,7 @@ def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 def read_and_prep():
 	print('reading...')
 
-	# read_ids = list(range(0, 13+1))
+	# read_ids = list(range(0, 12+1))
 	read_ids = [0,	# paper
 				1,	# nice states
 				2,	# nice manifold

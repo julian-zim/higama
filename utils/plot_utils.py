@@ -1100,3 +1100,81 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 
 	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
+
+
+def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, space='logarithmic', save_dirpath=None):
+	if save_dirpath is not None:
+		os.makedirs(save_dirpath, exist_ok=True)
+
+	if datasets is None:
+		datasets = sorted(list(set([dataset for model in hyperparams['ll00'].keys() for dataset in hyperparams['ll00'][model]['datasets']])))
+
+	for dataset in datasets:
+		identifier = f'{ll} {dataset} ({'log' if space == 'logarithmic' else 'lin'} space)'
+
+		fig, axes = plt.subplots(len(hyperparams[ll].keys()), 3,
+								 figsize=(4 * (3 + 2), 3 * len(hyperparams[ll].keys()) + 4), squeeze=False)
+		fig.suptitle(
+			identifier,
+			y=0.93, fontsize=25,
+		)
+
+		for row_id, model in enumerate(hyperparams[ll].keys()):
+			# setup
+			row = axes[row_id]
+
+			bbox = row[0].get_position()
+			y_center = bbox.y0 + bbox.height / 2
+			fig.text(0.07, y_center, model,
+					 va='center', ha='center', fontsize=20,
+					 )
+
+			for ax in row:
+				ax.tick_params(axis='both', which='both', bottom=False, left=False, labelbottom=False, labelleft=False)
+				for spine in ax.spines.values():
+					spine.set_visible(False)
+
+			if dataset not in hyperparams[ll][model]['datasets'].keys(): continue
+
+			wb_plot, wm_plot, vb_plot = None, None, None
+			wb_plot = row[0]
+			if model.startswith('hgm'):
+				wm_plot = row[2]
+			if model.endswith('rs'):
+				vb_plot = row[0]
+				wb_plot = row[1]
+
+			# plots
+			for hyperparam in ['wb_reg_lambda', 'vb_reg_lambda', 'wm_reg_lambda']:
+				plot = {
+					'wb_reg_lambda': wb_plot,
+					'vb_reg_lambda': vb_plot,
+					'wm_reg_lambda': wm_plot,
+				}[hyperparam]
+
+				if plot is not None:
+					plot.tick_params(axis='both', which='both', bottom=True, left=True, labelbottom=True,
+									 labelleft=True)
+					for spine in plot.spines.values():
+						spine.set_visible(True)
+
+					plot.set_title(hyperparam, fontsize=10)
+
+					means = hyperparams[ll][model]['datasets'][dataset][hyperparam]['mean']
+					values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
+
+					if space == 'logarithmic':
+						values = np.log10(values)
+						means = {mean_type: np.log10(means[mean_type]) for mean_type in means.keys()}
+
+					if histograms:
+						plot.hist(values, bins=25)
+					else:
+						plot.plot(values, marker='o', linestyle='None')
+						plot.plot(np.repeat(means['linear'], values.shape[0]), label='lin space mean', color='C1')
+						plot.plot(np.repeat(means['geometric'], values.shape[0]), label='log space mean', color='C2')
+
+						plot.legend()
+
+		if save_dirpath is not None:
+			plt.savefig(os.path.join(save_dirpath, f'{identifier}.png'), dpi=300, bbox_inches='tight')
