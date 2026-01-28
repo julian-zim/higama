@@ -225,18 +225,18 @@ def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 def read_and_prep():
 	print('reading...')
 
-	# read_ids = list(range(0, 12+1))
-	read_ids = [0,	# paper
-				1,	# nice states
-				2,	# nice manifold
-				5,	# variety
-				6,	# nice quiescence
-				7,	# nice states
-				9,	# nice heatmap
-				11]	# variety
+	# read
+	read_ids = list(range(0, 12+1))
+	# read_ids = [0,	# paper
+	# 			1,	# nice states
+	# 			2,	# nice manifold
+	# 			5,	# variety
+	# 			6,	# nice quiescence
+	# 			7,	# nice states
+	# 			9,	# nice heatmap
+	# 			11]	# variety
 	# read_ids = [0]
 
-	# read
 	path = os.path.join(read_utils.get_data_path(), 'brain')
 	(file_ids, filenames,
 	 traces,

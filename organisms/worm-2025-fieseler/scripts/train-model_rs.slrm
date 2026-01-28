@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name train-model_rs
+#SBATCH --job-name WORM_train-model_rs
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=shard:4

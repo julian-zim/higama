@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name sweep-bom-ll00
+#SBATCH --job-name WORM_sweep-bom-ll00
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=gpu:1
