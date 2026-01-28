@@ -27,7 +27,7 @@ def init_params(N, B, S, seeds, shape_UN, shape_US, shape_WB, shape_WM):
 		},
 		'model': {
 			'UN': 1E-3 * jax.random.normal(seeds[0], shape_UN),
-			'US': 1E-3 * jax.random.normal(seeds[1], shape_US),
+			# 'US': 1E-3 * jax.random.normal(seeds[1], shape_US),
 			'WB': 1E-3 * jax.random.normal(seeds[3], shape_WB),
 			'WM': 1E-3 * jax.random.normal(seeds[4], shape_WM),
 		}
