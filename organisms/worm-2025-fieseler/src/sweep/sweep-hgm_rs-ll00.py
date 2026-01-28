@@ -44,7 +44,7 @@ if __name__ == '__main__':
 		'parameters': {
 			'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 			'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-			'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
+			'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E1},
 		},
 		'run_cap': 1000,
 	}

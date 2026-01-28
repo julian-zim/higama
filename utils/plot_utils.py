@@ -1170,7 +1170,7 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 					if histograms:
 						plot.hist(values, bins=25)
 					else:
-						plot.plot(values, marker='o', linestyle='None')
+						plot.plot(values, marker='o', linestyle='None', alpha=0.5)
 						plot.plot(np.repeat(means['linear'], values.shape[0]), label='lin space mean', color='C1')
 						plot.plot(np.repeat(means['geometric'], values.shape[0]), label='log space mean', color='C2')
 

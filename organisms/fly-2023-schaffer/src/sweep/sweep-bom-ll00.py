@@ -43,7 +43,7 @@ if __name__ == '__main__':
 		'parameters': {
 			'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 		},
-		'run_cap': 100,
+		'run_cap': 150,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
 	sweep_utils.sweep(prefix, bom, sweep_config, default_hyperparameters, log_path)
