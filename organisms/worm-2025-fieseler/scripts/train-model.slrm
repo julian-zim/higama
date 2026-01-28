@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #SBATCH --job-name train-model
 #SBATCH --partition=gpu
-# --qos=gpu-01h
+# --qos=gpu-lim
 #SBATCH --gres=shard:4
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
-#SBATCH --time=25:00:00
+#SBATCH --time=1-01:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/train-model.%A.out
