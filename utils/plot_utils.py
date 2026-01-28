@@ -1102,12 +1102,12 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 	plt.show()
 
 
-def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, space='logarithmic', save_dirpath=None):
+def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, space='logarithmic', total_mean=True, save_dirpath=None):
 	if save_dirpath is not None:
 		os.makedirs(save_dirpath, exist_ok=True)
 
 	if datasets is None:
-		datasets = sorted(list(set([dataset for model in hyperparams['ll00'].keys() for dataset in hyperparams['ll00'][model]['datasets']])))
+		datasets = sorted(list(set([dataset for model in hyperparams[ll].keys() for dataset in hyperparams[ll][model]['datasets']])))
 
 	for dataset in datasets:
 		identifier = f'{ll} {dataset} ({'log' if space == 'logarithmic' else 'lin'} space)'
@@ -1160,12 +1160,16 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 
 					plot.set_title(hyperparam, fontsize=10)
 
-					means = hyperparams[ll][model]['datasets'][dataset][hyperparam]['mean']
 					values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
+					means = hyperparams[ll][model]['datasets'][dataset][hyperparam]['mean']
+					if total_mean:
+						total_means = hyperparams[ll][model]['means'][hyperparam]
 
 					if space == 'logarithmic':
 						values = np.log10(values)
 						means = {mean_type: np.log10(means[mean_type]) for mean_type in means.keys()}
+						if total_mean:
+							total_means = {mean_type: np.log10(total_means[mean_type]) for mean_type in total_means.keys()}
 
 					if histograms:
 						plot.hist(values, bins=25)
@@ -1173,6 +1177,9 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 						plot.plot(values, marker='o', linestyle='None', alpha=0.5)
 						plot.plot(np.repeat(means['linear'], values.shape[0]), label='lin space mean', color='C1')
 						plot.plot(np.repeat(means['geometric'], values.shape[0]), label='log space mean', color='C2')
+						if total_mean:
+							plot.plot(np.repeat(total_means['linear'], values.shape[0]), color='C1', alpha=0.5)
+							plot.plot(np.repeat(total_means['geometric'], values.shape[0]), color='C2', alpha=0.5)
 
 						plot.legend()
 
