@@ -26,4 +26,6 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
+export XLA_FLAGS="--xla_gpu_enable_command_buffer="
+
 srun --cpu-bind=none papermill ./model_rs.ipynb ./model_rs.ipynb --log-output

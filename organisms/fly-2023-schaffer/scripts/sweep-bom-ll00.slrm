@@ -29,4 +29,6 @@ export XLA_PYTHON_CLIENT_ALLOCATOR=platform
 export WANDB_DIR="${WANDB_DIR}"
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
+export XLA_FLAGS="--xla_gpu_enable_command_buffer="
+
 srun --cpu-bind=none python ./sweep-bom-ll00.py
