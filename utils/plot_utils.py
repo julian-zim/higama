@@ -1179,10 +1179,10 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 						plot.hist(values, bins=25)
 					else:
 						plot.plot(values, marker='o', linestyle='None', alpha=0.5)
-						plot.plot(np.repeat(means['linear'], values.shape[0]), color='C2', alpha=0.33)
+						# plot.plot(np.repeat(means['linear'], values.shape[0]), color='C2', alpha=0.33)
 						plot.plot(np.repeat(means['geometric'], values.shape[0]), label='local mean', color='C2')
 						if total_mean:
-							plot.plot(np.repeat(total_means['linear'], values.shape[0]), color='C1', alpha=0.33)
+							# plot.plot(np.repeat(total_means['linear'], values.shape[0]), color='C1', alpha=0.33)
 							plot.plot(np.repeat(total_means['geometric'], values.shape[0]), label='global mean', color='C1',)
 
 						plot.legend()
