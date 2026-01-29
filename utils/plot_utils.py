@@ -921,7 +921,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 
 def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', label_behavior='behavior', height_ratios=(1, 4),
-					   zlimits_activity=None, zlimits_behavior=None, cmap='rainbow', neuron_ids=False,
+					   timestamps=None, zlimits_activity=None, zlimits_behavior=None, cmap='rainbow', neuron_ids=False,
 					   save_path=None):
 	if behavior is not None:
 		fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=(12, 6), sharex=True,
@@ -941,6 +941,8 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 		ax_top.set_yticks(np.arange(behavior.values.shape[1]))
 		ax_top.set_yticklabels(behavior.columns, fontsize=8)
 		ax_top.set_xticks(np.arange(0, behavior.values.shape[0], behavior.values.shape[0] // 10))
+		if timestamps is not None:
+			ax_bottom.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
 		fig.colorbar(im_top, ax=ax_top, orientation='vertical', fraction=0.05)
 		ax_top.grid(False)
 
@@ -958,7 +960,9 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 	else:
 		ax_bottom.set_yticks(np.arange(traces.values.shape[1]))
 		ax_bottom.set_yticklabels([column if not (column == '' or column[0].isdigit()) else '' for column in traces.columns], fontsize=4)
-	ax_bottom.set_xticks(np.arange(0, traces.values.shape[0], traces.values.shape[0] // 10))
+		ax_top.set_xticks(np.arange(0, behavior.values.shape[0], behavior.values.shape[0] // 10))
+		if timestamps is not None:
+			ax_bottom.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
 	fig.colorbar(im_bottom, ax=ax_bottom, orientation='vertical', fraction=0.05)
 	ax_bottom.grid(False)
 
