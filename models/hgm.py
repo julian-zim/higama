@@ -56,12 +56,12 @@ def predict_res(prep_b, B, N_man, WB, WM):
 def predict_man(prep_n, N, UN):
 	N_mean, N_std = prep_n['mean'], prep_n['std']
 
-	# N_zs = (N - N_mean) / N_std
-	N_zs = N - N_mean
+	N_zs = (N - N_mean) / N_std
+	# N_zs = N - N_mean
 	N_man = N_zs @ UN
 	N_zs_rec = N_man @ get_reconstruction_matrix(N_man, N_zs)
-	# N_rec = N_zs_rec * N_std + N_mean
-	N_rec = N_zs_rec + N_mean
+	N_rec = N_zs_rec * N_std + N_mean
+	# N_rec = N_zs_rec + N_mean
 	N_res = N - N_rec
 
 	return N_man, N_rec, N_res
