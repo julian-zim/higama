@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name FLY_run-model
-#SBATCH --partition=gpu
+#SBATCH --partition=cpu
 # --qos=gpu-lim
 #SBATCH --gres=shard:4
 #SBATCH --cpus-per-task=8
@@ -27,5 +27,7 @@ export XLA_PYTHON_CLIENT_ALLOCATOR=platform
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
 export XLA_FLAGS="--xla_gpu_enable_command_buffer="
+
+export JAX_PLATFORM_NAME=cpu
 
 srun --cpu-bind=none papermill ./run-model.ipynb ./run-model.ipynb --log-output
