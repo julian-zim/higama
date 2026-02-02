@@ -2,7 +2,7 @@ import os
 import math
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt, colors as mplcolors, patches, cm
+from matplotlib import pyplot as plt, colors as mplcolors, patches, ticker, cm
 from matplotlib.collections import LineCollection
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
@@ -1161,30 +1161,34 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 									 labelleft=True)
 					for spine in plot.spines.values():
 						spine.set_visible(True)
+					plot.invert_xaxis()
 
-					plot.set_title(hyperparam, fontsize=10)
-
-					values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
+					y_values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
+					x_values = hyperparams[ll][model]['datasets'][dataset]['mpe_loss']['all'][::-1]
 					means = hyperparams[ll][model]['datasets'][dataset][hyperparam]['mean']
 					if total_mean:
 						total_means = hyperparams[ll][model]['means'][hyperparam]
 
+					plot.set_title(f'{hyperparam} ({y_values.shape[0]} runs)', fontsize=10)
+
 					if space == 'logarithmic':
-						values = np.log10(values)
+						y_values = np.log10(y_values)
 						means = {mean_type: np.log10(means[mean_type]) for mean_type in means.keys()}
 						if total_mean:
 							total_means = {mean_type: np.log10(total_means[mean_type]) for mean_type in total_means.keys()}
 
 					if histograms:
-						plot.hist(values, bins=25)
+						plot.hist(y_values, bins=25)
 					else:
-						plot.plot(values, marker='o', linestyle='None', alpha=0.5)
-						# plot.plot(np.repeat(means['linear'], values.shape[0]), color='C2', alpha=0.33)
-						plot.plot(np.repeat(means['geometric'], values.shape[0]), label='local mean', color='C2')
+						plot.plot(x_values, y_values, marker='o', linestyle='None', alpha=0.5)
+						# plot.plot([x_values[0], x_values[-1]], [means['linear'], means['linear']], label='local mean', color='C2', alpha=0.33)
+						plot.plot([x_values[0], x_values[-1]], [means['geometric'], means['geometric']], label='local mean', color='C2')
 						if total_mean:
-							# plot.plot(np.repeat(total_means['linear'], values.shape[0]), color='C1', alpha=0.33)
-							plot.plot(np.repeat(total_means['geometric'], values.shape[0]), label='global mean', color='C1',)
+							# plot.plot([x_values[0], x_values[-1]], [total_means['linear'], total_means['linear']], label='global mean', color='C1', alpha=0.33)
+							# plot.plot([x_values[0], x_values[-1]], [total_means['geometric'], total_means['geometric']], label='global mean', color='C1')
+							plot.plot([x_values[0], x_values[-1]], [total_means['geometric'], total_means['geometric']], label='min mean', color='C1')
 
+						plot.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
 						plot.legend()
 
 		if save_dirpath is not None:

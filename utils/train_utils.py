@@ -194,7 +194,7 @@ def get_variance_explained_orth(X_rec, X):
 def save_params(filenames, params, save_path):
 	organism_name = save_path.split('/')[0]
 	model_name = '/'.join(save_path.split('/')[1:])
-	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/new/{model_name}/params'
+	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}/params'
 	os.makedirs(outdir_path, exist_ok=True)
 	for filename, param in zip(filenames, params):
 		with open(f'{outdir_path}/{filename}.msgpack', 'wb') as f:
@@ -224,7 +224,7 @@ def save_losses(filenames, losses, save_path):
 	organism_name = save_path.split('/')[0]
 	model_name = '/'.join(save_path.split('/')[1:])
 	# format: dataset x array(type x split x epoch)
-	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/new/{model_name}/hist'
+	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}/hist'
 	os.makedirs(outdir_path, exist_ok=True)
 	for filename, loss in zip(filenames, losses):
 		np.save(f'{outdir_path}/{filename}.npy', loss)

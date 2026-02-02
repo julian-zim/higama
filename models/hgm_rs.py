@@ -38,7 +38,8 @@ def get_reconstruction_matrix(Y, X):
 	# best reconstruction matrix that reconstruct X using Y
 	# least-squares reconstruction (NOT Y @ jax.numpy.linalg.pinv(UN))
 	# return jnp.linalg.inv(Y.T @ Y) @ Y.T @ X
-	# return jnp.linalg.solve(Y.T @ Y, Y.T @ X)
+
+	# return jnp.linalg.solve(Y.T @ Y + 1E-3 * jnp.eye(Y.shape[1]), Y.T @ X)
 	return jnp.linalg.lstsq(Y, X, rcond=None)[0]
 
 
