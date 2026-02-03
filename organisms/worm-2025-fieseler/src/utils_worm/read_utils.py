@@ -86,6 +86,13 @@ def get_kymograph(file_handle):
 	return data
 
 
+
+def read_filename(path, file_id):
+	hdf5file = get_hdf5_files(path, [file_id])[0]
+	filename = get_filename(hdf5file)
+	return filename
+
+
 def check_neuron_contents(file_ids, traces, selection_n, sort=True):
 	scores = list()
 	for i in range(len(traces)):

@@ -243,5 +243,26 @@ def load_losses(load_path, filenames=None):
 		losses.append(np.load(f'{indir_path}/{filename}'))
 	return losses
 
+
+def save_predictions(filename, spn_man_rec_res_pres, model, _type, save_path):
+	(model_spn,
+	 models_man,
+	 models_rec,
+	 models_res,
+	 models_pres) = spn_man_rec_res_pres
+
+	outdir_path = f'{save_path}/{filename}/{model}/{_type}'
+	os.makedirs(outdir_path, exist_ok=True)
+
+	model_spn.to_parquet(f'{outdir_path}/score_per_neuron.parquet')
+	models_man.to_parquet(f'{outdir_path}/timeseries_manifold.parquet')
+	models_rec.to_parquet(f'{outdir_path}/timeseries_reconstruction.parquet')
+	models_res.to_parquet(f'{outdir_path}/timeseries_residual.parquet')
+	models_pres.to_parquet(f'{outdir_path}/timeseries_residual_predicted.parquet')
+
+
+def load_predictions(load_path, filename=None):
+	pass
+
 #endregion
 

@@ -1185,8 +1185,7 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 						plot.plot([x_values[0], x_values[-1]], [means['geometric'], means['geometric']], label='local mean', color='C2')
 						if total_mean:
 							# plot.plot([x_values[0], x_values[-1]], [total_means['linear'], total_means['linear']], label='global mean', color='C1', alpha=0.33)
-							# plot.plot([x_values[0], x_values[-1]], [total_means['geometric'], total_means['geometric']], label='global mean', color='C1')
-							plot.plot([x_values[0], x_values[-1]], [total_means['geometric'], total_means['geometric']], label='min mean', color='C1')
+							plot.plot([x_values[0], x_values[-1]], [total_means['geometric'], total_means['geometric']], label='global mean', color='C1')
 
 						plot.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
 						plot.legend()
