@@ -244,25 +244,65 @@ def load_losses(load_path, filenames=None):
 	return losses
 
 
-def save_predictions(filename, spn_man_rec_res_pres, model, _type, save_path):
-	(model_spn,
+def save_predictions(spn_man_rec_res_pres_resss_bss, save_path):
+	(models_spn,
 	 models_man,
 	 models_rec,
 	 models_res,
-	 models_pres) = spn_man_rec_res_pres
+	 models_pres,
+	 models_resss,
+	 models_bss) = spn_man_rec_res_pres_resss_bss
 
-	outdir_path = f'{save_path}/{filename}/{model}/{_type}'
-	os.makedirs(outdir_path, exist_ok=True)
+	os.makedirs(save_path, exist_ok=True)
 
-	model_spn.to_parquet(f'{outdir_path}/score_per_neuron.parquet')
-	models_man.to_parquet(f'{outdir_path}/timeseries_manifold.parquet')
-	models_rec.to_parquet(f'{outdir_path}/timeseries_reconstruction.parquet')
-	models_res.to_parquet(f'{outdir_path}/timeseries_residual.parquet')
-	models_pres.to_parquet(f'{outdir_path}/timeseries_residual_predicted.parquet')
+	for i in range(5):
+		os.makedirs(os.path.join(save_path, f's{i}'), exist_ok=True)
+		if models_spn is not None:
+			models_spn[i].to_parquet(f'{save_path}/s{i}/score_per_neuron.parquet')
+		if models_man is not None:
+			models_man[i].to_parquet(f'{save_path}/s{i}/timeseries_manifold.parquet')
+		if models_rec is not None:
+			models_rec[i].to_parquet(f'{save_path}/s{i}/timeseries_reconstruction.parquet')
+		if models_res is not None:
+			models_res[i].to_parquet(f'{save_path}/s{i}/timeseries_residual.parquet')
+		if models_pres is not None:
+			models_pres[i].to_parquet(f'{save_path}/s{i}/timeseries_residual_predicted.parquet')
+		if models_resss is not None:
+			models_resss[i].to_parquet(f'{save_path}/s{i}/timeseries_behavioral_subspace.parquet')
+		if models_bss is not None:
+			models_bss[i].to_parquet(f'{save_path}/s{i}/timeseries_residual_subspace.parquet')
 
 
-def load_predictions(load_path, filename=None):
-	pass
+def load_predictions(load_path):
+	[models_spn,
+	 models_man,
+	 models_rec,
+	 models_res,
+	 models_pres,
+	 models_resss,
+	 models_bss] = [list() for _ in range(7)]
+
+	for i in range(5):
+		if os.path.exists(f'{load_path}/s{i}/score_per_neuron.parquet'):
+			models_spn.append(pd.read_parquet(f'{load_path}/s{i}/score_per_neuron.parquet'))
+		if os.path.exists(f'{load_path}/s{i}/timeseries_manifold.parquet'):
+			models_man.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_manifold.parquet'))
+		if os.path.exists(f'{load_path}/s{i}/timeseries_reconstruction.parquet'):
+			models_rec.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_reconstruction.parquet'))
+		if os.path.exists(f'{load_path}/s{i}/timeseries_residual.parquet'):
+			models_res.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_residual.parquet'))
+		if os.path.exists(f'{load_path}/s{i}/timeseries_residual_predicted.parquet'):
+			models_pres.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_residual_predicted.parquet'))
+		if os.path.exists(f'{load_path}/s{i}/timeseries_behavioral_subspace.parquet'):
+			models_resss.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_behavioral_subspace.parquet'))
+		if os.path.exists(f'{load_path}/s{i}/timeseries_residual_subspace.parquet'):
+			models_bss.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_residual_subspace.parquet'))
+
+	for _list in [models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss]:
+		if len(_list) == 0:
+			_list = None
+
+	return models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss
 
 #endregion
 

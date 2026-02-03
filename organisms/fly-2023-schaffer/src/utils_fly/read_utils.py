@@ -14,22 +14,46 @@ def get_data_path():
 		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA//fly-2023-schaffer'
 
 
-def get_data(path, ids=None, with_markers=True):
-	# filenames_all = sorted('_'.join(filename.split('.')[0].split('_')[:-1]) for filename in os.listdir(os.path.join(path, 'pickles')))
-	filenames_all = sorted([name.split('.')[0] for name in os.listdir(path) if
-						not os.path.isdir(os.path.join(path, name)) and not name.endswith('.pkl')])
-	if ids is not None:
-		file_ids = ids
-		filenames = [filenames_all[file_id] for file_id in file_ids]
-	else:
-		file_ids = list(range(len(filenames_all)))
-		filenames = filenames_all
+def get_datas(path, file_ids=None, with_markers=True):
+	if file_ids is None:
+		file_ids = list(range(len(sorted(os.listdir(path)))))
 
-	traces = [get_traces(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id in file_ids]
-	states = [get_states(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id in file_ids]
-	markers = [get_markers(os.path.join(path, filenames[file_ids.index(file_id)])) for file_id in file_ids] if with_markers else None
-
+	filepaths = [get_filepath(path, file_id) for file_id in file_ids]
+	filenames = [get_filename(filepath) for filepath in filepaths]
+	traces = [get_traces(filepath) for filepath in filepaths]
+	states = [get_states(filepath) for filepath in filepaths]
+	markers = [get_markers(filepath) for filepath in filepaths] if with_markers else None
 	return file_ids, filenames, traces, states, markers
+
+
+def get_data(path, file_id, with_markers=True):
+	filepath = get_filepath(path, file_id)
+	filename = get_filename(filepath)
+	traces = get_traces(filepath)
+	states = get_states(filepath)
+	markers = get_markers(filepath) if with_markers else None
+	return filename, traces, states, markers
+
+
+def get_filepath(path, file_id):
+	filenames = sorted([filename for filename in os.listdir(path) if not os.path.isdir(os.path.join(path, filename))])[::2]
+	return os.path.join(path, '.'.join(filenames[file_id].split('.')[:-1]))
+
+
+def get_filename(filepath):
+	return os.path.basename(filepath)
+
+
+def get_sampling_rate(filepath):
+	with h5py.File(filepath + '.nwb', 'r') as file_handle:
+		ts = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
+	return 1 / np.mean(ts[1:] - ts[:-1])
+
+
+def get_timestamps(filepath):
+	with h5py.File(filepath + '.nwb', 'r') as file_handle:
+		timestamps = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
+	return timestamps
 
 
 def get_traces(filepath):
@@ -59,7 +83,7 @@ def get_markers(filepath):
 
 	marker_names = list(data['marker_names'])
 
-	# fix typo  :|
+	# fix typo -.-
 	for i in range(len(marker_names)):
 		if marker_names[i].startswith('addomen'):
 			marker_names[i] = marker_names[i].replace('addomen', 'abdomen')
@@ -70,18 +94,6 @@ def get_markers(filepath):
 	behavior_df = pd.DataFrame(data=markers_xy, columns=columns)
 
 	return behavior_df
-
-
-def get_sampling_rate(filepath):
-	with h5py.File(filepath + '.nwb', 'r') as file_handle:
-		ts = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
-	return 1 / np.mean(ts[1:] - ts[:-1])
-
-
-def get_timestamps(filepath):
-	with h5py.File(filepath + '.nwb', 'r') as file_handle:
-		timestamps = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
-	return timestamps
 
 
 # def get_states_pickle(filepath):

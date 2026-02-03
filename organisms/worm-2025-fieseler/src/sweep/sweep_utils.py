@@ -243,7 +243,7 @@ def read(artificial=False):
 	 traces_gcamp,
 	 continuous_behaviors_gcamp,
 	 discrete_states_gcamp, eigenworms_gcamp,
-	 kymographs_gcamp) = read_utils.get_data(path, read_ids_gcamp)
+	 kymographs_gcamp) = read_utils.get_datas(path, read_ids_gcamp)
 
 	# clear nan values
 	for i in range(len(file_ids_gcamp)):

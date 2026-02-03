@@ -241,7 +241,7 @@ def read_and_prep():
 	path = os.path.join(read_utils.get_data_path(), 'brain')
 	(file_ids, filenames,
 	 traces,
-	 states, markers) = read_utils.get_data(path, read_ids)
+	 states, markers) = read_utils.get_datas(path, read_ids)
 
 	# # clear nan values
 	# for i in range(len(file_ids)):

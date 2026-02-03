@@ -12,21 +12,33 @@ def get_data_path():
 		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA/worm-2025-fieseler'
 
 
-def get_data(path, ids=None):
-	file_ids = ids if ids is not None else list(range(len(sorted(os.listdir(path)))))
-	hdf5files = get_hdf5_files(path, file_ids)
-	filenames = [get_filename(file) for file in hdf5files]
-	traces = [get_neuronal_traces(file) for file in hdf5files]
-	continuous_behaviors = [get_continuous_behaviors(file) for file in hdf5files]
-	discrete_states = [get_discrete_states(file) for file in hdf5files]
-	eigenworms = [get_eigenworms(file) for file in hdf5files]
-	kymographs = [get_kymograph(file) for file in hdf5files]
+def get_datas(path, file_ids=None):
+	if file_ids is None:
+		file_ids = list(range(len(sorted(os.listdir(path)))))
+
+	file_handles = [get_file_handle(path, file_id) for file_id in file_ids]
+	filenames = [get_filename(file) for file in file_handles]
+	traces = [get_traces(file) for file in file_handles]
+	continuous_behaviors = [get_continuous_behaviors(file) for file in file_handles]
+	discrete_states = [get_discrete_states(file) for file in file_handles]
+	eigenworms = [get_eigenworms(file) for file in file_handles]
+	kymographs = [get_kymograph(file) for file in file_handles]
 	return file_ids, filenames, traces, continuous_behaviors, discrete_states, eigenworms, kymographs,
 
 
-def get_hdf5_files(path, file_ids):
-	filenames = [sorted(os.listdir(path))[file_id] for file_id in file_ids]
-	return [h5py.File(os.path.join(path, filename), 'r') for filename in filenames]
+def get_data(path, file_id):
+	file_handle = get_file_handle(path, file_id)
+	filename = get_filename(file_handle)
+	traces = get_traces(file_handle)
+	continuous_behaviors = get_continuous_behaviors(file_handle)
+	discrete_states = get_discrete_states(file_handle)
+	eigenworms = get_eigenworms(file_handle)
+	kymograph = get_kymograph(file_handle)
+	return filename, traces, continuous_behaviors, discrete_states, eigenworms, kymograph
+
+
+def get_file_handle(path, file_id):
+	return h5py.File(os.path.join(path, sorted(os.listdir(path))[file_id]), 'r')
 
 
 def get_filename(file_handle):
@@ -36,7 +48,15 @@ def get_filename(file_handle):
 	return filename
 
 
-def get_neuronal_traces(file_handle):
+def get_sampling_rate(file_handle):
+	raise NotImplementedError('ToDo')
+
+
+def get_timestamps(file_handle):
+	raise NotImplementedError('ToDo')
+
+
+def get_traces(file_handle):
 	try:
 		data = pd.DataFrame(file_handle[f'/processing/CalciumActivity/SignalDFoF/SignalCalciumImResponseSeries/data'][:],
 							 columns=[n_id.decode('utf-8') for n_id in file_handle[f'/processing/CalciumActivity/NeuronIDs/labels'][:]])
@@ -73,10 +93,6 @@ def get_eigenworms(file_handle):
 	return data
 
 
-def get_sampling_rate(filepath):
-	raise NotImplementedError('ToDo')
-
-
 def get_kymograph(file_handle):
 	try:
 		data = pd.DataFrame({key: file_handle[f'/processing/Behavior/kymograph/{key}/data'][:] for key in file_handle[f'/processing/Behavior/kymograph'].keys()})
@@ -87,9 +103,11 @@ def get_kymograph(file_handle):
 
 
 
+
+# temp
 def read_filename(path, file_id):
-	hdf5file = get_hdf5_files(path, [file_id])[0]
-	filename = get_filename(hdf5file)
+	file_handle = get_file_handle(path, file_id)
+	filename = get_filename(file_handle)
 	return filename
 
 
