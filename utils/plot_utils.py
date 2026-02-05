@@ -144,7 +144,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl, vars_expl_rs=
 
 	if vars_expl is not None:
 		if vars_expl_rs is not None:
-			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean() * 100:.1f}%)')
 		else:
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
@@ -231,7 +231,7 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 
 	if vars_expl is not None:
 		if vars_expl_rs is not None:
-			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean() * 100:.1f}%)')
 		else:
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
@@ -332,7 +332,7 @@ def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
 
 	if vars_expl is not None:
 		if vars_expl_rs is not None:
-			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean():.1f}%)')
 		else:
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
@@ -1029,7 +1029,7 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 		ax_top.set_yticklabels(behavior.columns, fontsize=8)
 		ax_top.set_xticks(np.arange(0, behavior.values.shape[0], behavior.values.shape[0] // 10))
 		if timestamps is not None:
-			ax_bottom.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
+			ax_top.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
 		fig.colorbar(im_top, ax=ax_top, orientation='vertical', fraction=0.05)
 		ax_top.grid(False)
 
@@ -1047,7 +1047,7 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 	else:
 		ax_bottom.set_yticks(np.arange(traces.values.shape[1]))
 		ax_bottom.set_yticklabels([column if not (column == '' or column[0].isdigit()) else '' for column in traces.columns], fontsize=4)
-		ax_top.set_xticks(np.arange(0, behavior.values.shape[0], behavior.values.shape[0] // 10))
+		ax_bottom.set_xticks(np.arange(0, traces.values.shape[0], traces.values.shape[0] // 10))
 		if timestamps is not None:
 			ax_bottom.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
 	fig.colorbar(im_bottom, ax=ax_bottom, orientation='vertical', fraction=0.05)
