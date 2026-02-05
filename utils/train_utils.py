@@ -282,6 +282,9 @@ def load_predictions(load_path):
 	 models_resss,
 	 models_bss] = [list() for _ in range(7)]
 
+	if not os.path.exists(f'{load_path}'):
+		raise FileNotFoundError(f'{load_path} not found')
+
 	for i in range(5):
 		if os.path.exists(f'{load_path}/s{i}/score_per_neuron.parquet'):
 			models_spn.append(pd.read_parquet(f'{load_path}/s{i}/score_per_neuron.parquet'))

@@ -62,6 +62,93 @@ def subplot(datas,
 
 #region manifolds
 
+def plot_manifolds_gradient(filenames, modes, coloring, vars_expl, vars_expl_rs=None,
+							title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
+							save_path=None):
+	if n_plots is None:
+		n_plots = len(filenames)
+
+	key = modes[0].columns[0][:-1]
+
+	#region plot setup
+	fig_size = (4, 4)
+
+	plots_per_row = min(n_plots, plots_per_row)
+	plots_per_col = math.ceil(n_plots / plots_per_row)
+	figheight = fig_size[1] * plots_per_col + top_space
+	figwidth = fig_size[0] * plots_per_row
+	fig, axes = plt.subplots(plots_per_col, plots_per_row,
+							 figsize=(figwidth, figheight), squeeze=False)
+	for ax in axes.ravel():
+		ax.set_xticks([])
+		ax.set_xticklabels([])
+		ax.set_yticks([])
+		ax.set_yticklabels([])
+		ax.grid(False)
+		for spine in ax.spines.values():
+			spine.set_visible(False)
+
+	top_space_rel = top_space / figheight
+	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
+	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
+
+	colormap = mplcolors.ListedColormap(plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
+	# fig.legend(
+	# 	handles=[(patches.Patch(color=colormap(i / len(coloring[0].columns)), alpha=0.3, label=coloring[0].columns[i])) for i in range(len(coloring[0].columns))],
+	# 	loc='center',
+	# 	bbox_to_anchor=(0.5, 1. - top_space_rel * 4 / 6),
+	# 	ncol=1,
+	# 	fontsize='large'
+	# )
+	#endregion
+
+	#region plot
+	scale = [] #[-1, 0, 1]
+	normalizer = plt.Normalize(0, len(coloring[0].columns))
+	for i, (modes_, colors_) in enumerate(zip(modes[:n_plots], coloring[:n_plots])):
+		i0 = 1
+		if f'{key}0' in modes_.columns:
+			i0 = 0
+
+		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}']]).T.reshape(-1, 1, 2)
+		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
+		lc_colors = colors_.values[:-1].reshape(-1)
+		lc = LineCollection(lc_segments, cmap=colormap, norm=normalizer)
+		lc.set_array(lc_colors)
+		lc.set_linewidth(2)
+
+		ax = axes[i // plots_per_row, i % plots_per_row]
+		ax.set_title(f'{filenames[i]}' +
+					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
+					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
+					 fontsize=10.5)
+
+		ax.plot(modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}'], alpha=0)
+		ax.add_collection(lc)
+		# ax.set_xlabel('test')
+		ax.set_xticks(scale)
+		ax.set_xticklabels(scale)
+		# ax.set_ylabel('test')
+		ax.set_yticks(scale)
+		ax.set_yticklabels(scale)
+		ax.grid(True)
+		for spine in axes[i // plots_per_row, i % plots_per_row].spines.values():
+			spine.set_visible(True)
+	#endregion
+
+	fig.subplots_adjust(top=1. - top_space_rel)
+	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
+
+	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	plt.show()
+
+	if vars_expl is not None:
+		if vars_expl_rs is not None:
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.mean(np.array(vars_expl_rs)) * 100:.1f}%)')
+		else:
+			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
+
+
 def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 				   title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 				   save_path=None):

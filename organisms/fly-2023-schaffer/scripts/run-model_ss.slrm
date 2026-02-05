@@ -30,4 +30,4 @@ export XLA_FLAGS="--xla_gpu_enable_command_buffer="
 
 export JAX_PLATFORM_NAME=cpu
 
-srun --cpu-bind=none papermill ./run-model_rs.ipynb ./run-model_rs.ipynb --log-output
+srun --cpu-bind=none papermill ./run-model_ss.ipynb ./run-model_ss.ipynb --log-output
