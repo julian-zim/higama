@@ -47,4 +47,4 @@ if __name__ == '__main__':
 		'run_cap': 400,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
-	sweep_utils.sweep(prefix, hgm, sweep_config, manual_hyperparameters, log_path)
+	sweep_model_ns_utils.sweep(prefix, hgm, sweep_config, manual_hyperparameters, log_path)
