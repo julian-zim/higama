@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name FLY_run-model_ns
+#SBATCH --job-name FLY_model_ns-run
 #SBATCH --partition=cpu
 # --qos=gpu-lim
 #SBATCH --gres=shard:4
@@ -8,8 +8,8 @@
 #SBATCH --time=1-01:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/run-model_ns.%A.out
-#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/run-model_ns.%A.err
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/model_ns-run.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/fly-2023-schaffer/out/slurm/model_ns-run.%A.err
 
 module load Python/3.12.3-GCCcore-13.3.0
 source "${HOME}/.venv/hgm/bin/activate"
@@ -30,4 +30,4 @@ export XLA_FLAGS="--xla_gpu_enable_command_buffer="
 
 export JAX_PLATFORM_NAME=cpu
 
-srun --cpu-bind=none papermill ./run-model_ns.ipynb ./run-model_ns.ipynb --log-output
+srun --cpu-bind=none papermill ./model_ns-run.ipynb ./model_ns-run.ipynb --log-output
