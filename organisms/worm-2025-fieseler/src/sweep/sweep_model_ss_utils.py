@@ -25,18 +25,18 @@ from models import hgm_rs as hgm_gen
 
 class Lambdas(NamedTuple):
 	loss_lambdas: tuple[float, float]
-	reg_lambdas: tuple[float, float, float]
+	reg_lambdas: tuple[float, float]
 	cca_lambdas: tuple[float, float]
 
 
-def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
+def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 	with wandb.init(dir=log_path):
 		config = wandb.config
 
 		#region hyperparamters ===============================================================
 		seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(3), jax.random.PRNGKey(4)
 
-		hyperparameters = default_hyperparameters.copy()
+		hyperparameters = manual_hyperparameters.copy()
 		for key in config:
 			hyperparameters[key] = config[key]
 
@@ -49,7 +49,7 @@ def train_model(model, splits, N, B, S, default_hyperparameters, log_path):
 
 		lambdas = Lambdas(
 			loss_lambdas=(hyperparameters['loss_man_lambda'], hyperparameters['loss_res_lambda']),
-			reg_lambdas=(hyperparameters['vb_reg_lambda'], hyperparameters['wb_reg_lambda'], hyperparameters['wm_reg_lambda']),
+			reg_lambdas=(hyperparameters['vb_reg_lambda'], hyperparameters['wm_reg_lambda']),
 			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
 		#endregion ===========================================================================
@@ -315,7 +315,7 @@ def read(artificial=False):
 	return file_ids_gcamp, filenames_gcamp, traces_gcamp, discrete_states_gcamp, eigenworms_gcamp
 
 
-def sweep(prefix, model, config, default_hyperparameters, log_path):
+def sweep(prefix, model, config, manual_hyperparameters, log_path):
 	file_ids, filenames, traces, discrete_states, eigenworms = read(artificial=False)
 
 	print('sweeping...')
@@ -333,7 +333,7 @@ def sweep(prefix, model, config, default_hyperparameters, log_path):
 							   traces[file_ids.index(file_id)].values,
 							   eigenworms[file_ids.index(file_id)].values,
 							   discrete_states[file_ids.index(file_id)].values,
-							   default_hyperparameters,
+							   manual_hyperparameters,
 							   log_path)
 
 		sweep_id = wandb.sweep(sweep=config, project=project_name)

@@ -1248,18 +1248,18 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 									 labelleft=True)
 					for spine in plot.spines.values():
 						spine.set_visible(True)
-					plot.invert_xaxis()
+					plot.invert_yaxis()
 
-					y_values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
-					x_values = hyperparams[ll][model]['datasets'][dataset]['mpe_loss']['all'][::-1]
+					x_values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
+					y_values = hyperparams[ll][model]['datasets'][dataset]['mpe_loss']['all'][::-1]
 					means = hyperparams[ll][model]['datasets'][dataset][hyperparam]['mean']
 					if total_mean:
 						total_means = hyperparams[ll][model]['means'][hyperparam]
 
-					plot.set_title(f'{hyperparam} ({y_values.shape[0]} runs)', fontsize=10)
+					plot.set_title(f'{hyperparam} ({x_values.shape[0]} runs)', fontsize=10)
 
 					if space == 'logarithmic':
-						y_values = np.log10(y_values)
+						x_values = np.log10(x_values)
 						means = {mean_type: np.log10(means[mean_type]) for mean_type in means.keys()}
 						if total_mean:
 							total_means = {mean_type: np.log10(total_means[mean_type]) for mean_type in total_means.keys()}
@@ -1269,12 +1269,12 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 					else:
 						plot.plot(x_values, y_values, marker='o', linestyle='None', alpha=0.5)
 						# plot.plot([x_values[0], x_values[-1]], [means['linear'], means['linear']], label='local mean', color='C2', alpha=0.33)
-						plot.plot([x_values[0], x_values[-1]], [means['geometric'], means['geometric']], label='local mean', color='C2')
+						plot.plot([means['geometric']] * 2, [y_values[0], y_values[-1]], label='local mean', color='C2')
 						if total_mean:
 							# plot.plot([x_values[0], x_values[-1]], [total_means['linear'], total_means['linear']], label='global mean', color='C1', alpha=0.33)
-							plot.plot([x_values[0], x_values[-1]], [total_means['geometric'], total_means['geometric']], label='global mean', color='C1')
+							plot.plot([total_means['geometric']] * 2, [y_values[0], y_values[-1]], label='global mean', color='C1')
 
-						plot.xaxis.set_major_formatter(ticker.FormatStrFormatter('%.3f'))
+						plot.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.4f'))
 						plot.legend()
 
 		if save_dirpath is not None:

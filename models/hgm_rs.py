@@ -45,6 +45,11 @@ def get_reconstruction_matrix(Y, X):
 
 #region PREDICTING
 
+def orthonormalize_qr(WB):
+	Q, R = jnp.linalg.qr(WB)
+	signs = jnp.sign(jnp.diag(R))  # fix sign ambiguity for a deterministic mapping
+	return Q * jnp.where(signs == 0, 1.0, signs)
+
 @jax.jit
 def predict_res(prep_b, B, N_man, WB, VB, WM):
 	B_mean, B_std = prep_b['mean'], prep_b['std']
@@ -52,7 +57,7 @@ def predict_res(prep_b, B, N_man, WB, VB, WM):
 
 	N_man_zs = (N_man - N_man.mean(axis=0)) / jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
 
-	B_ss = B_zs @ WB * jax.nn.sigmoid(N_man_zs @ WM)
+	B_ss = B_zs @ orthonormalize_qr(WB) * jax.nn.sigmoid(N_man_zs @ WM)
 	return B_ss @ VB, B_ss
 
 @jax.jit
@@ -108,7 +113,7 @@ def loss_fn(params, N, B, S, lambdas):
 	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
 
 	loss_man_lambda, loss_res_lambda = loss_lambdas
-	vb_reg_lambda, wb_reg_lambda, wm_reg_lambda = reg_lambdas
+	vb_reg_lambda, wm_reg_lambda = reg_lambdas
 	ccadiag_lambda, ccaunit_lambda = cca_lambdas
 
 	# predict
@@ -122,7 +127,7 @@ def loss_fn(params, N, B, S, lambdas):
 	# S_zs = (S - S_mean) / S_std
 	# S_man = S_zs @ US
 	# man_loss = cca_loss(N_man, S_man, ccadiag_lambda, ccaunit_lambda)
-	man_loss = jnp.array(0)
+	man_loss = jnp.array(0., dtype=N.dtype)
 	# ===============================================
 
 	# residuals loss ================================
@@ -132,7 +137,6 @@ def loss_fn(params, N, B, S, lambdas):
 	vb_reg_loss, wb_reg_loss, wm_reg_loss = jnp.linalg.norm(VB) ** 2, jnp.linalg.norm(WB) ** 2, jnp.linalg.norm(WM) ** 2
 	res_loss = (mpe_loss
 				+ vb_reg_loss * vb_reg_lambda
-				+ wb_reg_loss * wb_reg_lambda
 				+ wm_reg_loss * wm_reg_lambda)
 	# ===============================================
 

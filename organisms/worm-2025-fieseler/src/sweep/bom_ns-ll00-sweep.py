@@ -15,7 +15,7 @@ jax.config.update("jax_enable_x64", True)
 #endregion
 
 
-default_hyperparameters = {
+manual_hyperparameters = {
 	'max_epochs': 3000,
 	'max_patience': 3000 / 4,
 	'learning_rate': 1E-0,
@@ -46,4 +46,4 @@ if __name__ == '__main__':
 		'run_cap': 100,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
-	sweep_utils.sweep(prefix, bom, sweep_config, default_hyperparameters, log_path)
+	sweep_utils.sweep(prefix, bom, sweep_config, manual_hyperparameters, log_path)

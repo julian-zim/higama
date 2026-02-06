@@ -15,9 +15,9 @@ jax.config.update("jax_enable_x64", True)
 #endregion
 
 
-default_hyperparameters = {
-	'max_epochs': 3000,
-	'max_patience': 3000 / 4,
+manual_hyperparameters = {
+	'max_epochs': 4000,
+	'max_patience': 4000 / 4,
 	'learning_rate': 1E-0,
 	'dimensions': 2,
 	'ccadiag_lambda': 0.6,
@@ -25,7 +25,6 @@ default_hyperparameters = {
 	'loss_man_lambda': 0.0,
 	'loss_res_lambda': 1.0 - 0.0,
 	'vb_reg_lambda': 0.0,
-	'wb_reg_lambda': 0.0,
 	'wm_reg_lambda': -1.0,  # unused by the bom
 }
 
@@ -43,9 +42,8 @@ if __name__ == '__main__':
 		},
 		'parameters': {
 			'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-			'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
 		},
 		'run_cap': 600,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
-	sweep_utils_rs.sweep(prefix, bom, sweep_config, default_hyperparameters, log_path)
+	sweep_utils_rs.sweep(prefix, bom, sweep_config, manual_hyperparameters, log_path)
