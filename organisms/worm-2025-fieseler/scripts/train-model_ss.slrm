@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name WORM_train-model_rs
+#SBATCH --job-name WORM_train-model_ss
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=shard:4
@@ -8,8 +8,8 @@
 #SBATCH --time=1-01:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/train-model_rs.%A.out
-#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/train-model_rs.%A.err
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/train-model_ss.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/train-model_ss.%A.err
 
 module load Python/3.12.3-GCCcore-13.3.0
 source "${HOME}/.venv/hgm/bin/activate"
@@ -26,4 +26,4 @@ export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
-srun --cpu-bind=none papermill ./train-model_rs.ipynb ./model_ss-train.ipynb --log-output
+srun --cpu-bind=none papermill ./model_ss-train.ipynb ./model_ss-train.ipynb --log-output
