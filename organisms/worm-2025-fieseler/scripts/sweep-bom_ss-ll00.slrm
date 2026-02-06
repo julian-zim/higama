@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name WORM_bom_ss-ll00-sweep.py
+#SBATCH --job-name WORM_bom_ss-ll00-sweep
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=gpu:1
@@ -8,8 +8,8 @@
 #SBATCH --time=21-00:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/bom_ss-ll00-sweep.py.%A.out
-#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/bom_ss-ll00-sweep.py.%A.err
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/bom_ss-ll00-sweep.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/worm-2025-fieseler/out/slurm/bom_ss-ll00-sweep.%A.err
 
 module load Python/3.12.3-GCCcore-13.3.0
 source "${HOME}/.venv/hgm/bin/activate"
