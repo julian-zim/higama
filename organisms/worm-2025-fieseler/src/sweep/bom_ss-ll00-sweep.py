@@ -4,7 +4,7 @@ import os
 
 import jax
 
-import sweep_utils_rs
+import sweep_model_ss_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../../'))
 from models import bom_rs as bom

@@ -4,7 +4,7 @@ import os
 
 import jax
 
-import sweep_utils
+import sweep_model_ns_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../../'))
 from models import bom
