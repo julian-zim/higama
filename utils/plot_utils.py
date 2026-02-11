@@ -62,7 +62,7 @@ def subplot(datas,
 
 #region manifolds
 
-def plot_manifolds_gradient(filenames, modes, coloring, vars_expl, vars_expl_rs=None,
+def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_expl_rs=None,
 							title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 							save_path=None):
 	if n_plots is None:
@@ -149,7 +149,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl, vars_expl_rs=
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
+def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
 				   title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 				   save_path=None):
 	if n_plots is None:
@@ -179,14 +179,18 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
-	colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
-	fig.legend(
-		handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
-		loc='center',
-		bbox_to_anchor=(0.5, 1. - top_space_rel * 4 / 6),
-		ncol=1,
-		fontsize='large'
-	)
+	if states is not None:
+		colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
+		fig.legend(
+			handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
+			loc='center',
+			bbox_to_anchor=(0.5, 1. - top_space_rel * 4 / 6),
+			ncol=1,
+			fontsize='large'
+		)
+	else:
+		colormap = mplcolors.ListedColormap(plt.get_cmap('bwr')(np.linspace(0, 1, plt.get_cmap('bwr').N))[:, :3] * 1.0, name='bwr_const')
+		states = [pd.DataFrame(data=np.zeros((mode.shape[0], 1), dtype=np.float16), columns=['-']) for mode in modes]
 	#endregion
 
 	#region plot
@@ -236,7 +240,7 @@ def plot_manifolds(filenames, modes, states, vars_expl, vars_expl_rs=None,
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
+def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
 					  title='manifolds', n_plots=None, plots_per_row=4, top_space=3, animate=False,
 					  save_path=None):
 	if n_plots is None:
@@ -268,14 +272,18 @@ def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
 	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
-	colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
-	fig.legend(
-		handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
-		loc='center',
-		bbox_to_anchor=(0.5, 1. - top_space_rel * 3 / 6),
-		ncol=1,
-		fontsize='large'
-	)
+	if states is not None:
+		colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
+		fig.legend(
+			handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
+			loc='center',
+			bbox_to_anchor=(0.5, 1. - top_space_rel * 4 / 6),
+			ncol=1,
+			fontsize='large'
+		)
+	else:
+		colormap = mplcolors.ListedColormap(plt.get_cmap('bwr')(np.linspace(0, 1, plt.get_cmap('bwr').N))[:, :3] * 1.0, name='bwr_const')
+		states = [pd.DataFrame(data=np.zeros((mode.shape[0], 1), dtype=np.float16), columns=['-']) for mode in modes]
 	#endregion
 
 	#region plot
@@ -337,7 +345,7 @@ def plot_manifolds_3d(filenames, modes, states, vars_expl, vars_expl_rs=None,
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds_3d_sep(filenames, modes, states, vars_expl, vars_expl_rs=None,
+def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
 						  titles=None, n_plots=None, top_space=3, animate=False,
 						  save_path=None):
 	if n_plots is None:
@@ -348,7 +356,8 @@ def plot_manifolds_3d_sep(filenames, modes, states, vars_expl, vars_expl_rs=None
 		os.makedirs(save_path, exist_ok=True)
 
 	for i in range(n_plots):
-		plot_manifolds_3d([filenames[i]], [modes[i]], [states[i]], [vars_expl[i]], vars_expl_rs=[vars_expl_rs[i]] if vars_expl_rs is not None else None,
+		plot_manifolds_3d([filenames[i]], [modes[i]], [states[i]] if states is not None else None,
+						  [vars_expl[i]] if vars_expl is not None else None, [vars_expl_rs[i]] if vars_expl_rs is not None else None,
 						  title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
 						  save_path=f'{save_path}/{filenames[i]}' if save_path is not None else None)
 
@@ -1203,8 +1212,8 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 	for dataset in datasets:
 		identifier = f'{ll} {dataset} ({'log' if space == 'logarithmic' else 'lin'} space)'
 
-		fig, axes = plt.subplots(len(hyperparams[ll].keys()), 3,
-								 figsize=(4 * (3 + 2), 3 * len(hyperparams[ll].keys()) + 4), squeeze=False)
+		fig, axes = plt.subplots(len(hyperparams[ll].keys()), 2,
+								 figsize=(2 * 5 + 4, len(hyperparams[ll].keys()) * 3 + 4), squeeze=False)
 		fig.suptitle(
 			identifier,
 			y=0.93, fontsize=25,
@@ -1216,7 +1225,7 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 
 			bbox = row[0].get_position()
 			y_center = bbox.y0 + bbox.height / 2
-			fig.text(0.07, y_center, model,
+			fig.text(0.02, y_center, model,
 					 va='center', ha='center', fontsize=20,
 					 )
 
@@ -1228,12 +1237,12 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 			if dataset not in hyperparams[ll][model]['datasets'].keys(): continue
 
 			wb_plot, wm_plot, vb_plot = None, None, None
-			wb_plot = row[0]
-			if model.startswith('hgm'):
-				wm_plot = row[2]
 			if model.endswith('rs'):
 				vb_plot = row[0]
-				wb_plot = row[1]
+			else:
+				wb_plot = row[0]
+			if model.startswith('hgm'):
+				wm_plot = row[1]
 
 			# plots
 			for hyperparam in ['wb_reg_lambda', 'vb_reg_lambda', 'wm_reg_lambda']:

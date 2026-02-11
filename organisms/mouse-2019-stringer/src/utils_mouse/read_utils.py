@@ -5,34 +5,44 @@ import scipy as sp
 
 
 def get_data_path():
-	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA')
+	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA/mouse-2019-stringer')
 	if os.path.exists(local_path):
 		return local_path
 	else:
-		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/'
+		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/mouse-2019-stringer'
 
 
-def get_data(path, ids=None, with_whisking=True, median_center=True):
-	filenames_all = sorted(os.listdir(path))
-	if ids is not None:
-		file_ids = ids
-		filenames = [filenames_all[file_id] for file_id in file_ids]
-	else:
-		file_ids = list(range(len(filenames_all)))
-		filenames = filenames_all
+def get_datas(path, file_ids=None, with_whisking=True):
+	if file_ids is None:
+		file_ids = list(range(len(sorted(os.listdir(path)))))
 
-	traces = [get_traces(os.path.join(path, filenames[file_ids.index(file_id)]), median_center) for file_id in file_ids]
-	behaviors = [get_behaviors(os.path.join(path, filenames[file_ids.index(file_id)]), with_whisking) for file_id in file_ids]
-
+	filepaths = [get_filepath(path, file_id) for file_id in file_ids]
+	filenames = [get_filename(filepath) for filepath in filepaths]
+	traces = [get_traces(filepath) for filepath in filepaths]
+	behaviors = [get_behaviors(filepath, with_whisking) for filepath in filepaths]
 	return file_ids, filenames, traces, *([b[i] for b in behaviors] for i in range(3))
 
 
-def get_traces(filepath, median_center=False):
-	traces = sp.io.loadmat(filepath, variable_names=['Fsp'])['Fsp'].T
-	if median_center:
-		traces -= np.median(traces, axis=0)
-	traces_df = pd.DataFrame(data=traces)
-	return traces_df
+def get_data(path, file_id, with_whisking=True):
+	filepath = get_filepath(path, file_id)
+	filename = get_filename(filepath)
+	traces = get_traces(filepath)
+	behaviors = get_behaviors(filepath, with_whisking)
+	return filename, traces, behaviors
+
+
+def get_filepath(path, file_id):
+	filenames = sorted([filename for filename in os.listdir(path) if not os.path.isdir(os.path.join(path, filename))])
+	return os.path.join(path, '.'.join(filenames[file_id].split('.')[:-1]))
+
+
+def get_filename(filepath):
+	return os.path.basename(filepath)
+
+
+def get_traces(filepath):
+	traces = pd.DataFrame(data=sp.io.loadmat(filepath, variable_names=['Fsp'])['Fsp'].T)
+	return traces
 
 
 def get_behaviors(filepath, with_whisking=False):
