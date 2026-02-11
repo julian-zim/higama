@@ -35,12 +35,14 @@ def init_params(N, B, S, seeds, shape_UN, shape_US, shape_VB, shape_WB, shape_WM
 	}
 
 def get_reconstruction_matrix(Y, X):
-	# best reconstruction matrix that reconstruct X using Y
-	# least-squares reconstruction (NOT Y @ jax.numpy.linalg.pinv(UN))
+	# best reconstruction matrix that reconstruct X using Y (NOT Y @ jax.numpy.linalg.pinv(UN))
 	# return jnp.linalg.inv(Y.T @ Y) @ Y.T @ X
-
 	# return jnp.linalg.solve(Y.T @ Y + 1E-3 * jnp.eye(Y.shape[1]), Y.T @ X)
-	return jnp.linalg.lstsq(Y, X, rcond=None)[0]
+	# return jnp.linalg.lstsq(Y, X, rcond=None)[0]
+
+	YTY = Y.T @ Y
+	lam = 1E2 * float(jnp.finfo(YTY.dtype).eps) * jnp.maximum(jnp.trace(YTY) / YTY.shape[0], 1.0)
+	return jnp.linalg.solve(YTY + lam * jnp.eye(Y.shape[1], dtype=Y.dtype), Y.T @ X)
 
 
 #region PREDICTING
