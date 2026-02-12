@@ -46,5 +46,5 @@ if __name__ == '__main__':
 		},
 		'run_cap': 1000,
 	}
-	prefix = f'{os.path.basename(__file__).split('.')[0].replace('sweep-', '')}'
+	prefix = f'{os.path.basename(__file__).split('.')[0].replace('-sweep', '')}'
 	sweep_model_ss_utils.sweep(prefix, hgm, sweep_config, manual_hyperparameters, log_path)
