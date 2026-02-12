@@ -15,12 +15,10 @@ import wandb
 
 
 sys.path.append(os.path.join(os.getcwd(), '../'))
-from utils_worm import artificializer
 from utils_worm import read_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../../'))
 from models import trainer
-from models import hgm_rs as hgm_gen
 #endregion
 
 
@@ -59,6 +57,8 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 		n_states = S.shape[1]
 		n_behaviors = B.shape[1]
 
+		N, B, S = jnp.asarray(N), jnp.asarray(B), jnp.asarray(S)
+
 		# training loop ==============================
 		params_per_split = list()
 		(losses_train_per_split,
@@ -71,7 +71,6 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 		 mpe_losses_per_split) = list(), list(), list(), list()
 		for s_id, (train, eval) in enumerate(splits):
 			# region splitting and initializing (this also moves the data to the GPU) ==========================
-			N, B, S = jnp.array(N), jnp.array(B), jnp.array(S)
 			N_train, N_eval = N[train], N[eval]
 			B_train, B_eval = B[train], B[eval]
 			S_train, S_eval = S[train], S[eval]
@@ -99,7 +98,7 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 							   model, optimizer,
 							   opt_state, params,
 							   N_train, B_train, S_train,
-							   N_eval, B_eval, S_eval, )
+							   N_eval,  B_eval,  S_eval)
 
 			# save the split
 			params_per_split.append(jax.device_get(params))
@@ -115,28 +114,35 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 			mpe_losses_per_split.append(jax.device_get(mpe_losses))
 
 			# log
-			wandb.log({'loss_train': np.mean(np.array(losses_train_per_split)[:, -1]),
-					   'man_loss_train': np.mean(np.array(man_losses_train_per_split)[:, -1]),
-					   'res_loss_train': np.mean(np.array(res_losses_train_per_split)[:, -1]),
-					   'mpe_loss_train': np.mean(np.array(mpe_losses_train_per_split)[:, -1]),
-					   'loss': np.mean(np.array(losses_per_split)[:, -1]),
-					   'man_loss': np.mean(np.array(man_losses_per_split)[:, -1]),
-					   'res_loss': np.mean(np.array(res_losses_per_split)[:, -1]),
-					   'mpe_loss': np.mean(np.array(mpe_losses_per_split)[:, -1])})
+			losses_train_per_split = np.stack(losses_train_per_split)
+			man_losses_train_per_split = np.stack(man_losses_train_per_split)
+			res_losses_train_per_split = np.stack(res_losses_train_per_split)
+			mpe_losses_train_per_split = np.stack(mpe_losses_train_per_split)
+			losses_per_split = np.stack(losses_per_split)
+			man_losses_per_split = np.stack(man_losses_per_split)
+			res_losses_per_split = np.stack(res_losses_per_split)
+			mpe_losses_per_split = np.stack(mpe_losses_per_split)
 
-			print(f'{f'Stopped after {epoch_end} epochs: ' if epoch_end < max_epochs else ''}Split {s_id} completed. ', end='')
+			wandb.log({'loss_train': np.mean(losses_train_per_split[:, -1]),
+					   'man_loss_train': np.mean(man_losses_train_per_split[:, -1]),
+					   'res_loss_train': np.mean(res_losses_train_per_split[:, -1]),
+					   'mpe_loss_train': np.mean(mpe_losses_train_per_split[:, -1]),
+					   'loss': np.mean(losses_per_split[:, -1]),
+					   'man_loss': np.mean(man_losses_per_split[:, -1]),
+					   'res_loss': np.mean(res_losses_per_split[:, -1]),
+					   'mpe_loss': np.mean(mpe_losses_per_split[:, -1])})
 		# ============================================
 
-	# return
-	return (params_per_split,
-			np.array(losses_train_per_split),
-			np.array(man_losses_train_per_split),
-			np.array(res_losses_train_per_split),
-			np.array(mpe_losses_train_per_split),
-			np.array(losses_per_split),
-			np.array(man_losses_per_split),
-			np.array(res_losses_per_split),
-			np.array(mpe_losses_per_split))
+		# return
+		return (params_per_split,
+				losses_train_per_split,
+				man_losses_train_per_split,
+				res_losses_train_per_split,
+				mpe_losses_train_per_split,
+				losses_per_split,
+				man_losses_per_split,
+				res_losses_per_split,
+				mpe_losses_per_split)
 
 
 def read():
@@ -191,7 +197,7 @@ def sweep(prefix, model, config, manual_hyperparameters, log_path):
 	wandb.login()
 
 	for file_id in file_ids:
-		project_name = f'{prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
+		project_name = f'WORM {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filenames[file_ids.index(file_id)]}'
 		print(f'{file_id}: {filenames[file_ids.index(file_id)]}  ', end='')
 
 		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces[file_ids.index(file_id)].values.shape[0]), discrete_states[file_ids.index(file_id)][['REV']].values))

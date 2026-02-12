@@ -1237,7 +1237,7 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 			if dataset not in hyperparams[ll][model]['datasets'].keys(): continue
 
 			wb_plot, wm_plot, vb_plot = None, None, None
-			if model.endswith('rs'):
+			if model.endswith('ss'):
 				vb_plot = row[0]
 			else:
 				wb_plot = row[0]

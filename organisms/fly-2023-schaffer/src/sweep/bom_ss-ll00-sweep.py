@@ -7,11 +7,11 @@ import jax
 import sweep_model_ss_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../../'))
-from models import bom_rs as bom
-from models import hgm_rs as hgm
+from models import bom_ss as bom
+from models import hgm_ss as hgm
 
 
-jax.config.update("jax_enable_x64", True)
+# jax.config.update("jax_enable_x64", True)
 #endregion
 
 
