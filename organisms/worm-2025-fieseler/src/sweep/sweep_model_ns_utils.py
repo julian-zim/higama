@@ -113,36 +113,36 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 			res_losses_per_split.append(jax.device_get(res_losses))
 			mpe_losses_per_split.append(jax.device_get(mpe_losses))
 
-			# log
-			losses_train_per_split = np.stack(losses_train_per_split)
-			man_losses_train_per_split = np.stack(man_losses_train_per_split)
-			res_losses_train_per_split = np.stack(res_losses_train_per_split)
-			mpe_losses_train_per_split = np.stack(mpe_losses_train_per_split)
-			losses_per_split = np.stack(losses_per_split)
-			man_losses_per_split = np.stack(man_losses_per_split)
-			res_losses_per_split = np.stack(res_losses_per_split)
-			mpe_losses_per_split = np.stack(mpe_losses_per_split)
+		# log
+		losses_train_per_split = np.stack(losses_train_per_split)
+		man_losses_train_per_split = np.stack(man_losses_train_per_split)
+		res_losses_train_per_split = np.stack(res_losses_train_per_split)
+		mpe_losses_train_per_split = np.stack(mpe_losses_train_per_split)
+		losses_per_split = np.stack(losses_per_split)
+		man_losses_per_split = np.stack(man_losses_per_split)
+		res_losses_per_split = np.stack(res_losses_per_split)
+		mpe_losses_per_split = np.stack(mpe_losses_per_split)
 
-			wandb.log({'loss_train': np.mean(losses_train_per_split[:, -1]),
-					   'man_loss_train': np.mean(man_losses_train_per_split[:, -1]),
-					   'res_loss_train': np.mean(res_losses_train_per_split[:, -1]),
-					   'mpe_loss_train': np.mean(mpe_losses_train_per_split[:, -1]),
-					   'loss': np.mean(losses_per_split[:, -1]),
-					   'man_loss': np.mean(man_losses_per_split[:, -1]),
-					   'res_loss': np.mean(res_losses_per_split[:, -1]),
-					   'mpe_loss': np.mean(mpe_losses_per_split[:, -1])})
-		# ============================================
+		wandb.log({'loss_train': np.mean(losses_train_per_split[:, -1]),
+				   'man_loss_train': np.mean(man_losses_train_per_split[:, -1]),
+				   'res_loss_train': np.mean(res_losses_train_per_split[:, -1]),
+				   'mpe_loss_train': np.mean(mpe_losses_train_per_split[:, -1]),
+				   'loss': np.mean(losses_per_split[:, -1]),
+				   'man_loss': np.mean(man_losses_per_split[:, -1]),
+				   'res_loss': np.mean(res_losses_per_split[:, -1]),
+				   'mpe_loss': np.mean(mpe_losses_per_split[:, -1])})
+	# ============================================
 
-		# return
-		return (params_per_split,
-				losses_train_per_split,
-				man_losses_train_per_split,
-				res_losses_train_per_split,
-				mpe_losses_train_per_split,
-				losses_per_split,
-				man_losses_per_split,
-				res_losses_per_split,
-				mpe_losses_per_split)
+	# return
+	return (params_per_split,
+			losses_train_per_split,
+			man_losses_train_per_split,
+			res_losses_train_per_split,
+			mpe_losses_train_per_split,
+			losses_per_split,
+			man_losses_per_split,
+			res_losses_per_split,
+			mpe_losses_per_split)
 
 
 def read():
