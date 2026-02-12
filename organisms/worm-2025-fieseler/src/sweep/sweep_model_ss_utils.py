@@ -50,7 +50,7 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 
 		lambdas = Lambdas(
 			loss_lambdas=(hyperparameters['loss_man_lambda'], hyperparameters['loss_res_lambda']),
-			reg_lambdas=(hyperparameters['wb_reg_lambda'], hyperparameters['wm_reg_lambda']),
+			reg_lambdas=(hyperparameters['vb_reg_lambda'], hyperparameters['wm_reg_lambda']),
 			cca_lambdas=(hyperparameters['ccadiag_lambda'], hyperparameters['ccaunit_lambda'])
 		)
 		# endregion ===========================================================================
