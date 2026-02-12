@@ -11,7 +11,7 @@ from models import bom_rs as bom
 from models import hgm_rs as hgm
 
 
-jax.config.update("jax_enable_x64", True)
+# jax.config.update("jax_enable_x64", True)
 #endregion
 
 

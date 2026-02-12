@@ -170,8 +170,8 @@ def read():
 		eigenworms_gcamp[i] = eigenworms_gcamp[i][mask]
 		discrete_states_gcamp[i] = discrete_states_gcamp[i][mask]
 
-	# kymographs_gcamp[i] = kymographs_gcamp[i][mask]
-	# filenames_gcamp[i] = filenames_gcamp[i][mask]
+		# kymographs_gcamp[i] = kymographs_gcamp[i][mask]
+		# filenames_gcamp[i] = filenames_gcamp[i][mask]
 
 	# naive ID unknown neurons
 	for i in range(len(file_ids_gcamp)):
