@@ -40,7 +40,7 @@ def get_reconstruction_matrix(Y, X):
 	# return jnp.linalg.lstsq(Y, X, rcond=None)[0]
 
 	YTY = Y.T @ Y
-	lam = 1E2 * float(jnp.finfo(YTY.dtype).eps) * jnp.maximum(jnp.trace(YTY) / YTY.shape[0], 1.0)
+	lam = 1E2 * jnp.finfo(YTY.dtype).eps * jnp.maximum(jnp.trace(YTY) / YTY.shape[0], 1.0)
 	return jnp.linalg.solve(YTY + lam * jnp.eye(Y.shape[1], dtype=Y.dtype), Y.T @ X)
 
 
