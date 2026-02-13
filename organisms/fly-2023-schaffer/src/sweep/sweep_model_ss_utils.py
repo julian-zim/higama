@@ -176,7 +176,7 @@ def sweep(prefix, model, config, manual_hyperparameters, log_path):
 
 		# naive ID unknown neurons
 		traces.columns = pd.Index([
-			f'{file_ids:02d}_{n_id:03d}' if empty else label for n_id, (label, empty) in
+			f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
 			enumerate(zip(traces.columns, traces.columns == ''))
 		])
 
