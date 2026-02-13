@@ -163,7 +163,7 @@ def sweep(prefix, model, config, manual_hyperparameters, log_path):
 
 	for file_id in file_ids:
 		# read
-		filename, traces, discrete_states, eigenworms = read_utils.get_data(path, file_id)
+		filename, traces, _, discrete_states, eigenworms, _ = read_utils.get_data(path, file_id)
 
 		# clear nan values
 		mask = eigenworms.notna().all(axis=1)
