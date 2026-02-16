@@ -168,7 +168,7 @@ def sweep(file_id, prefix, model, config, manual_hyperparameters, log_path):
 	])
 
 	# sweep
-	print(f'sweeping {filename}...')
+	print(f'Sweeping {file_id}: {filename}...')
 	project_name = f'WORM {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
 	print(f'{file_id}: {filename}  ', end='')
 

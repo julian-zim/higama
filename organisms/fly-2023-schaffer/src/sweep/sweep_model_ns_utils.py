@@ -146,58 +146,46 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 			mpe_losses_per_split)
 
 
-def sweep(prefix, model, config, manual_hyperparameters, log_path):
+def sweep(file_id, prefix, model, config, manual_hyperparameters, log_path):
 	wandb.login()
 
-	file_ids = list(range(0, 12+1))
-	# file_ids = [0,	# paper
-	# 			1,	# nice states
-	# 			2,	# nice manifold
-	# 			5,	# variety
-	# 			6,	# nice quiescence
-	# 			7,	# nice states
-	# 			9,	# nice heatmap
-	# 			11]	# variety
-	# file_ids = [0]
+	# read
 	path = os.path.join(read_utils.get_data_path(), 'brain')
+	filename, traces, states, markers = read_utils.get_data(path, file_id)
+
+	# # clear nan values
+	# mask = markers.notna().all(axis=1)
+	# traces = traces[mask]
+	# markers = markers[mask]
+	# states = states[mask]
+
+	# naive ID unknown neurons
+	traces.columns = pd.Index([
+		f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
+		enumerate(zip(traces.columns, traces.columns == ''))
+	])
+
+	# preprocess
 	def highpass_butter(x, fs, cutoff_hz, order=4, axis=0):
 		return sp.signal.sosfiltfilt(sp.signal.butter(order, cutoff_hz, btype='highpass', fs=fs, output='sos'), x, axis=axis)
+	sampling_rate = read_utils.get_sampling_rate(os.path.join(path, filename))
+	traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
+	# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
 
-	for file_id in file_ids:
-		# read
-		filename, traces, states, markers = read_utils.get_data(path, file_id)
+	# sweep
+	print(f'Sweeping {file_id}: {filename}...')
+	project_name = f'FLY {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
+	print(f'{file_id}: {filename}  ', end='')
 
-		# # clear nan values
-		# mask = markers.notna().all(axis=1)
-		# traces = traces[mask]
-		# markers = markers[mask]
-		# states = states[mask]
+	splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.values.shape[0]), states[['still']].values))
 
-		# naive ID unknown neurons
-		traces.columns = pd.Index([
-			f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
-			enumerate(zip(traces.columns, traces.columns == ''))
-		])
+	def train_model_wrapper():
+		return train_model(model, splits,
+						   traces.values,
+						   markers.values,
+						   states.values,
+						   manual_hyperparameters,
+						   log_path)
 
-		# preprocess
-		sampling_rate = read_utils.get_sampling_rate(os.path.join(path, filename))
-		traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
-		# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
-
-		# sweep
-		print(f'sweeping {filename}...')
-		project_name = f'FLY {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
-		print(f'{file_id}: {filename}  ', end='')
-
-		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.values.shape[0]), states[['still']].values))
-
-		def train_model_wrapper():
-			return train_model(model, splits,
-							   traces.values,
-							   markers.values,
-							   states.values,
-							   manual_hyperparameters,
-							   log_path)
-
-		sweep_id = wandb.sweep(sweep=config, project=project_name)
-		wandb.agent(sweep_id, function=train_model_wrapper)
+	sweep_id = wandb.sweep(sweep=config, project=project_name)
+	wandb.agent(sweep_id, function=train_model_wrapper)

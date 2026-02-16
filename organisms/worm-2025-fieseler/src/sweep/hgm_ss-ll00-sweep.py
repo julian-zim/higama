@@ -56,7 +56,6 @@ def main():
 	# file_ids = [19]
 
 	for file_id in file_ids:
-		print(f'Running sweep for file with ID {file_id}')
 		subprocess.run(
 			[
 				sys.executable,
