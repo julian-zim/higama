@@ -43,16 +43,16 @@ def main():
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('-sweep', '')}'
 
-	file_ids = list(range(0, 33+1))
-	# file_ids = [0,   # minrevs
-	# 			1,   # minswitch
-	# 			7,   # maxswitch
-	# 			11,  # median
-	# 			12,  # maxrevs
-	# 			17,  # mean
-	# 			19,  # paper
-	# 			21]  # clean
-	# file_ids = [19]
+	file_ids = list(range(0, 12+1))
+	# file_ids = [0,	# paper
+	# 			1,	# nice states
+	# 			2,	# nice manifold
+	# 			5,	# variety
+	# 			6,	# nice quiescence
+	# 			7,	# nice states
+	# 			9,	# nice heatmap
+	# 			11]	# variety
+	# file_ids = [0]
 
 	for file_id in file_ids:
 		subprocess.run(
