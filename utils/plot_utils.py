@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt, colors as mplcolors, patches, ticker, cm
+from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import LineCollection
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
@@ -1213,7 +1214,7 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 		identifier = f'{ll} {dataset} ({'log' if space == 'logarithmic' else 'lin'} space)'
 
 		fig, axes = plt.subplots(len(hyperparams[ll].keys()), 2,
-								 figsize=(2 * 5 + 4, len(hyperparams[ll].keys()) * 3 + 4), squeeze=False)
+								 figsize=(2 * 5 + 4, len(hyperparams[ll].keys()) * 3 + 7), squeeze=False)
 		fig.suptitle(
 			identifier,
 			y=0.93, fontsize=25,
@@ -1282,6 +1283,10 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 						if total_mean:
 							# plot.plot([x_values[0], x_values[-1]], [total_means['linear'], total_means['linear']], label='global mean', color='C1', alpha=0.33)
 							plot.plot([total_means['geometric']] * 2, [y_values[0], y_values[-1]], label='global mean', color='C1')
+
+						plot.xaxis.set_major_locator(MultipleLocator(0.5))
+						for label in plot.get_xticklabels():
+							label.set_rotation(45)
 
 						plot.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.4f'))
 						plot.legend()

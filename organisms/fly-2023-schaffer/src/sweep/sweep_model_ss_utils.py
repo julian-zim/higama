@@ -97,7 +97,7 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 			 losses, man_losses, res_losses, mpe_losses, epoch_end
 			 ) = trainer.train(lambdas,
 							   max_epochs, max_patience,
-							   model, optimizer,
+							   model, optimizer.update,
 							   opt_state, params,
 							   N_train, B_train, S_train,
 							   N_eval,  B_eval,  S_eval)

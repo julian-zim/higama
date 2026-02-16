@@ -95,7 +95,7 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 			 losses, man_losses, res_losses, mpe_losses, epoch_end
 			 ) = trainer.train(lambdas,
 							   max_epochs, max_patience,
-							   model, optimizer,
+							   model, optimizer.update,
 							   opt_state, params,
 							   N_train, B_train, S_train,
 							   N_eval,  B_eval,  S_eval)
@@ -145,53 +145,41 @@ def train_model(model, splits, N, B, S, manual_hyperparameters, log_path):
 			mpe_losses_per_split)
 
 
-def sweep(prefix, model, config, manual_hyperparameters, log_path):
+def sweep(file_id, prefix, model, config, manual_hyperparameters, log_path):
 	wandb.login()
 
-	file_ids = list(range(0, 33+1))
-	# file_ids = [0,   # minrevs
-	# 			1,   # minswitch
-	# 			7,   # maxswitch
-	# 			11,  # median
-	# 			12,  # maxrevs
-	# 			17,  # mean
-	# 			19,  # paper
-	# 			21]  # clean
-	# file_ids = [19]
+	# read
 	path = os.path.join(read_utils.get_data_path(), 'exported_data_gcamp')
+	filename, traces, _, discrete_states, eigenworms, _ = read_utils.get_data(path, file_id)
 
-	for file_id in file_ids:
-		# read
-		filename, traces, _, discrete_states, eigenworms, _ = read_utils.get_data(path, file_id)
+	# clear nan values
+	mask = eigenworms.notna().all(axis=1)
+	traces = traces[mask]
+	eigenworms = eigenworms[mask]
+	discrete_states = discrete_states[mask]
+	# continuous_behaviors = continuous_behaviors[mask]
+	# kymographs = kymographs[mask]
 
-		# clear nan values
-		mask = eigenworms.notna().all(axis=1)
-		traces = traces[mask]
-		eigenworms = eigenworms[mask]
-		discrete_states = discrete_states[mask]
-		# continuous_behaviors = continuous_behaviors[mask]
-		# kymographs = kymographs[mask]
+	# naive ID unknown neurons
+	traces.columns = pd.Index([
+		f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
+		enumerate(zip(traces.columns, traces.columns == ''))
+	])
 
-		# naive ID unknown neurons
-		traces.columns = pd.Index([
-			f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
-			enumerate(zip(traces.columns, traces.columns == ''))
-		])
+	# sweep
+	print(f'sweeping {filename}...')
+	project_name = f'WORM {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
+	print(f'{file_id}: {filename}  ', end='')
 
-		# sweep
-		print(f'sweeping {filename}...')
-		project_name = f'WORM {prefix} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
-		print(f'{file_id}: {filename}  ', end='')
+	splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.values.shape[0]), discrete_states[['REV']].values))
 
-		splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.values.shape[0]), discrete_states[['REV']].values))
+	def train_model_wrapper():
+		return train_model(model, splits,
+						   traces.values,
+						   eigenworms.values,
+						   discrete_states.values,
+						   manual_hyperparameters,
+						   log_path)
 
-		def train_model_wrapper():
-			return train_model(model, splits,
-							   traces.values,
-							   eigenworms.values,
-							   discrete_states.values,
-							   manual_hyperparameters,
-							   log_path)
-
-		sweep_id = wandb.sweep(sweep=config, project=project_name)
-		wandb.agent(sweep_id, function=train_model_wrapper)
+	sweep_id = wandb.sweep(sweep=config, project=project_name)
+	wandb.agent(sweep_id, function=train_model_wrapper)

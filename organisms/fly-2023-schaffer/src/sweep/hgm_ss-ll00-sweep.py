@@ -1,14 +1,9 @@
 #region imports
 import sys
 import os
+import subprocess
 
 import jax
-
-import sweep_model_ss_utils
-
-sys.path.append(os.path.join(os.getcwd(), '../../../../'))
-from models import bom_ss as bom
-from models import hgm_ss as hgm
 
 
 # jax.config.update("jax_enable_x64", True)
@@ -28,7 +23,8 @@ manual_hyperparameters = {
 	'wm_reg_lambda': 0.0,
 }
 
-if __name__ == '__main__':
+
+def main():
 	log_path = '/lisc/data/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
 	if not (os.path.exists(log_path) and os.access(log_path, os.W_OK)):
 		log_path = '../../out/'
@@ -47,4 +43,46 @@ if __name__ == '__main__':
 		'run_cap': 1000,
 	}
 	prefix = f'{os.path.basename(__file__).split('.')[0].replace('-sweep', '')}'
-	sweep_model_ss_utils.sweep(prefix, hgm, sweep_config, manual_hyperparameters, log_path)
+
+	file_ids = list(range(0, 33+1))
+	# file_ids = [0,   # minrevs
+	# 			1,   # minswitch
+	# 			7,   # maxswitch
+	# 			11,  # median
+	# 			12,  # maxrevs
+	# 			17,  # mean
+	# 			19,  # paper
+	# 			21]  # clean
+	# file_ids = [19]
+
+	for file_id in file_ids:
+		print(f'Running sweep for file with ID {file_id}')
+		subprocess.run(
+			[
+				sys.executable,
+				"-c",
+				f"""
+import sys, os
+
+import sweep_model_ss_utils
+
+sys.path.append(os.path.join(os.getcwd(), '../../../../'))
+from models import hgm
+
+sweep_model_ss_utils.sweep(
+	{file_id},
+	{prefix!r},
+	hgm,
+	{sweep_config!r},
+	{manual_hyperparameters!r},
+	{log_path!r}
+)
+"""
+			],
+			check=True,
+			env=os.environ,
+		)
+
+
+if __name__ == '__main__':
+	main()

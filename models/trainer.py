@@ -5,7 +5,7 @@ import jax.numpy as jnp
 def train(
 	lambdas,
 	epochs_max, patience_max,
-	model, optimizer,
+	model, opt_update,
 	opt_state, params,
 	N_train, B_train, S_train,
 	N_eval,  B_eval,  S_eval,
@@ -29,7 +29,7 @@ def train(
 
 		# update
 		opt_state_new, params_new, loss_types_train = model.update(
-			optimizer.update, opt_state, params, N_train, B_train, S_train, lambdas
+			opt_update, opt_state, params, N_train, B_train, S_train, lambdas
 		)
 		(loss_train,
 		 man_loss_train,
