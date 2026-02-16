@@ -12,7 +12,7 @@ import jax
 
 manual_hyperparameters = {
 	'max_epochs': 4000,
-	'max_patience': 4000 / 4,
+	'max_patience': 4000 / 1,
 	'learning_rate': 1E-0,
 	'dimensions': 2,
 	'ccadiag_lambda': 0.6,
