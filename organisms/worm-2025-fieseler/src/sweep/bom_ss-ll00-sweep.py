@@ -66,7 +66,7 @@ import sys, os
 import sweep_model_ss_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../../'))
-from models import bom
+from models import bom_ss as bom
 
 sweep_model_ss_utils.sweep(
 	{file_id},

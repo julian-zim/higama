@@ -67,7 +67,7 @@ import sys, os
 import sweep_model_ss_utils
 
 sys.path.append(os.path.join(os.getcwd(), '../../../../'))
-from models import hgm
+from models import hgm_ss as hgm
 
 sweep_model_ss_utils.sweep(
 	{file_id},
