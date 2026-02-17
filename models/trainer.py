@@ -56,7 +56,7 @@ def train(
 
 		epoch_new = epoch + 1
 		patience_new = jnp.where(warmed_up, jnp.where(improved_loss, 0, patience + 1), patience)
-		params_best_new = jax.tree.map(lambda x, y: jnp.where(update_best, x, y), params_new, params_best)
+		params_best_new = jax.tree.map(lambda new, old: jnp.where(update_best, new, old), params_new, params_best)
 
 		loss_train_best_new		= jnp.where(update_best, loss_train,		loss_train_best)
 		man_loss_train_best_new = jnp.where(update_best, man_loss_train,	man_loss_train_best)
