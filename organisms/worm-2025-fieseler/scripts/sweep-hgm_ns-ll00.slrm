@@ -27,6 +27,7 @@ mkdir -p "${WANDB_DIR}"
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
 export XLA_PYTHON_CLIENT_ALLOCATOR=platform
 export WANDB_DIR="${WANDB_DIR}"
+export WANDB_CACHE_DIR="${WANDB_DIR}"
 echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
 
 srun --cpu-bind=none python ./hgm_ns-ll00-sweep.py
