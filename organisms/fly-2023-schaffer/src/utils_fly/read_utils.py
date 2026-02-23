@@ -11,7 +11,7 @@ def get_data_path():
 	if os.path.exists(local_path):
 		return local_path
 	else:
-		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA//fly-2023-schaffer'
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA/fly-2023-schaffer'
 
 
 def get_datas(path, file_ids=None, with_markers=True):

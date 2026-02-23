@@ -9,7 +9,7 @@ def get_data_path():
 	if os.path.exists(local_path):
 		return local_path
 	else:
-		return '/lisc/scratch/neurobiology/zimmer/zimmermann/DATA/mouse-2019-stringer'
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/DATA/mouse-2019-stringer'
 
 
 def get_datas(path, file_ids=None, with_whisking=True):
