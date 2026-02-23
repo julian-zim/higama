@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name FLY_hgm_ss-ll00-sweep
+#SBATCH --job-name MOUSE_hgm_ss-ll00-sweep
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=gpu:1

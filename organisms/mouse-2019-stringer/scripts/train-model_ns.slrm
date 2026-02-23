@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name FLY_model_ns-train
+#SBATCH --job-name MOUSE_model_ns-train
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=shard:4
