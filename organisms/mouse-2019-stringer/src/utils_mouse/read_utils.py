@@ -28,7 +28,7 @@ def get_data(path, file_id, with_whisking=True):
 	filename = get_filename(filepath)
 	traces = get_traces(filepath)
 	behaviors = get_behaviors(filepath, with_whisking)
-	return filename, traces, behaviors
+	return filename, traces, *behaviors
 
 
 def get_filepath(path, file_id):
@@ -38,6 +38,11 @@ def get_filepath(path, file_id):
 
 def get_filename(filepath):
 	return os.path.basename(filepath)
+
+
+def get_sampling_rate(filepath):
+	planes = sp.io.loadmat(filepath, variable_names=['stat'])['stat']['iplane'].max().item()
+	return {10: 3, 12: 2.5}[planes]
 
 
 def get_traces(filepath):

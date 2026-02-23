@@ -105,7 +105,6 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 
 	#region plot
 	scale = [] #[-1, 0, 1]
-	normalizer = plt.Normalize(0, len(coloring[0].columns))
 	for i, (modes_, colors_) in enumerate(zip(modes[:n_plots], coloring[:n_plots])):
 		i0 = 1
 		if f'{key}0' in modes_.columns:
@@ -114,6 +113,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}']]).T.reshape(-1, 1, 2)
 		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
 		lc_colors = colors_.values[:-1].reshape(-1)
+		normalizer = plt.Normalize(colors_.values.min(), colors_.values.max())  # ponder: normalize per dataset or globally?
 		lc = LineCollection(lc_segments, cmap=colormap, norm=normalizer)
 		lc.set_array(lc_colors)
 		lc.set_linewidth(2)

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#SBATCH --job-name FLY_bom_ss-ll00-sweep
+#SBATCH --partition=gpu
+# --qos=gpu-lim
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=21-00:00:00
+#SBATCH --mail-user=a12144285@unet.univie.ac.at
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-2019-stringer/out/slurm/bom_ss-ll00-sweep.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-2019-stringer/out/slurm/bom_ss-ll00-sweep.%A.err
+
+module load Python/3.12.3-GCCcore-13.3.0
+source "${HOME}/.venv/hgm/bin/activate"
+
+python --version
+echo "${VIRTUAL_ENV}"
+
+
+OUT_DIR="/lisc/data/scratch/neurobiology/zimmer/zimmermann/Slurm"
+WANDB_DIR="/lisc/data/scratch/neurobiology/zimmer/zimmermann/Sweeps/"
+mkdir -p "${OUT_DIR}"
+mkdir -p "${WANDB_DIR}"
+
+
+export XLA_PYTHON_CLIENT_PREALLOCATE=false
+export XLA_PYTHON_CLIENT_ALLOCATOR=platform
+export WANDB_DIR="${WANDB_DIR}"
+export WANDB_CACHE_DIR="${WANDB_DIR}"
+echo "CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset}"
+
+export XLA_FLAGS="--xla_gpu_enable_command_buffer="
+
+srun --cpu-bind=none python ./bom_ss-ll00-sweep.py
