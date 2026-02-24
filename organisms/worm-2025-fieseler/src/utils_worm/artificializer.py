@@ -8,6 +8,7 @@ import jax
 import jax.numpy as jnp
 
 
+
 def generate_params(weights, model, seeds, shape_WB, shape_WM, scaling=0.1):
 	bom_lin = weights[0]
 

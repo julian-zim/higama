@@ -194,10 +194,10 @@ def get_variance_explained_orth(X_rec, X):
 def save_params(filenames, params, save_path):
 	organism_name = save_path.split('/')[0]
 	model_name = '/'.join(save_path.split('/')[1:])
-	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}/params'
-	os.makedirs(outdir_path, exist_ok=True)
+	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
 	for filename, param in zip(filenames, params):
-		with open(f'{outdir_path}/{filename}.msgpack', 'wb') as f:
+		os.makedirs(os.path.join(outdir_path, filename), exist_ok=True)
+		with open(f'{outdir_path}/{filename}/params.msgpack', 'wb') as f:
 			f.write(to_bytes(param))
 
 
@@ -205,13 +205,11 @@ def load_params(load_path, filenames=None):
 	organism_name = load_path.split('/')[0]
 	model_name = '/'.join(load_path.split('/')[1:])
 	params = list()
-	indir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}/params'
+	indir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
 	if filenames is None:
-		filenames = sorted(os.listdir(indir_path))
-	else:
-		filenames = [filename + '.msgpack' for filename in filenames]
+		filenames = [os.path.splitext(filename)[0] for filename in sorted(os.listdir(indir_path))]
 	for filename in filenames:
-		with open(f'{indir_path}/{filename}', 'rb') as f:
+		with open(f'{indir_path}/{filename}/params.msgpack', 'rb') as f:
 			param_dict = from_bytes(None, f.read())
 			param = list()
 			for key in param_dict.keys():
@@ -224,23 +222,21 @@ def save_losses(filenames, losses, save_path):
 	organism_name = save_path.split('/')[0]
 	model_name = '/'.join(save_path.split('/')[1:])
 	# format: dataset x array(type x split x epoch)
-	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}/hist'
-	os.makedirs(outdir_path, exist_ok=True)
+	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
 	for filename, loss in zip(filenames, losses):
-		np.save(f'{outdir_path}/{filename}.npy', loss)
+		os.makedirs(os.path.join(outdir_path, filename), exist_ok=True)
+		np.save(f'{outdir_path}/{filename}/hist.npy', loss)
 
 
 def load_losses(load_path, filenames=None):
 	organism_name = load_path.split('/')[0]
 	model_name = '/'.join(load_path.split('/')[1:])
 	losses = list()
-	indir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}/hist'
+	indir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
 	if filenames is None:
-		filenames = sorted(os.listdir(indir_path))
-	else:
-		filenames = [filename + '.npy' for filename in filenames]
+		filenames = [os.path.splitext(filename)[0] for filename in sorted(os.listdir(indir_path))]
 	for filename in filenames:
-		losses.append(np.load(f'{indir_path}/{filename}'))
+		losses.append(np.load(f'{indir_path}/{filename}/hist.npy'))
 	return losses
 
 

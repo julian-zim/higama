@@ -6,10 +6,14 @@ import optax
 p = 1
 
 
-def get_type():
-	return True
+def init_params(N, B, S, seeds, n_dimensions, n_neurons, n_behaviors, n_states):
 
-def init_params(N, B, S, seeds, shape_UN, shape_US, shape_VB, shape_WB, shape_WM):
+	shape_UN = (n_neurons, n_dimensions)
+	shape_US = (n_states, n_dimensions)
+	shape_VB = (n_behaviors, n_neurons)
+	shape_WB = (n_behaviors, n_behaviors)
+	shape_WM = (n_dimensions, n_behaviors)
+
 	return {
 		'prep': {
 			'N': {

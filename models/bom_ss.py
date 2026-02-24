@@ -6,10 +6,13 @@ import optax
 p = 1
 
 
-def get_type():
-	return False
+def init_params(N, B, S, seeds, n_dimensions, n_neurons, n_behaviors, n_states):
 
-def init_params(N, B, S, seeds, shape_UN, shape_US, shape_VB, shape_WB):
+	shape_UN = (n_neurons, n_dimensions)
+	shape_US = (n_states, n_dimensions)
+	shape_VB = (n_behaviors, n_neurons)
+	shape_WB = (n_behaviors, n_behaviors)
+
 	return {
 		'prep': {
 			'N': {
@@ -112,7 +115,7 @@ def loss_fn(params, N, B, S, lambdas):
 	loss_lambdas, reg_lambdas, cca_lambdas = lambdas.loss_lambdas, lambdas.reg_lambdas, lambdas.cca_lambdas
 
 	loss_man_lambda, loss_res_lambda = loss_lambdas
-	vb_reg_lambda, _ = reg_lambdas
+	vb_reg_lambda, = reg_lambdas
 	ccadiag_lambda, ccaunit_lambda = cca_lambdas
 
 	# predict
