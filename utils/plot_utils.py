@@ -1258,7 +1258,7 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 									 labelleft=True)
 					for spine in plot.spines.values():
 						spine.set_visible(True)
-					plot.invert_yaxis()
+					# plot.invert_yaxis()
 
 					x_values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
 					y_values = hyperparams[ll][model]['datasets'][dataset]['mpe_loss']['all'][::-1]

@@ -20,12 +20,10 @@ import jax.numpy as jnp
 import optax
 from sklearn.model_selection import TimeSeriesSplit, StratifiedKFold
 
-sys.path.append(os.path.join(os.getcwd(), '../../../../'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from utils import plot_utils
 from utils import train_utils
 from models import trainer
-
-
 #endregion
 
 
@@ -197,19 +195,34 @@ def sweep_dataset(model, splits, N, B, S, hyperparameters, log_path):
 
 
 class Organism(ABC):
-	data_variant: str
+	model_names: list
 	model_variants: list
+	data_variant: str
 	sweep_config: dict
 	hyperparameters: dict
 	file_ids: list
 	filenames: list
 	subfolder: str
 
-	def __init__(self, file_ids, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
+	def __init__(self, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
 		self.file_ids = file_ids
 
-		self.data_variant = data_variant
+		self.model_names = model_names
 		self.model_variants = model_variants
+		self.data_variant = data_variant
+
+		self.hyperparameters = {
+			'ccadiag_lambda': 0.6,
+			'ccaunit_lambda': 1.0 - 0.6,
+			'loss_man_lambda': 0.0,
+			'loss_res_lambda': 1.0 - 0.0,
+		}
+		for param in hyperparameters.keys():
+			self.hyperparameters[param] = hyperparameters[param]
+		if not self.hyperparameters['reg_lambdas'].keys():
+			reg_lambdas = self.read_reg_lambdas()
+			for key in reg_lambdas:
+				self.hyperparameters['reg_lambdas'][key] = reg_lambdas[key]
 		self.sweep_config = sweep_config
 		self.sweep_config = {
 			'method': 'bayes',
@@ -221,20 +234,13 @@ class Organism(ABC):
 		}
 		for param in sweep_config.keys():
 			self.sweep_config['parameters'][param] = sweep_config[param]
-		self.hyperparameters = {
-			'ccadiag_lambda': 0.6,
-			'ccaunit_lambda': 1.0 - 0.6,
-			'loss_man_lambda': 0.0,
-			'loss_res_lambda': 1.0 - 0.0,
-		}
-		for param in hyperparameters.keys():
-			self.hyperparameters[param] = hyperparameters[param]
-		reg_lambdas = self.read_reg_lambdas()
-		for key in reg_lambdas:
-			self.hyperparameters['reg_lambdas'][key] = reg_lambdas[key]
 
 	@abstractmethod
 	def get_split_class(self):
+		pass
+
+	@abstractmethod
+	def get_model_path(self):
 		pass
 
 	@abstractmethod
@@ -244,7 +250,7 @@ class Organism(ABC):
 	def read_reg_lambdas(self):
 		ll = f'll{int(self.hyperparameters['loss_man_lambda'] * 100):02d}'
 
-		with open(f'{self.subfolder}/src/sweep/hyperparams.pkl', 'rb') as f:
+		with open(f'hyperparams.pkl', 'rb') as f:
 			swept_params = pickle.load(f)
 
 		reg_lambdas = dict()
@@ -260,39 +266,33 @@ class Organism(ABC):
 		return reg_lambdas
 
 	def run(self):
-		sys.path.append(os.path.join(os.getcwd(), '../'))
-
 		for model_variant in self.model_variants:
 			if model_variant == 'ns':
 				from models import bom as bom, hgm as hgm
 			elif model_variant == 'ss':
 				from models import bom_ss as bom, hgm_ss as hgm
 			else:
-				raise ValueError(f'Unknown model variant: {model_variant}. use either \'ns\' or \'ss\'.')
+				raise ValueError(f'Unknown model variant: {model_variant}. Use either \'ns\' or \'ss\'.')
 
-			for model_name in ['bom', 'hgm']:
-				model = {'bom': bom, 'hgm': hgm}[model_name]
+			for model_name in self.model_names:
+				try:
+					model = {'bom': bom, 'hgm': hgm}[model_name]
+				except KeyError:
+					raise KeyError(f'Unknown model name: {model_name}. Use either \'bom\' or \'hgm\'.')
 
 				hyperparams = self.hyperparameters.copy()
 				hyperparams['reg_lambdas'] = hyperparams['reg_lambdas'][model_variant][model_name]
 
 				model_folder = (f'{self.data_variant}_{model_name}_{model_variant}_'
-								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in
-											hyperparams['reg_lambdas'].keys()]))
-				load_path = os.path.join(f'{self.subfolder}', 'new',
-										 f'll{int(hyperparams['loss_man_lambda'] * 100):02d}',
-										 model_folder)
+								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in hyperparams['reg_lambdas'].keys()]))
 
 				print(f'\nRunning {model_name}_{model_variant}:', end='')
 				for file_id in self.file_ids:
 					filename, traces, behavior, classes, aux = self.read(file_id, self.data_variant)
 					splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.shape[0]),
 																				   classes[[self.get_split_class()]].values))
-					model_params = train_utils.load_params(load_path, [filename])[0]
 
-					save_path = os.path.join(f'{self.subfolder}', 'out/predictions',
-											 model_folder,
-											 f'{filename}')
+					model_params = train_utils.load_params(os.path.join(f'{self.get_model_path()}', 'params', model_folder), filename)
 
 					print(f'\n\t{file_id}: {filename}... ', end='')
 					(model_spn,
@@ -304,6 +304,7 @@ class Organism(ABC):
 					 model_bss) = run_dataset(model, model_params, splits, traces, behavior, model_variant)
 
 					train_utils.save_predictions(
+						filename,
 						(model_spn,
 						 model_man,
 						 model_rec,
@@ -311,31 +312,28 @@ class Organism(ABC):
 						 model_pres,
 						 model_resss,
 						 model_bss),
-						save_path=save_path)
+						save_path=os.path.join(os.path.join(f'{self.get_model_path()}', 'predictions', model_folder)))
 
 	def train(self):
-		sys.path.append(os.path.join(os.getcwd(), '../'))
-
 		for model_variant in self.model_variants:
 			if model_variant == 'ns':
 				from models import bom as bom, hgm as hgm
 			elif model_variant == 'ss':
 				from models import bom_ss as bom, hgm_ss as hgm
 			else:
-				raise ValueError(f'Unknown model variant: {model_variant}. use either \'ns\' or \'ss\'.')
+				raise ValueError(f'Unknown model variant: {model_variant}. Use either \'ns\' or \'ss\'.')
 
-			for model_name in ['bom', 'hgm']:
-				model = {'bom': bom, 'hgm': hgm}[model_name]
+			for model_name in self.model_names:
+				try:
+					model = {'bom': bom, 'hgm': hgm}[model_name]
+				except KeyError:
+					raise KeyError(f'Unknown model name: {model_name}. Use either \'bom\' or \'hgm\'.')
 
 				hyperparams = self.hyperparameters.copy()
 				hyperparams['reg_lambdas'] = hyperparams['reg_lambdas'][model_variant][model_name]
 
 				model_folder = (f'{self.data_variant}_{model_name}_{model_variant}_'
-								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in
-											hyperparams['reg_lambdas'].keys()]))
-				save_path = os.path.join(f'{self.subfolder}', 'new',
-										 f'll{int(hyperparams['loss_man_lambda'] * 100):02d}',
-										 model_folder)
+								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in hyperparams['reg_lambdas'].keys()]))
 
 				print(f'\nTraining {model_name}_{model_variant}:', end='')
 				for file_id in self.file_ids:
@@ -353,19 +351,18 @@ class Organism(ABC):
 									   classes.values,
 									   hyperparams)
 
-					train_utils.save_params([filename], [params], save_path)
-					train_utils.save_losses([filename], [np.array([
+					train_utils.save_params(filename, params,
+											os.path.join(f'{self.get_model_path()}', 'params', model_folder))
+					train_utils.save_losses(filename, np.stack([
 						losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 						losses, man_losses, res_losses, mpe_losses
-					])], save_path)
+					]), os.path.join(f'{self.get_model_path()}', 'history', model_folder))
 
 	def sweep(self):
 		log_path = '/lisc/data/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
 		if not (os.path.exists(log_path) and os.access(log_path, os.W_OK)):
-			log_path = f'{self.subfolder}/out/'
+			log_path = f'./out/'
 		wandb.login()
-
-		sys.path.append(os.path.join(os.getcwd(), '../'))
 
 		for model_variant in self.model_variants:
 			if model_variant == 'ns':
@@ -375,8 +372,11 @@ class Organism(ABC):
 			else:
 				raise ValueError(f'Unknown model variant: {model_variant}. use either \'ns\' or \'ss\'.')
 
-			for model_name in ['bom', 'hgm']:
-				model = {'bom': bom, 'hgm': hgm}[model_name]
+			for model_name in self.model_names:
+				try:
+					model = {'bom': bom, 'hgm': hgm}[model_name]
+				except KeyError:
+					raise KeyError(f'Unknown model name: {model_name}. Use either \'bom\' or \'hgm\'.')
 
 				hyperparams = self.hyperparameters.copy()
 				hyperparams['reg_lambdas'] = hyperparams['reg_lambdas'][model_variant][model_name]
@@ -399,7 +399,7 @@ class Organism(ABC):
 											 hyperparams,
 											 log_path)
 
-					project_name = f'WORM {model_name}_{model_variant}-{f'll{int(hyperparams['loss_man_lambda'] * 100):02d}'} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
+					project_name = f'{self.subfolder.split('-')[0]} {model_name}_{model_variant}-{f'll{int(hyperparams['loss_man_lambda'] * 100):02d}'} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
 					sweep_id = wandb.sweep(sweep=sweep_cfg, project=project_name)
 
 					print(f'\n\t{file_id}: {filename}... ', end='')

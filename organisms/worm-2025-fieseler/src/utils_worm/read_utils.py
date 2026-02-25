@@ -4,6 +4,14 @@ import h5py
 import pynwb
 
 
+def get_model_path():
+	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/MODEL/worm-2025-fieseler')
+	if os.path.exists(local_path):
+		return local_path
+	else:
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/worm-2025-fieseler'
+
+
 def get_data_path():
 	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA/worm-2025-fieseler')
 	if os.path.exists(local_path):

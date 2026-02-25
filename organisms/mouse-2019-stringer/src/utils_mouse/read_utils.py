@@ -4,6 +4,14 @@ import pandas as pd
 import scipy as sp
 
 
+def get_model_path():
+	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/MODEL/mouse-2019-stringer')
+	if os.path.exists(local_path):
+		return local_path
+	else:
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/mouse-2019-stringer'
+
+
 def get_data_path():
 	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/DATA/mouse-2019-stringer')
 	if os.path.exists(local_path):

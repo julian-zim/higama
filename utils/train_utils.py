@@ -46,7 +46,7 @@ def get_manifolds_plsc(traces, behavior, zscore=(False, False), n_ls=3):
 		var_ratio = list()
 
 		var_ratio_cumulative = list()
-		for k in range(1, n_ls+1):  # VE k = VE :k - VE :k-1
+		for k in range(1, n_ls + 1):  # VE k = VE :k - VE :k-1
 			trace_reduced_to_k = np.zeros_like(trace_reduced)
 			trace_reduced_to_k[:, :k] = trace_reduced[:, :k]
 			behavior_reduced_to_k = np.zeros_like(behavior_reduced)
@@ -55,7 +55,7 @@ def get_manifolds_plsc(traces, behavior, zscore=(False, False), n_ls=3):
 			trace_reconstructed_to_k, _ = plsc.inverse_transform(trace_reduced_to_k, behavior_reduced_to_k)
 
 			var_ratio_cumulative.append(get_variance_explained(trace_reconstructed_to_k, trace.values))
-			var_ratio_k = var_ratio_cumulative[k-1] - (var_ratio_cumulative[k-1-1] if k > 1 else 0)
+			var_ratio_k = var_ratio_cumulative[k - 1] - (var_ratio_cumulative[k - 1 - 1] if k > 1 else 0)
 
 			var_ratio.append(var_ratio_k)
 
@@ -86,7 +86,8 @@ def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
 
 		# reduction
 		cca = CCA(n_components=n_cv, scale=False)
-		trace_reduced, behavior_reduced = cca.fit_transform(trace_reconstructed_pca if n_pc > 0 else trace.values, behavior.values)
+		trace_reduced, behavior_reduced = cca.fit_transform(trace_reconstructed_pca if n_pc > 0 else trace.values,
+															behavior.values)
 		trace_reconstructed, behavior_reconstructed = cca.inverse_transform(trace_reduced, behavior_reduced)
 
 		if zscore[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
@@ -107,7 +108,7 @@ def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
 
 		var_ratio_cumulative = list()
 		var_ratio_rs_cumulative = list()
-		for k in range(1, n_cv+1):  # VE k = VE :k - VE :k-1
+		for k in range(1, n_cv + 1):  # VE k = VE :k - VE :k-1
 			trace_reduced_to_k = np.zeros_like(trace_reduced)
 			trace_reduced_to_k[:, :k] = trace_reduced[:, :k]
 			behavior_reduced_to_k = np.zeros_like(behavior_reduced)
@@ -118,12 +119,13 @@ def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
 			var_expl = get_variance_explained(trace_reconstructed_to_k, trace.values)
 			var_ratio_cumulative.append(var_expl)
 			if n_pc > 0:
-				var_ratio_rs_cumulative.append(get_variance_explained(trace_reconstructed_to_k, trace_reconstructed_pca))
+				var_ratio_rs_cumulative.append(
+					get_variance_explained(trace_reconstructed_to_k, trace_reconstructed_pca))
 			else:
 				var_ratio_rs_cumulative.append(var_expl)
 
-			var_ratio_k = var_ratio_cumulative[k-1] - (var_ratio_cumulative[k-1-1] if k > 1 else 0)
-			var_ratio_rs_k = var_ratio_rs_cumulative[k-1] - (var_ratio_rs_cumulative[k-1-1] if k > 1 else 0)
+			var_ratio_k = var_ratio_cumulative[k - 1] - (var_ratio_cumulative[k - 1 - 1] if k > 1 else 0)
+			var_ratio_rs_k = var_ratio_rs_cumulative[k - 1] - (var_ratio_rs_cumulative[k - 1 - 1] if k > 1 else 0)
 
 			var_ratio.append(var_ratio_k)
 			var_ratio_rs.append(var_ratio_rs_k)
@@ -162,6 +164,7 @@ def get_manifolds_pca(traces, zscore=False, n_pc=3):
 
 	return modes, recon, loadings, vars_expl
 
+
 #endregion
 
 
@@ -186,122 +189,97 @@ def get_variance_explained_orth(X_rec, X):
 
 	return X_var_ratio
 
+
 #endregion
 
 
 #region models
 
-def save_params(filenames, params, save_path):
-	organism_name = save_path.split('/')[0]
-	model_name = '/'.join(save_path.split('/')[1:])
-	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
-	for filename, param in zip(filenames, params):
-		os.makedirs(os.path.join(outdir_path, filename), exist_ok=True)
-		with open(f'{outdir_path}/{filename}/params.msgpack', 'wb') as f:
-			f.write(to_bytes(param))
+def save_params(filename, params, save_path):
+	os.makedirs(save_path, exist_ok=True)
+	with open(f'{save_path}/{filename}.msgpack', 'wb') as f:
+		f.write(to_bytes(params))
 
 
-def load_params(load_path, filenames=None):
-	organism_name = load_path.split('/')[0]
-	model_name = '/'.join(load_path.split('/')[1:])
+def load_params(load_path, filename):
+	with open(f'{load_path}/{filename}.msgpack', 'rb') as f:
+		params_dict = from_bytes(None, f.read())
 	params = list()
-	indir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
-	if filenames is None:
-		filenames = [os.path.splitext(filename)[0] for filename in sorted(os.listdir(indir_path))]
-	for filename in filenames:
-		with open(f'{indir_path}/{filename}/params.msgpack', 'rb') as f:
-			param_dict = from_bytes(None, f.read())
-			param = list()
-			for key in param_dict.keys():
-				param.append(param_dict[key])
-			params.append(param)
+	for key in params_dict.keys():
+		params.append(params_dict[key])
 	return params
 
 
-def save_losses(filenames, losses, save_path):
-	organism_name = save_path.split('/')[0]
-	model_name = '/'.join(save_path.split('/')[1:])
-	# format: dataset x array(type x split x epoch)
-	outdir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
-	for filename, loss in zip(filenames, losses):
-		os.makedirs(os.path.join(outdir_path, filename), exist_ok=True)
-		np.save(f'{outdir_path}/{filename}/hist.npy', loss)
+def save_losses(filename, losses, save_path):
+	os.makedirs(save_path, exist_ok=True)
+	# losses format: array(type x split x epoch)
+	np.save(f'{save_path}/{filename}.npy', losses)
 
 
-def load_losses(load_path, filenames=None):
-	organism_name = load_path.split('/')[0]
-	model_name = '/'.join(load_path.split('/')[1:])
-	losses = list()
-	indir_path = f'{os.path.dirname(os.path.abspath(__file__))}/../organisms/{organism_name}/out/models/{model_name}'
-	if filenames is None:
-		filenames = [os.path.splitext(filename)[0] for filename in sorted(os.listdir(indir_path))]
-	for filename in filenames:
-		losses.append(np.load(f'{indir_path}/{filename}/hist.npy'))
+def load_losses(load_path, filename):
+	losses = np.load(f'{load_path}/{filename}.npy')
 	return losses
 
 
-def save_predictions(spn_man_rec_res_pres_resss_bss, save_path):
-	(models_spn,
-	 models_man,
-	 models_rec,
-	 models_res,
-	 models_pres,
-	 models_resss,
-	 models_bss) = spn_man_rec_res_pres_resss_bss
-
-	os.makedirs(save_path, exist_ok=True)
+def save_predictions(filename, spn_man_rec_res_pres_resss_bss, save_path):
+	(model_spn,
+	 model_man,
+	 model_rec,
+	 model_res,
+	 model_pres,
+	 model_resss,
+	 model_bss) = spn_man_rec_res_pres_resss_bss
 
 	for i in range(5):
-		os.makedirs(os.path.join(save_path, f's{i}'), exist_ok=True)
-		if models_spn is not None:
-			models_spn[i].to_parquet(f'{save_path}/s{i}/score_per_neuron.parquet')
-		if models_man is not None:
-			models_man[i].to_parquet(f'{save_path}/s{i}/timeseries_manifold.parquet')
-		if models_rec is not None:
-			models_rec[i].to_parquet(f'{save_path}/s{i}/timeseries_reconstruction.parquet')
-		if models_res is not None:
-			models_res[i].to_parquet(f'{save_path}/s{i}/timeseries_residual.parquet')
-		if models_pres is not None:
-			models_pres[i].to_parquet(f'{save_path}/s{i}/timeseries_residual_predicted.parquet')
-		if models_resss is not None:
-			models_resss[i].to_parquet(f'{save_path}/s{i}/timeseries_behavioral_subspace.parquet')
-		if models_bss is not None:
-			models_bss[i].to_parquet(f'{save_path}/s{i}/timeseries_residual_subspace.parquet')
+		os.makedirs(os.path.join(save_path, filename, f's{i}'), exist_ok=True)
+		if model_spn is not None:
+			model_spn[i].to_parquet(f'{save_path}/{filename}/s{i}/score_per_neuron.parquet')
+		if model_man is not None:
+			model_man[i].to_parquet(f'{save_path}/{filename}/s{i}/timeseries_manifold.parquet')
+		if model_rec is not None:
+			model_rec[i].to_parquet(f'{save_path}/{filename}/s{i}/timeseries_reconstruction.parquet')
+		if model_res is not None:
+			model_res[i].to_parquet(f'{save_path}/{filename}/s{i}/timeseries_residual.parquet')
+		if model_pres is not None:
+			model_pres[i].to_parquet(f'{save_path}/{filename}/s{i}/timeseries_residual_predicted.parquet')
+		if model_resss is not None:
+			model_resss[i].to_parquet(f'{save_path}/{filename}/s{i}/timeseries_behavioral_subspace.parquet')
+		if model_bss is not None:
+			model_bss[i].to_parquet(f'{save_path}/{filename}/s{i}/timeseries_residual_subspace.parquet')
 
 
-def load_predictions(load_path):
-	[models_spn,
-	 models_man,
-	 models_rec,
-	 models_res,
-	 models_pres,
-	 models_resss,
-	 models_bss] = [list() for _ in range(7)]
+def load_predictions(load_path, filename):
+	[model_spn,
+	 model_man,
+	 model_rec,
+	 model_res,
+	 model_pres,
+	 model_resss,
+	 model_bss] = [list() for _ in range(7)]
 
-	if not os.path.exists(f'{load_path}'):
-		raise FileNotFoundError(f'{load_path} not found')
+	if not os.path.exists(os.path.join(load_path, filename)):
+		raise FileNotFoundError(f'{os.path.join(load_path, filename)} not found')
 
 	for i in range(5):
-		if os.path.exists(f'{load_path}/s{i}/score_per_neuron.parquet'):
-			models_spn.append(pd.read_parquet(f'{load_path}/s{i}/score_per_neuron.parquet'))
-		if os.path.exists(f'{load_path}/s{i}/timeseries_manifold.parquet'):
-			models_man.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_manifold.parquet'))
-		if os.path.exists(f'{load_path}/s{i}/timeseries_reconstruction.parquet'):
-			models_rec.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_reconstruction.parquet'))
-		if os.path.exists(f'{load_path}/s{i}/timeseries_residual.parquet'):
-			models_res.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_residual.parquet'))
-		if os.path.exists(f'{load_path}/s{i}/timeseries_residual_predicted.parquet'):
-			models_pres.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_residual_predicted.parquet'))
-		if os.path.exists(f'{load_path}/s{i}/timeseries_behavioral_subspace.parquet'):
-			models_resss.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_behavioral_subspace.parquet'))
-		if os.path.exists(f'{load_path}/s{i}/timeseries_residual_subspace.parquet'):
-			models_bss.append(pd.read_parquet(f'{load_path}/s{i}/timeseries_residual_subspace.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/score_per_neuron.parquet'):
+			model_spn.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/score_per_neuron.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_manifold.parquet'):
+			model_man.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/timeseries_manifold.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_reconstruction.parquet'):
+			model_rec.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/timeseries_reconstruction.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_residual.parquet'):
+			model_res.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/timeseries_residual.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_residual_predicted.parquet'):
+			model_pres.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/timeseries_residual_predicted.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_behavioral_subspace.parquet'):
+			model_resss.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/timeseries_behavioral_subspace.parquet'))
+		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_residual_subspace.parquet'):
+			model_bss.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/timeseries_residual_subspace.parquet'))
 
-	for _list in [models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss]:
+	for _list in [model_spn, model_man, model_rec, model_res, model_pres, model_resss, model_bss]:
 		if len(_list) == 0:
 			_list = None
 
-	return models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss
+	return model_spn, model_man, model_rec, model_res, model_pres, model_resss, model_bss
 
 #endregion
-

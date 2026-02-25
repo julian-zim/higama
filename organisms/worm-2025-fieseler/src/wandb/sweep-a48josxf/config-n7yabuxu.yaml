@@ -1,0 +1,6 @@
+wandb_version: 1
+
+vb_reg_lambda:
+  value: 0.4038200958385998
+wm_reg_lambda:
+  value: 0.06133896675874574
