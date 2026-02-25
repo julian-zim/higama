@@ -1,6 +1,0 @@
-wandb_version: 1
-
-vb_reg_lambda:
-  value: 2.6377154369605464e-07
-wm_reg_lambda:
-  value: 3.4838088983199335e-06

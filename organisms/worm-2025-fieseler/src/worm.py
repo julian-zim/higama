@@ -54,6 +54,7 @@ class Worm(Organism):
 		# preprocess
 		pass
 
+		# generate
 		if data_variant == 'art':
 			from utils_worm import artificializer
 			sys.path.append(os.path.join(os.getcwd(), '../../../'))

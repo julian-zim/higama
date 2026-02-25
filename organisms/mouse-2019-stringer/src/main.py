@@ -39,8 +39,8 @@ def main():
 
 	}
 	mouse_hyperparameters = {
-		'max_epochs': 4000,
-		'max_patience': 4000 / 1,
+		'max_epochs': 1,
+		'max_patience': 1 / 1,
 		'learning_rate': 1E-0,
 		'dimensions': 8,
 		'reg_lambdas': manual_reg_lambdas
@@ -49,8 +49,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	file_ids = list(range(0, 8+1))
-	# file_ids = [2]
+	# file_ids = list(range(0, 8+1))
+	file_ids = [2]
 
 	mouse = Mouse(file_ids, names, variants, mouse_hyperparameters, mouse_sweep_parameters)
 	# mouse.sweep()

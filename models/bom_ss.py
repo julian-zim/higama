@@ -7,11 +7,12 @@ p = 1
 
 
 def init_params(N, B, S, seeds, n_dimensions, n_neurons, n_behaviors, n_states):
+	n_behavior_ss = min(n_behaviors, 16)
 
 	shape_UN = (n_neurons, n_dimensions)
 	shape_US = (n_states, n_dimensions)
-	shape_VB = (n_behaviors, n_neurons)
-	shape_WB = (n_behaviors, n_behaviors)
+	shape_VB = (n_behavior_ss, n_neurons)
+	shape_WB = (n_behaviors, n_behavior_ss)
 
 	return {
 		'prep': {
@@ -42,9 +43,11 @@ def get_reconstruction_matrix(Y, X):
 	# return jnp.linalg.solve(Y.T @ Y + 1E-3 * jnp.eye(Y.shape[1]), Y.T @ X)
 	# return jnp.linalg.lstsq(Y, X, rcond=None)[0]
 
-	YTY = Y.T @ Y
-	lam = 1E2 * jnp.finfo(YTY.dtype).eps * jnp.maximum(jnp.trace(YTY) / YTY.shape[0], 1.0)
-	return jnp.linalg.solve(YTY + lam * jnp.eye(Y.shape[1], dtype=Y.dtype), Y.T @ X)
+	# YTY = Y.T @ Y
+	# lam = 1E2 * jnp.finfo(YTY.dtype).eps * jnp.maximum(jnp.trace(YTY) / YTY.shape[0], 1.0)
+	# return jnp.linalg.solve(YTY + lam * jnp.eye(Y.shape[1], dtype=Y.dtype), Y.T @ X)
+
+	return jnp.linalg.lstsq(Y, X, rcond=None)[0]
 
 
 #region PREDICTING
