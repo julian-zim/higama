@@ -1,3 +1,3 @@
 scp -r \
-/home/julian-zim/Files/Cloud/OneDrive/OneFiles/Linux/ZimmerLab/MSc_Thesis/Workspace/hobe/organisms/mouse-2019-stringer/out/models/new/ \
-zimmermann@login01.lisc.univie.ac.at:/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-2019-stringer/out/models/new/
+/home/julian-zim/Desktop/MODEL/worm-2025-fieseler/* \
+zimmermann@login01.lisc.univie.ac.at:/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/worm-2025-fieseler/
