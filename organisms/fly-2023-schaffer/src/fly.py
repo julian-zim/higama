@@ -54,7 +54,7 @@ class Fly(Organism):
 		# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
 
 		# MAKE MARKERS RANDOM NOISE
-		eigenworms = pd.DataFrame(
+		markers = pd.DataFrame(
 			np.random.randn(markers.shape[0], markers.shape[1]),
 			columns=markers.columns
 		)
