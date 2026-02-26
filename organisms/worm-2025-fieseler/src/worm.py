@@ -21,13 +21,10 @@ class Worm(Organism):
 		return read_utils.get_model_path()
 
 	def read(self, file_id, data_variant='gcamp'):
-		if data_variant not in ['gcamp', 'gfp', 'art']:
+		if data_variant not in ['gcamp', 'gfp']:
 			print(f'Warning: Unavailable data variant \'{data_variant}\'.')
 
-		if data_variant == 'gcamp':
-			path = os.path.join(read_utils.get_data_path(), 'exported_data_gcamp')
-		else:
-			path = os.path.join(read_utils.get_data_path(), 'exported_data_gfp')
+		path = os.path.join(read_utils.get_data_path(), f'exported_data_{data_variant}')
 
 		# read
 		(filename,
@@ -53,31 +50,6 @@ class Worm(Organism):
 
 		# preprocess
 		pass
-
-		# generate
-		if data_variant == 'art':
-			from utils_worm import artificializer
-			sys.path.append(os.path.join(os.getcwd(), '../../../'))
-			from models import hgm as hgm_gen
-
-			selection_bhl = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
-			dims_generation = 2
-			weights = (0.1, -0.25)
-
-			(filename_art,
-			 modes_art,
-			 traces_reconstructed_art,
-			 traces_residual_art,
-			 traces_art,
-			 params_art,
-			 params_cca_art_) = artificializer.artificialize(weights, hgm_gen,
-															 filename,
-															 traces.columns,
-															 eigenworms,
-															 discrete_states[selection_bhl],
-															 n_dimensions=dims_generation)
-
-			return filename_art, traces_art, eigenworms, discrete_states, (continuous_behaviors, kymograph)
 
 		# return
 		return filename, traces, eigenworms, discrete_states, (continuous_behaviors, kymograph)

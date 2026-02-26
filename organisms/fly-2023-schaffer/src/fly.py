@@ -53,4 +53,10 @@ class Fly(Organism):
 		traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
 		# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
 
+		# MAKE MARKERS RANDOM NOISE
+		eigenworms = pd.DataFrame(
+			np.random.randn(markers.shape[0], markers.shape[1]),
+			columns=markers.columns
+		)
+
 		return filename, traces, markers, states, None

@@ -38,20 +38,20 @@ def main():
 	manual_reg_lambdas = {
 		'ns': {
 			'bom': {
-				'wb_reg_lambda': 1E-9,
+				'wb_reg_lambda': 0.0134,
 			},
 			'hgm': {
-				'wb_reg_lambda': 1E-9,
-				'wm_reg_lambda': 1E-9,
+				'wb_reg_lambda': 0.0088,
+				'wm_reg_lambda': 9.1079E-6,
 			}
 		},
 		'ss': {
 			'bom': {
-				'vb_reg_lambda': 1E-9,
+				'vb_reg_lambda': 0.0293,
 			},
 			'hgm': {
-				'vb_reg_lambda': 1E-9,
-				'wm_reg_lambda': 1E-9,
+				'vb_reg_lambda': 0.0092,
+				'wm_reg_lambda': 2.2508E-5,
 			}
 		}
 	}
@@ -81,12 +81,6 @@ def main():
 	# worm_gfp.sweep()
 	worm_gfp.train()
 	worm_gfp.run()
-
-	file_ids_art = file_ids_gfp.copy()
-	worm_art = Worm(file_ids_art, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='art')
-	# worm_art.sweep()
-	worm_art.train()
-	worm_art.run()
 
 
 if __name__ == '__main__':

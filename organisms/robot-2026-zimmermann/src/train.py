@@ -1,9 +1,9 @@
-import mouse
-Mouse = mouse.Mouse
+import robot
+Robot = robot.Robot
 
 
 def main():
-	mouse_sweep_parameters = {
+	robot_sweep_parameters = {
 		'ns': {
 			'bom': {
 				'parameters': {
@@ -36,26 +36,48 @@ def main():
 		}
 	}
 	manual_reg_lambdas = {
-
+		'ns': {
+			'bom': {
+				'wb_reg_lambda': 1E-9,
+			},
+			'hgm': {
+				'wb_reg_lambda': 1E-9,
+				'wm_reg_lambda': 1E-9,
+			}
+		},
+		'ss': {
+			'bom': {
+				'vb_reg_lambda': 1E-9,
+			},
+			'hgm': {
+				'vb_reg_lambda': 1E-9,
+				'wm_reg_lambda': 1E-9,
+			}
+		}
 	}
-	mouse_hyperparameters = {
-		'max_epochs': 1,
-		'max_patience': 1 / 1,
+	robot_hyperparameters = {
+		'max_epochs': 3000,
+		'max_patience': 3000 / 4,
 		'learning_rate': 1E-0,
-		'dimensions': 8,
+		'dimensions': 2,
 		'reg_lambdas': manual_reg_lambdas
 	}
 
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	# file_ids = list(range(0, 8+1))
-	file_ids = [2]
+	# file_id = list(range(0, 33+1))
+	file_id = [19]
 
-	mouse = Mouse(file_ids, names, variants, mouse_hyperparameters, mouse_sweep_parameters)
-	# mouse.sweep()
-	mouse.train()
-	mouse.run()
+	weights = (0.1, -0.25)
+	n_neurons = 6
+	# states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
+	states = ['REV', 'VENTRAL_TURN']
+
+	robot = Robot(weights, n_neurons, states, file_id, names, variants, robot_hyperparameters, robot_sweep_parameters, data_variant='gcamp')
+	# robot.sweep()
+	robot.train()
+	robot.run()
 
 
 if __name__ == '__main__':

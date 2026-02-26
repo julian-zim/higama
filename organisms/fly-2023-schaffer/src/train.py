@@ -38,20 +38,20 @@ def main():
 	manual_reg_lambdas = {
 		'ns': {
 			'bom': {
-				'wb_reg_lambda': 1E-9,
+				'wb_reg_lambda': 1E-4,
 			},
 			'hgm': {
-				'wb_reg_lambda': 1E-9,
+				'wb_reg_lambda': 1E-6,
 				'wm_reg_lambda': 1E-9,
 			}
 		},
 		'ss': {
 			'bom': {
-				'vb_reg_lambda': 1E-9,
+				'vb_reg_lambda': 1E-4,
 			},
 			'hgm': {
-				'vb_reg_lambda': 1E-9,
-				'wm_reg_lambda': 1E-9,
+				'vb_reg_lambda': 1E-6,
+				'wm_reg_lambda': 1E-6,
 			}
 		}
 	}
@@ -64,7 +64,8 @@ def main():
 	}
 
 	names = ['bom', 'hgm']
-	variants = ['ns', 'ss']
+	# variants = ['ns', 'ss']
+	variants = ['ns']
 
 	# file_ids = list(range(0, 12+1))
 	file_ids = [0]

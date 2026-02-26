@@ -93,7 +93,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
-	colormap = mplcolors.ListedColormap(plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
+	colormap = mplcolors.ListedColormap(plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('plasma').N))[:, :3] * 0.8, name='plasma_dark')
 	# fig.legend(
 	# 	handles=[(patches.Patch(color=colormap(i / len(coloring[0].columns)), alpha=0.3, label=coloring[0].columns[i])) for i in range(len(coloring[0].columns))],
 	# 	loc='center',

@@ -2,7 +2,6 @@ import jax
 import jax.numpy as jnp
 import optax
 
-
 p = 1
 
 
@@ -37,6 +36,7 @@ def init_params(N, B, S, seeds, n_dimensions, n_neurons, n_behaviors, n_states):
 		}
 	}
 
+
 def get_reconstruction_matrix(Y, X):
 	# best reconstruction matrix that reconstruct X using Y (NOT Y @ jax.numpy.linalg.pinv(UN))
 	# return jnp.linalg.inv(Y.T @ Y) @ Y.T @ X
@@ -57,6 +57,7 @@ def orthonormalize_qr(WB):
 	signs = jnp.sign(jnp.diag(R))  # fix sign ambiguity for a deterministic mapping
 	return Q * jnp.where(signs == 0, 1.0, signs)
 
+
 @jax.jit
 def predict_res(prep_b, B, WB, VB):
 	B_mean, B_std = prep_b['mean'], prep_b['std']
@@ -65,19 +66,23 @@ def predict_res(prep_b, B, WB, VB):
 	B_ss = B_zs @ orthonormalize_qr(WB)
 	return B_ss @ VB, B_ss
 
+
 @jax.jit
 def predict_man(prep_n, N, UN):
 	N_mean, N_std = prep_n['mean'], prep_n['std']
 
 	N_zs = (N - N_mean) / N_std
 	# N_zs = N - N_mean
-	N_man = N_zs @ UN
+	# N_man = N_zs @ UN
+	N_man = N_zs @ orthonormalize_qr(UN)
+	# N_zs_rec = N_man @ orthonormalize_qr(UN).T
 	N_zs_rec = N_man @ get_reconstruction_matrix(N_man, N_zs)
 	N_rec = N_zs_rec * N_std + N_mean
 	# N_rec = N_zs_rec + N_mean
 	N_res = N - N_rec
 
 	return N_man, N_rec, N_res
+
 
 @jax.jit
 def predict(params, N, B):
@@ -91,6 +96,7 @@ def predict(params, N, B):
 
 	return N_man, N_rec, N_res, N_res_pred, B_ss
 
+
 #endregion
 
 
@@ -102,6 +108,7 @@ def norm(X_proj):
 	X_proj = X_proj / (jnp.linalg.norm(X_proj, axis=0) + 1e-6)
 	return X_proj
 
+
 @jax.jit
 def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
 	corr = norm(X_proj).T @ norm(Y_proj)
@@ -111,6 +118,7 @@ def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
 
 	return (ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag))
 			+ ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape))))
+
 
 #@jax.jit
 def loss_fn(params, N, B, S, lambdas):
@@ -148,12 +156,15 @@ def loss_fn(params, N, B, S, lambdas):
 				 res_loss * loss_res_lambda)
 	return full_loss, (man_loss, res_loss, mpe_loss)
 
+
 loss_and_grads = jax.jit(jax.value_and_grad(loss_fn, has_aux=True), static_argnums=(4,))
+
 
 @jax.jit
 def loss_fn_flattened(params, N, B, S, lambdas):
 	full_loss, (man_loss, res_loss, mpe_loss) = loss_fn(params, N, B, S, lambdas)
 	return full_loss, man_loss, res_loss, mpe_loss
+
 
 def update(opt_update, opt_state, params, N, B, S, lambdas):
 	(loss, (man_loss, res_loss, mpe_loss)), grads = loss_and_grads(params, N, B, S, lambdas)
@@ -161,7 +172,9 @@ def update(opt_update, opt_state, params, N, B, S, lambdas):
 	params_new = optax.apply_updates(params, params_updates)
 	return opt_state, params_new, (loss, man_loss, res_loss, mpe_loss)
 
+
 update = jax.jit(update, static_argnums=(0, 6,))
+
 
 #endregion
 
@@ -173,6 +186,7 @@ def r2_score(y_eval, y_pred, baseline):
 	ss_res = jnp.sum((y_eval - y_pred) ** 2)  # ^p?
 	ss_tot = jnp.sum((y_eval - baseline) ** 2)  # ^p?
 	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
+
 
 @jax.jit
 def score_fn(params, N, B):
