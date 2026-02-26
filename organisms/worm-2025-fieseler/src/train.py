@@ -36,7 +36,24 @@ def main():
 		}
 	}
 	manual_reg_lambdas = {
-
+		'ns': {
+			'bom': {
+				'wb_reg_lambda': 1E-9,
+			},
+			'hgm': {
+				'wb_reg_lambda': 1E-9,
+				'wm_reg_lambda': 1E-9,
+			}
+		},
+		'ss': {
+			'bom': {
+				'vb_reg_lambda': 1E-9,
+			},
+			'hgm': {
+				'vb_reg_lambda': 1E-9,
+				'wm_reg_lambda': 1E-9,
+			}
+		}
 	}
 	worm_hyperparameters = {
 		'max_epochs': 3000,
@@ -49,8 +66,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	file_ids_gcamp = list(range(0, 33+1))
-	# file_ids_gcamp = [19]
+	# file_ids_gcamp = list(range(0, 33+1))
+	file_ids_gcamp = [19]
 
 	worm_gcamp = Worm(file_ids_gcamp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gcamp')
 	# worm_gcamp.sweep()
@@ -58,8 +75,8 @@ def main():
 	worm_gcamp.run()
 
 
-	file_ids_gfp = list(range(0, 7+1))
-	# file_ids_gfp = [2]
+	# file_ids_gfp = list(range(0, 7+1))
+	file_ids_gfp = [2]
 	worm_gfp = Worm(file_ids_gfp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gfp')
 	# worm_gfp.sweep()
 	worm_gfp.train()

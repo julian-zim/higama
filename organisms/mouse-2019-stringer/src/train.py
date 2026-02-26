@@ -36,7 +36,24 @@ def main():
 		}
 	}
 	manual_reg_lambdas = {
-
+		'ns': {
+			'bom': {
+				'wb_reg_lambda': 1E-9,
+			},
+			'hgm': {
+				'wb_reg_lambda': 1E-9,
+				'wm_reg_lambda': 1E-9,
+			}
+		},
+		'ss': {
+			'bom': {
+				'vb_reg_lambda': 1E-9,
+			},
+			'hgm': {
+				'vb_reg_lambda': 1E-9,
+				'wm_reg_lambda': 1E-9,
+			}
+		}
 	}
 	mouse_hyperparameters = {
 		'max_epochs': 4000,
@@ -49,8 +66,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	file_ids = list(range(0, 8+1))
-	# file_ids = [2]
+	# file_ids = list(range(0, 8+1))
+	file_ids = [2]
 
 	mouse = Mouse(file_ids, names, variants, mouse_hyperparameters, mouse_sweep_parameters)
 	# mouse.sweep()
