@@ -35,7 +35,9 @@ def main():
 			}
 		}
 	}
-	manual_reg_lambdas = {}
+	manual_reg_lambdas = {
+
+	}
 	worm_hyperparameters = {
 		'max_epochs': 3000,
 		'max_patience': 3000 / 4,

@@ -1279,10 +1279,10 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 					else:
 						plot.plot(x_values, y_values, marker='o', linestyle='None', alpha=0.5)
 						# plot.plot([x_values[0], x_values[-1]], [means['linear'], means['linear']], label='local mean', color='C2', alpha=0.33)
-						plot.plot([means['geometric']] * 2, [y_values[0], y_values[-1]], label='local mean', color='C2')
+						plot.plot([means['geometric']] * 2, [y_values[0], y_values[-1]], label=f'local mean: {means['geometric']:.2f}', color='C2')
 						if total_mean:
 							# plot.plot([x_values[0], x_values[-1]], [total_means['linear'], total_means['linear']], label='global mean', color='C1', alpha=0.33)
-							plot.plot([total_means['geometric']] * 2, [y_values[0], y_values[-1]], label='global mean', color='C1')
+							plot.plot([total_means['geometric']] * 2, [y_values[0], y_values[-1]], label=f'global mean: {total_means['geometric']:.2f}', color='C1')
 
 						plot.xaxis.set_major_locator(MultipleLocator(0.5))
 						for label in plot.get_xticklabels():

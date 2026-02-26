@@ -35,7 +35,9 @@ def main():
 			}
 		}
 	}
-	manual_reg_lambdas = {}
+	manual_reg_lambdas = {
+
+	}
 	mouse_hyperparameters = {
 		'max_epochs': 4000,
 		'max_patience': 4000 / 1,

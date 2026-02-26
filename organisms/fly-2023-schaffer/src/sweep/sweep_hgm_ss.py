@@ -49,8 +49,8 @@ def main():
 	names = ['hgm']
 	variants = ['ss']
 
-	file_ids = list(range(0, 12+1))
-	# file_ids = [0]
+	# file_ids = list(range(0, 12+1))
+	file_ids = [0]
 
 	fly = Fly(file_ids, names, variants, fly_hyperparameters, fly_sweep_parameters)
 	fly.sweep()
