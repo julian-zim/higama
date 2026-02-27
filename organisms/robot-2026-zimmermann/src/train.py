@@ -35,32 +35,12 @@ def main():
 			}
 		}
 	}
-	manual_reg_lambdas = {
-		'ns': {
-			'bom': {
-				'wb_reg_lambda': 1E-9,
-			},
-			'hgm': {
-				'wb_reg_lambda': 1E-9,
-				'wm_reg_lambda': 1E-9,
-			}
-		},
-		'ss': {
-			'bom': {
-				'vb_reg_lambda': 1E-9,
-			},
-			'hgm': {
-				'vb_reg_lambda': 1E-9,
-				'wm_reg_lambda': 1E-9,
-			}
-		}
-	}
 	robot_hyperparameters = {
 		'max_epochs': 3000,
 		'max_patience': 3000 / 4,
 		'learning_rate': 1E-0,
 		'dimensions': 2,
-		'reg_lambdas': manual_reg_lambdas
+		'reg_lambdas': 'manual'
 	}
 
 	names = ['bom', 'hgm']

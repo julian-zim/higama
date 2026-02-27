@@ -37,13 +37,12 @@ def main():
 			}
 		}
 	}
-	manual_reg_lambdas = {}
 	worm_hyperparameters = {
 		'max_epochs': 4000,
 		'max_patience': 4000 / 1,
 		'learning_rate': 1E-0,
 		'dimensions': 8,
-		'reg_lambdas': manual_reg_lambdas
+		'reg_lambdas': 'manual'
 	}
 
 	names = ['bom']

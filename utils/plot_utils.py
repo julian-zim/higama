@@ -1203,30 +1203,35 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 	plt.show()
 
 
-def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, space='logarithmic', total_mean=True, save_dirpath=None):
+def plot_hyperparams(hyperparams, hyperparams_verbose, datasets=None, ll='ll00', histograms=False, space='logarithmic', total_mean=True, save_dirpath=None):
 	if save_dirpath is not None:
 		os.makedirs(save_dirpath, exist_ok=True)
 
+	variants_x_models = [f'{variant}_{model}' for variant in hyperparams_verbose[ll].keys() for model in hyperparams_verbose[ll][variant].keys()]
+
 	if datasets is None:
-		datasets = sorted(list(set([dataset for model in hyperparams[ll].keys() for dataset in hyperparams[ll][model]['datasets']])))
+		datasets = sorted(list(set([dataset for variant in hyperparams_verbose[ll].keys() for model in hyperparams_verbose[ll][variant].keys() for dataset in hyperparams_verbose[ll][variant][model]])))
 
 	for dataset in datasets:
 		identifier = f'{ll} {dataset} ({'log' if space == 'logarithmic' else 'lin'} space)'
 
-		fig, axes = plt.subplots(len(hyperparams[ll].keys()), 2,
-								 figsize=(2 * 5 + 4, len(hyperparams[ll].keys()) * 3 + 7), squeeze=False)
+		fig, axes = plt.subplots(len(variants_x_models), 2,
+								 figsize=(2 * 5 + 4, len(variants_x_models) * 3 + 7), squeeze=False)
 		fig.suptitle(
 			identifier,
 			y=0.93, fontsize=25,
 		)
 
-		for row_id, model in enumerate(hyperparams[ll].keys()):
+		for row_id, variant_x_model in enumerate(variants_x_models):
+			variant = variant_x_model.split('_')[0]
+			model = variant_x_model.split('_')[1]
+
 			# setup
 			row = axes[row_id]
 
 			bbox = row[0].get_position()
 			y_center = bbox.y0 + bbox.height / 2
-			fig.text(0.02, y_center, model,
+			fig.text(0.02, y_center, variant_x_model,
 					 va='center', ha='center', fontsize=20,
 					 )
 
@@ -1235,14 +1240,14 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 				for spine in ax.spines.values():
 					spine.set_visible(False)
 
-			if dataset not in hyperparams[ll][model]['datasets'].keys(): continue
+			if dataset not in hyperparams_verbose[ll][variant][model].keys(): continue
 
 			wb_plot, wm_plot, vb_plot = None, None, None
-			if model.endswith('ss'):
+			if variant == 'ss':
 				vb_plot = row[0]
 			else:
 				wb_plot = row[0]
-			if model.startswith('hgm'):
+			if model == 'hgm':
 				wm_plot = row[1]
 
 			# plots
@@ -1260,11 +1265,11 @@ def plot_hyperparams(hyperparams, datasets=None, ll='ll00', histograms=False, sp
 						spine.set_visible(True)
 					# plot.invert_yaxis()
 
-					x_values = hyperparams[ll][model]['datasets'][dataset][hyperparam]['all'][::-1]
-					y_values = hyperparams[ll][model]['datasets'][dataset]['mpe_loss']['all'][::-1]
-					means = hyperparams[ll][model]['datasets'][dataset][hyperparam]['mean']
+					x_values = hyperparams_verbose[ll][variant][model][dataset][hyperparam]['all'][::-1]
+					y_values = hyperparams_verbose[ll][variant][model][dataset]['mpe_loss']['all'][::-1]
+					means = hyperparams_verbose[ll][variant][model][dataset][hyperparam]['mean']
 					if total_mean:
-						total_means = hyperparams[ll][model]['means'][hyperparam]
+						total_means = {mean_type: hyperparams[mean_type][ll][variant][model][hyperparam] for mean_type in hyperparams.keys()}
 
 					plot.set_title(f'{hyperparam} ({x_values.shape[0]} runs)', fontsize=10)
 

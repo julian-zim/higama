@@ -2,8 +2,7 @@
 import sys, os
 import gc
 import time
-import subprocess
-import pickle
+import json
 
 import wandb
 
@@ -219,10 +218,8 @@ class Organism(ABC):
 		}
 		for param in hyperparameters.keys():
 			self.hyperparameters[param] = hyperparameters[param]
-		if not self.hyperparameters['reg_lambdas'].keys():
-			reg_lambdas = self.read_reg_lambdas()
-			for key in reg_lambdas:
-				self.hyperparameters['reg_lambdas'][key] = reg_lambdas[key]
+		reg_lambdas = self.read_reg_lambdas(self.hyperparameters['reg_lambdas'] == 'manual')
+		self.hyperparameters['reg_lambdas'] = reg_lambdas
 		self.sweep_config = sweep_config
 		self.sweep_config = {
 			'method': 'bayes',
@@ -247,21 +244,15 @@ class Organism(ABC):
 	def read(self, file_id, data_variant='gcamp'):
 		pass
 
-	def read_reg_lambdas(self):
+	def read_reg_lambdas(self, manual):
 		ll = f'll{int(self.hyperparameters['loss_man_lambda'] * 100):02d}'
 
-		with open(f'hyperparams.pkl', 'rb') as f:
-			swept_params = pickle.load(f)
-
-		reg_lambdas = dict()
-		for model in swept_params[ll].keys():
-			type_, variant = model.split('_')
-			if variant not in reg_lambdas.keys():
-				reg_lambdas[variant] = dict()
-			if type_ not in reg_lambdas[variant].keys():
-				reg_lambdas[variant][type_] = dict()
-			for param in swept_params[ll][model]['means'].keys():
-				reg_lambdas[variant][type_][param] = swept_params[ll][model]['means'][param]['geometric']
+		if manual:
+			with open('../hyperparams_manual.json', 'r') as f:
+				reg_lambdas = json.load(f)
+		else:
+			with open('../hyperparams.json', 'r') as f:
+				reg_lambdas = json.load(f)['geometric'][ll]
 
 		return reg_lambdas
 

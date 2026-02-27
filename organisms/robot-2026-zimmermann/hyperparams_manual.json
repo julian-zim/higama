@@ -1,0 +1,18 @@
+{
+  "ns": {
+	"bom": {
+	  "wb_reg_lambda": 1e-4
+	},
+	"hgm": {
+	  "wb_reg_lambda": 1e-06, "wm_reg_lambda": 1e-09
+	}
+  },
+  "ss": {
+	"bom": {
+	  "vb_reg_lambda": 1e-4
+	},
+	"hgm": {
+	  "vb_reg_lambda": 1e-06, "wm_reg_lambda": 1e-06
+	}
+  }
+}

@@ -35,37 +35,16 @@ def main():
 			}
 		}
 	}
-	manual_reg_lambdas = {
-		'ns': {
-			'bom': {
-				'wb_reg_lambda': 1E-4,
-			},
-			'hgm': {
-				'wb_reg_lambda': 1E-6,
-				'wm_reg_lambda': 1E-9,
-			}
-		},
-		'ss': {
-			'bom': {
-				'vb_reg_lambda': 1E-4,
-			},
-			'hgm': {
-				'vb_reg_lambda': 1E-6,
-				'wm_reg_lambda': 1E-6,
-			}
-		}
-	}
 	fly_hyperparameters = {
 		'max_epochs': 4000,
 		'max_patience': 4000 / 1,
 		'learning_rate': 1E-0,
 		'dimensions': 4,
-		'reg_lambdas': manual_reg_lambdas
+		'reg_lambdas': 'manual'
 	}
 
 	names = ['bom', 'hgm']
-	# variants = ['ns', 'ss']
-	variants = ['ns']
+	variants = ['ns', 'ss']
 
 	# file_ids = list(range(0, 12+1))
 	file_ids = [0]
