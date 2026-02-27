@@ -107,11 +107,8 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	#region plot
 	scale = [] #[-1, 0, 1]
 	for i, (modes_, colors_) in enumerate(zip(modes[:n_plots], coloring[:n_plots])):
-		i0 = 1
-		if f'{key}0' in modes_.columns:
-			i0 = 0
 
-		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}']]).T.reshape(-1, 1, 2)
+		lc_points = np.array([modes_.iloc[:, 0], modes_.iloc[:, 1]]).T.reshape(-1, 1, 2)
 		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
 		lc_colors = colors_.values[:-1].reshape(-1)
 		# normalizer = plt.Normalize(colors_.values.min(), colors_.values.max())  # normalize per dataset
@@ -125,7 +122,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 
-		ax.plot(modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}'], alpha=0)
+		ax.plot(modes_.iloc[:, 0], modes_.iloc[:, 1], alpha=0)
 		ax.add_collection(lc)
 		# ax.set_xlabel('test')
 		ax.set_xticks(scale)
@@ -199,11 +196,8 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 	scale = [] #[-1, 0, 1]
 	normalizer = plt.Normalize(0, len(states[0].columns))
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
-		i0 = 1
-		if f'{key}0' in modes_.columns:
-			i0 = 0
 
-		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}']]).T.reshape(-1, 1, 2)
+		lc_points = np.array([modes_.iloc[:, 0], modes_.iloc[:, 1]]).T.reshape(-1, 1, 2)
 		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
 		lc_colors = np.argmax(states_.values, axis=1)[:-1]
 		lc = LineCollection(lc_segments, cmap=colormap, norm=normalizer)
@@ -216,7 +210,7 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 
-		ax.plot(modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}'], alpha=0)
+		ax.plot(modes_.iloc[:, 0], modes_.iloc[:, 1], alpha=0)
 		ax.add_collection(lc)
 		# ax.set_xlabel('test')
 		ax.set_xticks(scale)
@@ -292,11 +286,8 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 	scale = [-1, 0, 1]
 	normalizer = plt.Normalize(0, len(states[0].columns))
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
-		i0 = 1
-		if f'{key}0' in modes_.columns:
-			i0 = 0
 
-		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}'], modes_[f'{key}{i0+2}']]).T.reshape(-1, 1, 3)
+		lc_points = np.array([modes_.iloc[:, 0], modes_.iloc[:, 1], modes_.iloc[:, 2]]).T.reshape(-1, 1, 3)
 		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
 		lc_colors = np.argmax(states_.values, axis=1)[:-1]
 		lc = Line3DCollection(lc_segments, cmap=colormap, norm=normalizer)
@@ -309,7 +300,7 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 
-		# ax.plot(modes_[f'{key}{i0}'], modes_[f'{key}{i0 + 1}'], modes_[f'{key}{i0 + 2}'], alpha=0)
+		# ax.plot([modes_.iloc[:, 0], modes_.iloc[:, 1], modes_.iloc[:, 2]], alpha=0)
 		ax.add_collection3d(lc)
 		# ax.set_xlabel('test')
 		ax.set_xticks(scale)
