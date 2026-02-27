@@ -53,7 +53,7 @@ class Fly(Organism):
 		traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
 		# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
 
-		# # add shifted markers in time
+		# add shifted markers in time
 		max_shift_seconds = 5
 		max_shift = int(max_shift_seconds * sampling_rate)
 		if max_shift > 0:
