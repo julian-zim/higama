@@ -70,6 +70,7 @@ def run_dataset(model, model_params, splits, traces, behavior, model_variant):
 			] for m in [5, 6]
 		)
 
+	print('Done.', end='')
 	return models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss
 
 
