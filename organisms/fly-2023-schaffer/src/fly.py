@@ -65,6 +65,6 @@ class Fly(Organism):
 		# 	markers = pd.concat([markers, pd.DataFrame(markers_shifted, index=markers.index)], axis=1)
 
 		# use random noise as behavior
-		markers = pd.DataFrame(np.random.randn(markers.values.shape), columns=markers.columns)
+		markers = pd.DataFrame(np.random.randn(*markers.values.shape), columns=markers.columns)
 
 		return filename, traces, markers, states, None
