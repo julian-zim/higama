@@ -3,38 +3,7 @@ Robot = robot.Robot
 
 
 def main():
-	robot_sweep_parameters = {
-		'ns': {
-			'bom': {
-				'parameters': {
-					'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 100,
-			},
-			'hgm': {
-				'parameters': {
-					'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-					'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 400,
-			}
-		},
-		'ss': {
-			'bom': {
-				'parameters': {
-					'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 600,
-			},
-			'hgm': {
-				'parameters': {
-					'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-					'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 1000,
-			}
-		}
-	}
+	robot_sweep_parameters = {}
 	robot_hyperparameters = {
 		'max_epochs': 3000,
 		'max_patience': 3000 / 4,

@@ -3,43 +3,12 @@ Fly = fly.Fly
 
 
 def main():
-	fly_sweep_parameters = {
-		'ns': {
-			'bom': {
-				'parameters': {
-					'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 150,
-			},
-			'hgm': {
-				'parameters': {
-					'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-					'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 400,
-			}
-		},
-		'ss': {
-			'bom': {
-				'parameters': {
-					'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 600,
-			},
-			'hgm': {
-				'parameters': {
-					'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-					'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 1000,
-			}
-		}
-	}
+	fly_sweep_parameters = {}
 	fly_hyperparameters = {
 		'max_epochs': 4000,
 		'max_patience': 4000 / 1,
 		'learning_rate': 1E-0,
-		'dimensions': 4,
+		'dimensions': 8,
 		'reg_lambdas': 'manual'
 	}
 

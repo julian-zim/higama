@@ -53,7 +53,18 @@ class Fly(Organism):
 		traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
 		# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
 
-		# add shifted markers in time
-		# todo
+		# # add shifted markers in time
+		# max_shift_seconds = 5
+		# max_shift = int(max_shift_seconds * sampling_rate)
+		# if max_shift > 0:
+		# 	markers_shifted = dict()
+		# 	for marker_label in markers.columns:
+		# 		for s in range(1, int(max_shift) + 1):
+		# 			shift_seconds = s / sampling_rate
+		# 			markers_shifted[f'{marker_label}-{shift_seconds:.2f}s'] = np.pad(markers[marker_label].values[:-s], ((s, 0),))
+		# 	markers = pd.concat([markers, pd.DataFrame(markers_shifted, index=markers.index)], axis=1)
+
+		# use random noise as behavior
+		markers = pd.DataFrame(np.random.randn(markers.values.shape), columns=markers.columns)
 
 		return filename, traces, markers, states, None
