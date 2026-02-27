@@ -94,6 +94,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
 	colormap = mplcolors.ListedColormap(plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('plasma').N))[:, :3] * 0.8, name='plasma_dark')
+	normalizer = plt.Normalize(np.stack([colors_.values for colors_ in coloring]).min(), np.stack([colors_.values for colors_ in coloring]).max())  # normalize globally
 	# fig.legend(
 	# 	handles=[(patches.Patch(color=colormap(i / len(coloring[0].columns)), alpha=0.3, label=coloring[0].columns[i])) for i in range(len(coloring[0].columns))],
 	# 	loc='center',
@@ -113,7 +114,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 		lc_points = np.array([modes_[f'{key}{i0}'], modes_[f'{key}{i0+1}']]).T.reshape(-1, 1, 2)
 		lc_segments = np.concatenate([lc_points[:-1], lc_points[1:]], axis=1)
 		lc_colors = colors_.values[:-1].reshape(-1)
-		normalizer = plt.Normalize(colors_.values.min(), colors_.values.max())  # ponder: normalize per dataset or globally?
+		# normalizer = plt.Normalize(colors_.values.min(), colors_.values.max())  # normalize per dataset
 		lc = LineCollection(lc_segments, cmap=colormap, norm=normalizer)
 		lc.set_array(lc_colors)
 		lc.set_linewidth(2)
