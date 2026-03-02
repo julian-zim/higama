@@ -1,6 +1,9 @@
+import sys, os
 import jax
 import jax.numpy as jnp
 import optax
+sys.path.append(os.path.dirname(__file__))
+import model_utils
 
 p = 1
 
@@ -39,50 +42,30 @@ def init_params(N, B, S, seeds, n_dimensions, n_neurons, n_behaviors, n_states):
 	}
 
 
-def get_reconstruction_matrix(Y, X):
-	# best reconstruction matrix that reconstruct X using Y (NOT Y @ jax.numpy.linalg.pinv(UN))
-	# return jnp.linalg.inv(Y.T @ Y) @ Y.T @ X
-	# return jnp.linalg.solve(Y.T @ Y + 1E-3 * jnp.eye(Y.shape[1]), Y.T @ X)
-	# return jnp.linalg.lstsq(Y, X, rcond=None)[0]
-
-	# YTY = Y.T @ Y
-	# lam = 1E2 * jnp.finfo(YTY.dtype).eps * jnp.maximum(jnp.trace(YTY) / YTY.shape[0], 1.0)
-	# return jnp.linalg.solve(YTY + lam * jnp.eye(Y.shape[1], dtype=Y.dtype), Y.T @ X)
-
-	return jnp.linalg.lstsq(Y, X, rcond=None)[0]
-
-
 #region PREDICTING
 
-def orthonormalize_qr(WB):
-	Q, R = jnp.linalg.qr(WB)
-	signs = jnp.sign(jnp.diag(R))  # fix sign ambiguity for a deterministic mapping
-	return Q * jnp.where(signs == 0, 1.0, signs)
-
-
-@jax.jit
+#@jax.jit
 def predict_res(prep_b, B, N_man, WB, VB, WM):
 	B_mean, B_std = prep_b['mean'], prep_b['std']
 	B_zs = (B - B_mean) / B_std
 
 	N_man_zs = (N_man - N_man.mean(axis=0)) / jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
 
-	B_ss = B_zs @ orthonormalize_qr(WB) * jax.nn.sigmoid(N_man_zs @ WM)
+	B_ss = B_zs @ model_utils.orthonormalize_qr(WB) * jax.nn.sigmoid(N_man_zs @ WM)
 	return B_ss @ VB, B_ss
 
 
-@jax.jit
+#@jax.jit
 def predict_man(prep_n, N, UN):
 	N_mean, N_std = prep_n['mean'], prep_n['std']
 
 	N_zs = (N - N_mean) / N_std
-	# N_zs = N - N_mean
-	N_man = N_zs @ UN
-	# N_man = N_zs @ orthonormalize_qr(UN)
-	# N_zs_rec = N_man @ orthonormalize_qr(UN).T
-	N_zs_rec = N_man @ get_reconstruction_matrix(N_man, N_zs)
+
+	# N_man = N_zs @ UN
+	N_man = N_zs @ model_utils.orthonormalize_qr(UN)
+	N_zs_rec = N_man @ model_utils.get_reconstruction_matrix(N_man, N_zs)
+
 	N_rec = N_zs_rec * N_std + N_mean
-	# N_rec = N_zs_rec + N_mean
 	N_res = N - N_rec
 
 	return N_man, N_rec, N_res
@@ -100,29 +83,10 @@ def predict(params, N, B):
 
 	return N_man, N_rec, N_res, N_res_pred, B_ss
 
-
 #endregion
 
 
 #region TRAINING
-
-#@jax.jit
-def norm(X_proj):
-	X_proj = X_proj - jnp.mean(X_proj, axis=0)
-	X_proj = X_proj / (jnp.linalg.norm(X_proj, axis=0) + 1e-6)
-	return X_proj
-
-
-@jax.jit
-def cca_loss(X_proj, Y_proj, ccadiag_lambda, ccaunit_lambda):
-	corr = norm(X_proj).T @ norm(Y_proj)
-
-	corr_diag = jnp.diag(jnp.diag(corr))
-	corr_nondiag = corr - corr_diag
-
-	return (ccadiag_lambda * jnp.mean(jnp.abs(corr_nondiag))
-			+ ccaunit_lambda * jnp.mean(jnp.abs(corr_diag - jnp.eye(*corr_diag.shape))))
-
 
 #@jax.jit
 def loss_fn(params, N, B, S, lambdas):
@@ -180,26 +144,18 @@ def update(opt_update, opt_state, params, N, B, S, lambdas):
 
 update = jax.jit(update, static_argnums=(0, 6,))
 
-
 #endregion
 
 
 #region EVALUATING
 
-#@jax.jit
-def r2_score(y_eval, y_pred, baseline):
-	ss_res = jnp.sum((y_eval - y_pred) ** 2)  # ^p?
-	ss_tot = jnp.sum((y_eval - baseline) ** 2)  # ^p?
-	return jnp.where(ss_tot > 0.0, 1.0 - ss_res / ss_tot, 0.0)
-
-
 @jax.jit
 def score_fn(params, N, B):
 	N_man, N_rec, N_res, N_res_pred, B_ss = predict(params, N, B)
-	N_res_ss = N_res @ get_reconstruction_matrix(N_res_pred, B_ss)
+	N_res_ss = N_res @ model_utils.get_reconstruction_matrix(N_res_pred, B_ss)
 
 	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # ToDo: Use actual train residual mean!
-	score_per_neuron = jax.vmap(r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
+	score_per_neuron = jax.vmap(model_utils.r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
 
 	return score_per_neuron, N_man, N_rec, N_res, N_res_pred, N_res_ss, B_ss
 
