@@ -1,9 +1,11 @@
+#region imports
 import sys, os
 import jax
 import jax.numpy as jnp
 import optax
 sys.path.append(os.path.dirname(__file__))
 import model_utils
+#endregion
 
 p = 1
 
@@ -73,7 +75,7 @@ def predict(params, N, B):
 	prep_b = jax.lax.stop_gradient(params['prep']['B'])
 	UN, VB, WB = params['model']['UN'], params['model']['VB'], params['model']['WB']
 
-	N_man, N_rec, N_res = model_utils.predict_man(prep_n, N, UN)
+	N_man, N_rec, N_res = predict_man(prep_n, N, UN)
 
 	N_res_pred, B_ss = predict_res(prep_b, B, WB, VB)
 

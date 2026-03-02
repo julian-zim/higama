@@ -38,10 +38,10 @@ def main():
 		}
 	}
 	worm_hyperparameters = {
-		'max_epochs': 4000,
-		'max_patience': 4000 / 1,
+		'max_epochs': 3000,
+		'max_patience': 3000 / 4,
 		'learning_rate': 1E-0,
-		'dimensions': 8,
+		'dimensions': 2,
 		'reg_lambdas': 'manual'
 	}
 

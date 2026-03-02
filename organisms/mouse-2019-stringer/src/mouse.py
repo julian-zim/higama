@@ -64,4 +64,8 @@ class Mouse(Organism):
 			columns=['run']
 		)
 
+		# # kill all information in behavior
+		# motion_pcs[0] = pd.DataFrame(np.random.randn(*motion_pcs[0].values.shape), columns=motion_pcs[0].columns)
+		# motion_pcs[0] = pd.DataFrame(data=np.zeros(motion_pcs[0].values.shape), columns=motion_pcs[0].columns)
+
 		return filename, traces, motion_pcs[0], classes, (continuous_behaviors, motion_masks, motion_pcs[1])

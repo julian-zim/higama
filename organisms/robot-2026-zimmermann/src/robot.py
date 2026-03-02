@@ -5,8 +5,6 @@ import pandas as pd
 
 from utils_robot import read_utils
 from utils_robot import generate_utils
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
-from models import hgm
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from organism import Organism
 
@@ -54,12 +52,16 @@ class Robot(Organism):
 		 traces_residual,
 		 traces,
 		 params,
-		 params_cca) = generate_utils.artificialize(self.weights, hgm,
+		 params_manifold) = generate_utils.artificialize(self.weights, 'hgm',
 													filename_gcamp,
 													[f'N{i}' for i in range(self.n_neurons)],
 													eigenworms,
 													discrete_states[self.states],
 													n_dimensions=len(self.states))
 
+		# # kill all information in behavior
+		# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
+		# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
+
 		# return
-		return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, params, params_cca)
+		return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, params, params_manifold)

@@ -18,8 +18,8 @@ def main():
 	# file_id = list(range(0, 33+1))
 	file_id = [19]
 
-	weights = (0.1, -0.25)
-	n_neurons = 6
+	weights = (0.1, -0.25, 1.)
+	n_neurons = 20
 	# states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 	states = ['REV', 'VENTRAL_TURN']
 

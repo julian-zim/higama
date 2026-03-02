@@ -4,10 +4,10 @@ import jax.numpy as jnp
 
 #region TRAINING
 
-#@jax.jit
-def orthogonalize_qr(A):
-	Q, R = jnp.linalg.qr(A)
-	return Q * jnp.diag(R)  # also fixes sign ambiguity for a deterministic mapping
+# #@jax.jit
+# def orthogonalize_qr(A):
+# 	Q, R = jnp.linalg.qr(A)
+# 	return Q * jnp.diag(R)  # also fixes sign ambiguity for a deterministic mapping
 
 
 @jax.jit
@@ -27,6 +27,8 @@ def get_reconstruction_matrix(X, Y):
 	# lam = 1E2 * jnp.finfo(XTX.dtype).eps * jnp.maximum(jnp.trace(XTX) / XTX.shape[0], 1.0)
 	# return jnp.linalg.solve(XTX + lam * jnp.eye(X.shape[1], dtype=X.dtype), X.T @ Y)
 
+	# return U.T
+	# return jnp.linalg.pinv(U)
 	return jnp.linalg.lstsq(X, Y)[0]
 
 #endregion

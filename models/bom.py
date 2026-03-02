@@ -1,9 +1,11 @@
+#region imports
 import sys, os
 import jax
 import jax.numpy as jnp
 import optax
 sys.path.append(os.path.dirname(__file__))
 import model_utils
+#endregion
 
 p = 1
 
@@ -105,7 +107,7 @@ def loss_fn(params, N, B, S, lambdas):
 	# residuals loss ================================
 	WB = params['model']['WB']
 
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res_pred - N_res) ** p, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res - N_res_pred) ** p, axis=0))
 	wb_reg_loss = jnp.linalg.norm(WB) ** 2
 	res_loss = (mpe_loss
 				+ wb_reg_loss * wb_reg_lambda)
@@ -148,6 +150,3 @@ def score_fn(params, N, B):
 
 #endregion
 
-
-def get_type():
-	return False

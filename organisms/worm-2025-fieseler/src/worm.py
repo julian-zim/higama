@@ -51,5 +51,9 @@ class Worm(Organism):
 		# preprocess
 		pass
 
+		# # kill all information in behavior
+		# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
+		# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
+
 		# return
 		return filename, traces, eigenworms, discrete_states, (continuous_behaviors, kymograph)

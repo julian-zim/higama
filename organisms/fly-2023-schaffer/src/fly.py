@@ -64,7 +64,8 @@ class Fly(Organism):
 					markers_shifted[f'{marker_label}-{shift_seconds:.2f}s'] = np.pad(markers[marker_label].values[:-s], ((s, 0),))
 			markers = pd.concat([markers, pd.DataFrame(markers_shifted, index=markers.index)], axis=1)
 
-		# use random noise as behavior
+		# # kill all information in behavior
 		# markers = pd.DataFrame(np.random.randn(*markers.values.shape), columns=markers.columns)
+		# markers = pd.DataFrame(data=np.zeros(markers.values.shape), columns=markers.columns)
 
 		return filename, traces, markers, states, None
