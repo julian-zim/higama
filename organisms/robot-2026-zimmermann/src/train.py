@@ -20,7 +20,7 @@ def main():
 
 	weights = (0.1, -0.25, 1.)
 
-	neuron_labels = [f'N{i}' for i in range(20)]
+	neuron_labels = [f'N{i}' for i in range(50)]
 	# states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 	bhl_selection = ['REV', 'VENTRAL_TURN']
 

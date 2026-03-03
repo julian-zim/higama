@@ -26,6 +26,7 @@ class Mouse(Organism):
 
 		path = os.path.join(read_utils.get_data_path(), '6163622/sessions')
 
+		# read
 		(filename,
 		 traces,
 		 continuous_behaviors,

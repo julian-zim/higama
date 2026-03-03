@@ -230,7 +230,8 @@ def save_predictions(filename, spn_man_rec_res_pres_resss_bss, save_path):
 	 model_resss,
 	 model_bss) = spn_man_rec_res_pres_resss_bss
 
-	for i in range(5):
+	s = max([len(spn_man_rec_res_pres_resss_bss[i]) for i in range(len(spn_man_rec_res_pres_resss_bss)) if spn_man_rec_res_pres_resss_bss[i] is not None])
+	for i in range(s):
 		os.makedirs(os.path.join(save_path, filename, f's{i}'), exist_ok=True)
 		if model_spn is not None:
 			model_spn[i].to_parquet(f'{save_path}/{filename}/s{i}/score_per_neuron.parquet')
@@ -260,7 +261,8 @@ def load_predictions(load_path, filename):
 	if not os.path.exists(os.path.join(load_path, filename)):
 		raise FileNotFoundError(f'{os.path.join(load_path, filename)} not found')
 
-	for i in range(5):
+	s = max([int(s_name[-1]) for s_name in os.listdir(f'{load_path}/{filename}')]) + 1
+	for i in range(s):
 		if os.path.exists(f'{load_path}/{filename}/s{i}/score_per_neuron.parquet'):
 			model_spn.append(pd.read_parquet(f'{load_path}/{filename}/s{i}/score_per_neuron.parquet'))
 		if os.path.exists(f'{load_path}/{filename}/s{i}/timeseries_manifold.parquet'):
