@@ -4,7 +4,7 @@
 	  "wb_reg_lambda": 1e-04
 	},
 	"hgm": {
-	  "wb_reg_lambda": 1e-06, "wm_reg_lambda": 1e-09
+	  "wb_reg_lambda": 1e-06, "wm_reg_lambda": 1e-06
 	}
   },
   "ss": {
@@ -12,7 +12,7 @@
 	  "vb_reg_lambda": 1e-04
 	},
 	"hgm": {
-	  "vb_reg_lambda": 1e-06, "wm_reg_lambda": 1e-06
+	  "vb_reg_lambda": 1e-06, "wm_reg_lambda": 1e-09
 	}
   }
 }

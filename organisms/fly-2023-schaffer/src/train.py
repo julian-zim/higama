@@ -8,7 +8,7 @@ def main():
 		'max_epochs': 4000,
 		'max_patience': 4000 / 1,
 		'learning_rate': 1E-0,
-		'dimensions': 16,
+		'dimensions': 8,
 		'reg_lambdas': 'manual'
 	}
 
