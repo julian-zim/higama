@@ -1,18 +1,18 @@
 {
   "ns": {
 	"bom": {
-	  "wb_reg_lambda": 0
+	  "wb_reg_lambda": 0.0
 	},
 	"hgm": {
-	  "wb_reg_lambda": 0, "wm_reg_lambda": 0
+	  "wb_reg_lambda": 0.0, "wm_reg_lambda": 0.0
 	}
   },
   "ss": {
 	"bom": {
-	  "vb_reg_lambda": 0
+	  "vb_reg_lambda": 0.0
 	},
 	"hgm": {
-	  "vb_reg_lambda": 0, "wm_reg_lambda": 0
+	  "vb_reg_lambda": 0.0, "wm_reg_lambda": 0.0
 	}
   }
 }
