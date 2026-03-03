@@ -26,6 +26,7 @@ def main():
 
 	# file_ids_gfp = list(range(0, 7+1))
 	# # file_ids_gfp = [2]
+	#
 	# worm_gfp = Worm(file_ids_gfp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gfp')
 	# # worm_gfp.sweep()
 	# worm_gfp.train()
