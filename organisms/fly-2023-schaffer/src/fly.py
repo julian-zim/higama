@@ -40,7 +40,7 @@ class Fly(Organism):
 
 		# naive ID unknown neurons
 		traces.columns = pd.Index([
-			f'{file_id:02d}_{n_id:03d}' if empty else label for n_id, (label, empty) in
+			f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
 			enumerate(zip(traces.columns, traces.columns == ''))
 		])
 
@@ -51,7 +51,7 @@ class Fly(Organism):
 
 		sampling_rate = read_utils.get_sampling_rate(os.path.join(path, filename))
 		traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
-		# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
+		#markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
 
 		# add shifted markers in time
 		max_shift_seconds = 5

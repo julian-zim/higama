@@ -110,14 +110,7 @@ def get_kymograph(file_handle):
 	return data
 
 
-
-
 # temp
-def read_filename(path, file_id):
-	file_handle = get_file_handle(path, file_id)
-	filename = get_filename(file_handle)
-	return filename
-
 
 def check_neuron_contents(file_ids, traces, selection_n, sort=True):
 	scores = list()

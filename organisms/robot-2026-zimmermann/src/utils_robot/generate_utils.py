@@ -96,10 +96,10 @@ def artificialize(weights, model_name, filename, neuron_labels, behavior, states
 								  columns=[f'CV{i + 1}' for i in range(n_dimensions)])
 
 	# (dimensions x neurons)
-	cca_params = generate_manifold_params(manifold_scale, seeds, n_dimensions, n_neurons)
+	params_manifold = generate_manifold_params(manifold_scale, seeds, n_dimensions, n_neurons)
 
 	# (timepoints x neurons)
-	cyber_traces_reconstructed = pd.DataFrame(data=generate_reconstructed_traces(cyber_manifold, cca_params),
+	cyber_traces_reconstructed = pd.DataFrame(data=generate_reconstructed_traces(cyber_manifold, params_manifold),
 											  columns=neuron_labels)
 
 	# (timepoints x neurons)
@@ -112,4 +112,4 @@ def artificialize(weights, model_name, filename, neuron_labels, behavior, states
 	cyber_traces = pd.DataFrame(data=generate_traces(cyber_traces_reconstructed, cyber_traces_residual),
 								columns=neuron_labels)
 
-	return cyber_name, cyber_manifold, cyber_traces_reconstructed, cyber_traces_residual, cyber_traces, params, cca_params
+	return cyber_name, cyber_manifold, cyber_traces_reconstructed, cyber_traces_residual, cyber_traces, params, params_manifold

@@ -44,7 +44,9 @@ def get_data(path, file_id, with_markers=True):
 
 
 def get_filepath(path, file_id):
-	filenames = sorted([filename for filename in os.listdir(path) if not os.path.isdir(os.path.join(path, filename))])[::2]
+	filenames = sorted([filename for filename in os.listdir(path) if not os.path.isdir(os.path.join(path, filename))])
+	if filenames[1].endswith('_dict.pkl'):
+		filenames = filenames[::2]
 	return os.path.join(path, '.'.join(filenames[file_id].split('.')[:-1]))
 
 
