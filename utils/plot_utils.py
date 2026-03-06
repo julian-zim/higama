@@ -63,9 +63,12 @@ def subplot(datas,
 
 #region manifolds
 
-def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_expl_rs=None,
+def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_expl_rs=None, sort=False,
 							title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 							save_path=None):
+	if sort:
+		raise NotImplementedError('Implement axis sorting by variance')
+
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -150,9 +153,12 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
+def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None, sort=False,
 				   title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 				   save_path=None):
+	if sort:
+		raise NotImplementedError('Implement axis sorting by variance')
+
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -240,9 +246,12 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
+def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None, sort=False,
 					  title='manifolds', n_plots=None, plots_per_row=4, top_space=3, animate=False,
 					  save_path=None):
+	if sort:
+		raise NotImplementedError('Implement axis sorting by variance')
+
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -346,7 +355,7 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
+def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None, sort=False,
 						  titles=None, n_plots=None, top_space=3, animate=False,
 						  save_path=None):
 	if n_plots is None:
@@ -359,7 +368,7 @@ def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_ex
 	for i in range(n_plots):
 		plot_manifolds_3d([filenames[i]], [modes[i]], [states[i]] if states is not None else None,
 						  [vars_expl[i]] if vars_expl is not None else None, [vars_expl_rs[i]] if vars_expl_rs is not None else None,
-						  title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
+						  sort=sort, title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
 						  save_path=f'{save_path}/{filenames[i]}' if save_path is not None else None)
 
 #endregion
