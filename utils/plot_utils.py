@@ -69,8 +69,6 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	if n_plots is None:
 		n_plots = len(filenames)
 
-	key = modes[0].columns[0][:-1]
-
 	#region plot setup
 	fig_size = (4, 4)
 
@@ -121,6 +119,10 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
+		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
 		ax.plot(modes_.iloc[:, 0], modes_.iloc[:, 1], alpha=0)
 		ax.add_collection(lc)
@@ -153,8 +155,6 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 				   save_path=None):
 	if n_plots is None:
 		n_plots = len(filenames)
-
-	key = modes[0].columns[0][:-1]
 
 	#region plot setup
 	fig_size = (4, 4)
@@ -193,7 +193,8 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 	#endregion
 
 	#region plot
-	scale = [] #[-1, 0, 1]
+	# scale = [-1, 0, 2]
+	scale = []
 	normalizer = plt.Normalize(0, len(states[0].columns))
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
 
@@ -205,17 +206,20 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 		lc.set_linewidth(2)
 
 		ax = axes[i // plots_per_row, i % plots_per_row]
+
 		ax.set_title(f'{filenames[i]}' +
 					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
+		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
 		ax.plot(modes_.iloc[:, 0], modes_.iloc[:, 1], alpha=0)
 		ax.add_collection(lc)
-		# ax.set_xlabel('test')
 		ax.set_xticks(scale)
 		ax.set_xticklabels(scale)
-		# ax.set_ylabel('test')
 		ax.set_yticks(scale)
 		ax.set_yticklabels(scale)
 		ax.grid(True)
@@ -241,8 +245,6 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 					  save_path=None):
 	if n_plots is None:
 		n_plots = len(filenames)
-
-	key = modes[0].columns[0][:-1]
 
 	#region plot setup
 	fig_size = (4, 4)
@@ -299,6 +301,12 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
+		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+		ax.set_zlabel((f' {vars_expl[i][2] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+					  + (f' ({vars_expl_rs[i][2] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
 		# ax.plot([modes_.iloc[:, 0], modes_.iloc[:, 1], modes_.iloc[:, 2]], alpha=0)
 		ax.add_collection3d(lc)

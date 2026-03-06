@@ -35,7 +35,7 @@ class Lambdas(NamedTuple):
 def run_dataset(model, model_params, splits, traces, behavior, model_variant):
 	# predict from eval set for neuron scores
 	model_predictions = [
-		model.score_fn(params, traces.values[eval], behavior.values[eval]) for params, (train, eval) in
+		model.predict_and_score(params, traces.values[eval], behavior.values[eval]) for params, (train, eval) in
 		zip(model_params, splits)
 	]
 
@@ -46,11 +46,11 @@ def run_dataset(model, model_params, splits, traces, behavior, model_variant):
 
 	# predict from all for traces
 	model_predictions = [
-		model.score_fn(params, traces.values, behavior.values) for params in model_params
+		model.predict_and_score(params, traces.values, behavior.values) for params in model_params
 	]
 
 	models_man = [
-		pd.DataFrame(data=np.array(split[1]), columns=[f'M{i}' for i in range(np.array(split[1]).shape[1])])
+		pd.DataFrame(data=np.array(split[1]), columns=[f'M{i+1}' for i in range(np.array(split[1]).shape[1])])
 		for split in model_predictions
 	]
 	(models_rec,
@@ -65,7 +65,7 @@ def run_dataset(model, model_params, splits, traces, behavior, model_variant):
 		(models_resss,
 		 models_bss) = tuple(
 			[
-				pd.DataFrame(data=np.array(split[m]), columns=[f'SS{j}' for j in range(np.array(split[m]).shape[1])])
+				pd.DataFrame(data=np.array(split[m]), columns=[f'SS{j+1}' for j in range(np.array(split[m]).shape[1])])
 				for split in model_predictions
 			] for m in [5, 6]
 		)
@@ -91,10 +91,6 @@ def train_dataset(model, splits, N, B, S, hyperparams):
 	)
 	# endregion ===========================================================================
 
-	n_neurons = N.shape[1]
-	n_behaviors = B.shape[1]
-	n_states = S.shape[1]
-
 	N, B, S = jnp.asarray(N), jnp.asarray(B), jnp.asarray(S)
 
 	# training loop ==============================
@@ -114,8 +110,8 @@ def train_dataset(model, splits, N, B, S, hyperparams):
 		S_train, S_eval = S[train], S[eval]
 
 		params = model.init_params(N_train, B_train, S_train,
-								   seeds,
-								   n_dimensions, n_neurons, n_behaviors, n_states)
+								   n_dimensions,
+								   seeds)
 
 		optimizer = optax.adam(
 			learning_rate=optax.cosine_decay_schedule(init_value=learning_rate, decay_steps=max_epochs,

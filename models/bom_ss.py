@@ -10,19 +10,20 @@ import model_utils
 p = 1
 
 
-def init_params(N, B, S, seeds, n_dimensions, n_neurons, n_behaviors, n_states):
-	n_behavior_ss = min(n_behaviors, 16)
+def init_params(N, B, S, n_dimensions, seeds):
+	n_bss = min(B.shape[1], 16)
 
-	shape_UN = (n_neurons, n_dimensions)
-	shape_US = (n_states, n_dimensions)
-	shape_VB = (n_behavior_ss, n_neurons)
-	shape_WB = (n_behaviors, n_behavior_ss)
+	shape_UN = (N.shape[1], n_dimensions)
+	shape_US = (S.shape[1], n_dimensions)
+	shape_VB = (n_bss, N.shape[1])
+	shape_WB = (B.shape[1], n_bss)
 
 	return {
 		'prep': {
 			'N': {
 				'mean': N.mean(axis=0),
-				'std': jnp.where((N_std := jnp.std(N, axis=0)) == 0.0, 1.0, N_std),
+				# 'std': jnp.where((N_std := jnp.std(N, axis=0)) == 0.0, 1.0, N_std),
+				'std': jnp.ones((N.shape[1],)),
 			},
 			'B': {
 				'mean': B.mean(axis=0),
@@ -59,9 +60,11 @@ def predict_man(prep_n, N, UN):
 
 	N_zs = (N - N_mean) / N_std
 
-	# N_man = N_zs @ UN
-	N_man = N_zs @ model_utils.orthonormalize_qr(UN)
-	N_zs_rec = N_man @ model_utils.get_reconstruction_matrix(N_man, N_zs)
+	# UN_orth = UN
+	UN_orth = model_utils.orthonormalize_qr(UN)
+
+	N_man = N_zs @ UN_orth
+	N_zs_rec = N_man @ UN_orth.T
 
 	N_rec = N_zs_rec * N_std + N_mean
 	N_res = N - N_rec
@@ -147,7 +150,7 @@ update = jax.jit(update, static_argnums=(0, 6,))
 #region EVALUATING
 
 @jax.jit
-def score_fn(params, N, B):
+def predict_and_score(params, N, B):
 	N_man, N_rec, N_res, N_res_pred, B_ss = predict(params, N, B)
 	N_res_ss = N_res @ model_utils.get_reconstruction_matrix(N_res_pred, B_ss)
 

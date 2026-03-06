@@ -2,14 +2,6 @@ import jax
 import jax.numpy as jnp
 
 
-#region TRAINING
-
-# #@jax.jit
-# def orthogonalize_qr(A):
-# 	Q, R = jnp.linalg.qr(A)
-# 	return Q * jnp.diag(R)  # also fixes sign ambiguity for a deterministic mapping
-
-
 @jax.jit
 def orthonormalize_qr(A):
 	Q, R = jnp.linalg.qr(A)

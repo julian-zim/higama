@@ -11,17 +11,20 @@ from sklearn.cross_decomposition import PLSCanonical
 
 #region manifolds
 
-def get_manifolds_plsc(traces, behavior, zscore=(False, False), n_ls=3):
+def get_manifolds_plsc(traces, behavior, scale=(False, False), n_ls=3):
+	if type(scale) is not tuple:
+		scale = (scale, scale)
+
 	modes_neural, modes_behavioral = list(), list()
 	recon_neural, recon_behavioral = list(), list()
 	loadings_neural, loadings_behavioral = list(), list()
 	vars_expl = list()
 	for trace, behavior in zip(traces, behavior):
-		# zscoring
-		if zscore[0]:
+		# scaling
+		if scale[0]:
 			trace_scaler = StandardScaler()
 			trace = pd.DataFrame(data=trace_scaler.fit_transform(trace.values), columns=trace.columns)
-		if zscore[1]:
+		if scale[1]:
 			behavior_scaler = StandardScaler()
 			behavior = pd.DataFrame(data=behavior_scaler.fit_transform(behavior.values), columns=behavior.columns)
 
@@ -33,8 +36,8 @@ def get_manifolds_plsc(traces, behavior, zscore=(False, False), n_ls=3):
 		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'LS{n + 1}' for n in range(n_ls)]))
 		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'LS{n + 1}' for n in range(n_ls)]))
 
-		if zscore[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
-		if zscore[1]: behavior_reconstructed = behavior_scaler.inverse_transform(behavior_reconstructed)
+		if scale[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
+		if scale[1]: behavior_reconstructed = behavior_scaler.inverse_transform(behavior_reconstructed)
 
 		recon_neural.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
 		recon_behavioral.append(pd.DataFrame(data=behavior_reconstructed, columns=behavior.columns))
@@ -64,17 +67,20 @@ def get_manifolds_plsc(traces, behavior, zscore=(False, False), n_ls=3):
 	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl
 
 
-def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
+def get_manifolds_cca(traces, behavior, scale=(False, False), n_cv=3, n_pc=0):
+	if type(scale) is not tuple:
+		scale = (scale, scale)
+
 	modes_neural, modes_behavioral = list(), list()
 	recon_neural, recon_behavioral = list(), list()
 	loadings_neural, loadings_behavioral = list(), list()
 	vars_expl, vars_expl_rs = list(), list()
 	for trace, behavior in zip(traces, behavior):
-		# zscoring
-		if zscore[0]:
+		# scaling
+		if scale[0]:
 			trace_scaler = StandardScaler()
 			trace = pd.DataFrame(data=trace_scaler.fit_transform(trace.values), columns=trace.columns)
-		if zscore[1]:
+		if scale[1]:
 			behavior_scaler = StandardScaler()
 			behavior = pd.DataFrame(data=behavior_scaler.fit_transform(behavior.values), columns=behavior.columns)
 
@@ -90,8 +96,8 @@ def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
 															behavior.values)
 		trace_reconstructed, behavior_reconstructed = cca.inverse_transform(trace_reduced, behavior_reduced)
 
-		if zscore[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
-		if zscore[1]: behavior_reconstructed = behavior_scaler.inverse_transform(behavior_reconstructed)
+		if scale[0]: trace_reconstructed = trace_scaler.inverse_transform(trace_reconstructed)
+		if scale[1]: behavior_reconstructed = behavior_scaler.inverse_transform(behavior_reconstructed)
 
 		modes_neural.append(pd.DataFrame(data=trace_reduced, columns=[f'CV{n + 1}' for n in range(n_cv)]))
 		modes_behavioral.append(pd.DataFrame(data=behavior_reduced, columns=[f'CV{n + 1}' for n in range(n_cv)]))
@@ -136,14 +142,14 @@ def get_manifolds_cca(traces, behavior, zscore=(False, False), n_cv=3, n_pc=0):
 	return modes_neural, modes_behavioral, recon_neural, recon_behavioral, loadings_neural, loadings_behavioral, vars_expl, vars_expl_rs
 
 
-def get_manifolds_pca(traces, zscore=False, n_pc=3):
+def get_manifolds_pca(traces, scale=False, n_pc=3):
 	modes = list()
 	recon = list()
 	loadings = list()
 	vars_expl = list()
 	for trace in traces:
-		# zscoring
-		if zscore:
+		# scaling
+		if scale:
 			scaler = StandardScaler()
 			trace = pd.DataFrame(data=scaler.fit_transform(trace.values), columns=trace.columns)
 
@@ -152,14 +158,13 @@ def get_manifolds_pca(traces, zscore=False, n_pc=3):
 		trace_reduced = pca.fit_transform(trace.values)
 		trace_reconstructed = pca.inverse_transform(trace_reduced)
 
-		if zscore: trace_reconstructed = scaler.inverse_transform(trace_reconstructed)
+		if scale: trace_reconstructed = scaler.inverse_transform(trace_reconstructed)
 
 		modes.append(pd.DataFrame(data=trace_reduced, columns=[f'PC{n + 1}' for n in range(n_pc)]))
 		recon.append(pd.DataFrame(data=trace_reconstructed, columns=trace.columns))
 
-		loadings.append(pca.components_)
-
 		# variance explained
+		loadings.append(pca.components_)
 		vars_expl.append(pca.explained_variance_ratio_)
 
 	return modes, recon, loadings, vars_expl
@@ -170,22 +175,67 @@ def get_manifolds_pca(traces, zscore=False, n_pc=3):
 
 #region variance explained
 
+def explain_variances(X_man, X, reconstructor, scale=False):
+	X_c = X - X.mean(axis=0)
+	if scale:
+		X_c = X_c / np.where((X_std := X.std(axis=0)) == 0.0, 1.0, X_std)
+
+	n_dim = X_man.shape[1]
+
+	vars_expl = list()
+	vars_expl_cumulative = list()
+	for k in range(1, n_dim + 1):  # VE k = VE :k - VE :k-1
+		X_man_to_k = np.zeros_like(X_man)
+
+		X_man_to_k[:, :k] = X_man[:, :k]
+		X_rec_to_k = reconstructor(X_man_to_k)
+		var_expl_to_k = get_variance_explained(X_rec_to_k, X_c)
+
+		vars_expl_cumulative.append(var_expl_to_k)
+
+		var_expl_k = vars_expl_cumulative[k - 1] - (vars_expl_cumulative[k - 1 - 1] if k > 1 else 0)
+
+		vars_expl.append(var_expl_k)
+
+	return vars_expl
+
+
 def get_variance_explained(X_rec, X):
-	X_rec_var = np.linalg.trace(np.cov(X_rec, rowvar=False))
+	X_res = X - X_rec
+
+	X_res_var = X_res.var(axis=0).sum()
+	X_var = X.var(axis=0).sum()
+
+	X_var_ratio = 1 - X_res_var / X_var
+
+	return X_var_ratio
+
+
+def get_variance_explained_cov(X_rec, X):
+	X_res = X - X_rec
+
+	X_res_var = np.linalg.trace(np.cov(X_res, rowvar=False))
 	X_var = np.linalg.trace(np.cov(X, rowvar=False))
+
+	X_var_ratio = 1 - X_res_var / X_var
+
+	return X_var_ratio
+
+
+def get_variance_explained_orth(X_rec, X):
+	X_rec_var = X_rec.var(axis=0).sum()
+	X_var = X.var(axis=0).sum()
 
 	X_var_ratio = X_rec_var / X_var
 
 	return X_var_ratio
 
 
-def get_variance_explained_orth(X_rec, X):
-	X_res = X - X_rec
+def get_variance_explained_orth_cov(X_rec, X):
+	X_rec_var = np.linalg.trace(np.cov(X_rec, rowvar=False))
+	X_var = np.linalg.trace(np.cov(X, rowvar=False))
 
-	X_res_var = X_res.var().sum()
-	X_var = X.var().sum()
-
-	X_var_ratio = 1 - X_res_var / X_var
+	X_var_ratio = X_rec_var / X_var
 
 	return X_var_ratio
 
