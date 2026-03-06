@@ -55,5 +55,4 @@ class Worm(Organism):
 		# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
 		# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
-		# return
 		return filename, traces, eigenworms, discrete_states, (continuous_behaviors, kymograph)
