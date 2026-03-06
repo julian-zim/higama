@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #SBATCH --job-name MOUSE_models-train
- --partition=gpu
+#SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=gpu:1
+#SBATCH --constraint=rtx
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=128G
 #SBATCH --time=1-01:00:00

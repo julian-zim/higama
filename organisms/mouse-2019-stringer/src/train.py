@@ -9,7 +9,7 @@ def main():
 		'max_patience': 4000 / 1,
 		'learning_rate': 1E-0,
 		'dimensions': 16,
-		'reg_lambdas': 'manual'
+		'reg_lambdas': 'swept'
 	}
 
 	names = ['bom', 'hgm']
