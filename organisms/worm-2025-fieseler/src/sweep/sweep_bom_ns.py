@@ -48,8 +48,8 @@ def main():
 	names = ['bom']
 	variants = ['ns']
 
-	# file_ids = list(range(0, 33+1))
-	file_ids = [19]
+	file_ids = list(range(0, 33+1))
+	# file_ids = [19]
 
 	worm = Worm(file_ids, names, variants, worm_hyperparameters, worm_sweep_parameters)
 	worm.sweep()
