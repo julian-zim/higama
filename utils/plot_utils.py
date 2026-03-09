@@ -7,6 +7,7 @@ from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import LineCollection
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
+from sklearn.decomposition import PCA
 
 
 def subplot(datas,
@@ -63,12 +64,9 @@ def subplot(datas,
 
 #region manifolds
 
-def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_expl_rs=None, sort=False,
+def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_expl_rs=None,
 							title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 							save_path=None):
-	if sort:
-		raise NotImplementedError('Implement axis sorting by variance')
-
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -153,12 +151,9 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None, sort=False,
+def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
 				   title='manifolds', n_plots=None, plots_per_row=4, top_space=2,
 				   save_path=None):
-	if sort:
-		raise NotImplementedError('Implement axis sorting by variance')
-
 	if n_plots is None:
 		n_plots = len(filenames)
 
@@ -246,12 +241,9 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None, sort=False,
+def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
 					  title='manifolds', n_plots=None, plots_per_row=4, top_space=3, animate=False,
 					  save_path=None):
-	if sort:
-		raise NotImplementedError('Implement axis sorting by variance')
-
 	if n_plots is None:
 		n_plots = len(filenames)
 

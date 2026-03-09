@@ -22,7 +22,7 @@ def main():
 
 	neuron_labels = [f'N{i}' for i in range(50)]
 	# states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
-	bhl_selection = ['REV', 'VENTRAL_TURN']
+	bhl_selection = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN']
 
 	robot = Robot(weights, neuron_labels, bhl_selection,
 				  file_id,

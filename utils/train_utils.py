@@ -174,13 +174,33 @@ def get_manifolds_pca(traces, scale=False, n_pc=3):
 
 
 #region variance explained
-
-def explain_variances(X_man, X, reconstructor, scale=False):
+def postprocess_manifold(X_man, X, reconstructor, scale=False, align=True):
 	X_c = X - X.mean(axis=0)
 	if scale:
 		X_c = X_c / np.where((X_std := X.std(axis=0)) == 0.0, 1.0, X_std)
 
 	n_dim = X_man.shape[1]
+
+	if align:
+		prep_pca = PCA(n_components=n_dim)
+		prep_X_man = prep_pca.fit_transform(X_man)
+
+		vars_expl_aligned = list()
+		vars_expl_cumulative_aligned = list()
+		for k in range(1, n_dim + 1):  # VE k = VE :k - VE :k-1
+			prep_X_man_to_k = np.zeros_like(prep_X_man)
+
+			prep_X_man_to_k[:, :k] = prep_X_man[:, :k]
+			prep_X_rec_to_k = prep_pca.inverse_transform(prep_X_man_to_k)
+			X_rec_to_k_aligned = reconstructor(prep_X_rec_to_k)
+
+			var_expl_to_k_aligned = get_variance_explained(X_rec_to_k_aligned, X_c)
+			vars_expl_cumulative_aligned.append(var_expl_to_k_aligned)
+
+			var_expl_k = vars_expl_cumulative_aligned[k - 1] - (vars_expl_cumulative_aligned[k - 1 - 1] if k > 1 else 0)
+			vars_expl_aligned.append(var_expl_k)
+
+		return prep_X_man, vars_expl_aligned
 
 	vars_expl = list()
 	vars_expl_cumulative = list()
@@ -189,15 +209,13 @@ def explain_variances(X_man, X, reconstructor, scale=False):
 
 		X_man_to_k[:, :k] = X_man[:, :k]
 		X_rec_to_k = reconstructor(X_man_to_k)
-		var_expl_to_k = get_variance_explained(X_rec_to_k, X_c)
 
+		var_expl_to_k = get_variance_explained(X_rec_to_k, X_c)
 		vars_expl_cumulative.append(var_expl_to_k)
 
 		var_expl_k = vars_expl_cumulative[k - 1] - (vars_expl_cumulative[k - 1 - 1] if k > 1 else 0)
-
 		vars_expl.append(var_expl_k)
-
-	return vars_expl
+	return X_man, vars_expl
 
 
 def get_variance_explained(X_rec, X):
