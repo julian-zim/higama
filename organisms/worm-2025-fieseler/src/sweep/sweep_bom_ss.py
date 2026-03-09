@@ -42,7 +42,7 @@ def main():
 		'max_patience': 3000 / 4,
 		'learning_rate': 1E-0,
 		'dimensions': 2,
-		'reg_lambdas': 'manual'
+		'reg_lambdas': 'swept'
 	}
 
 	names = ['bom']
