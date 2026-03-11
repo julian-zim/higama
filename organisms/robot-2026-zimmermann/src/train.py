@@ -15,8 +15,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	file_id = list(range(0, 33+1))
-	# file_id = [19]
+	# file_id = list(range(0, 33+1))
+	file_id = [19]
 
 	weights = (0.1, -0.25, 1.)
 
@@ -31,6 +31,8 @@ def main():
 	# robot.sweep()
 	robot.train()
 	robot.run()
+	robot.train_on_all()
+	robot.run_on_all()
 
 
 if __name__ == '__main__':

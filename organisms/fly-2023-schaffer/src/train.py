@@ -22,6 +22,8 @@ def main():
 	# fly.sweep()
 	fly.train()
 	fly.run()
+	fly.train_on_all()
+	fly.run_on_all()
 
 
 if __name__ == '__main__':

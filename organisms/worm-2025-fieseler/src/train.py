@@ -22,6 +22,8 @@ def main():
 	# worm_gcamp.sweep()
 	worm_gcamp.train()
 	worm_gcamp.run()
+	worm_gcamp.train_on_all()
+	worm_gcamp.run_on_all()
 
 
 	file_ids_gfp = list(range(0, 7+1))

@@ -35,7 +35,7 @@
 		  "max": 1E-0
 		}
 	  },
-	  "run_cap": 250
+	  "run_cap": 300
 	},
 	"hgm": {
 	  "parameters": {
@@ -50,7 +50,7 @@
 		  "max": 1E-0
 		}
 	  },
-	  "run_cap": 250
+	  "run_cap": 300
 	}
   }
 }

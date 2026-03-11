@@ -22,6 +22,8 @@ def main():
 	# mouse.sweep()
 	mouse.train()
 	mouse.run()
+	mouse.train_on_all()
+	mouse.run_on_all()
 
 
 if __name__ == '__main__':
