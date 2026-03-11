@@ -1,42 +1,13 @@
 import sys, os
+import json
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 import fly
 Fly = fly.Fly
 
 
 def main():
-	fly_sweep_parameters = {
-		'ns': {
-			'bom': {
-				'parameters': {
-					'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 150,
-			},
-			'hgm': {
-				'parameters': {
-					'wb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-					'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 400,
-			}
-		},
-		'ss': {
-			'bom': {
-				'parameters': {
-					'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 600,
-			},
-			'hgm': {
-				'parameters': {
-					'vb_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-					'wm_reg_lambda': {'distribution': 'log_uniform_values', 'min': 1E-9, 'max': 1E-0},
-				},
-				'run_cap': 1000,
-			}
-		}
-	}
+	with open('../sweep-config.json', 'r') as f:
+		fly_sweep_parameters = json.load(f)
 	fly_hyperparameters = {
 		'max_epochs': 4000,
 		'max_patience': 4000 / 1,

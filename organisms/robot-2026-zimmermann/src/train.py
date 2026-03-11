@@ -15,8 +15,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	# file_id = list(range(0, 33+1))
-	file_id = [19]
+	file_id = list(range(0, 33+1))
+	# file_id = [19]
 
 	weights = (0.1, -0.25, 1.)
 

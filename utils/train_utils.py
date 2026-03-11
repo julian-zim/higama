@@ -200,7 +200,7 @@ def postprocess_manifold(X_man, X, reconstructor, scale=False, align=True):
 			var_expl_k = vars_expl_cumulative_aligned[k - 1] - (vars_expl_cumulative_aligned[k - 1 - 1] if k > 1 else 0)
 			vars_expl_aligned.append(var_expl_k)
 
-		return prep_X_man, vars_expl_aligned
+		return prep_X_man, np.array(vars_expl_aligned)
 
 	vars_expl = list()
 	vars_expl_cumulative = list()
@@ -215,7 +215,7 @@ def postprocess_manifold(X_man, X, reconstructor, scale=False, align=True):
 
 		var_expl_k = vars_expl_cumulative[k - 1] - (vars_expl_cumulative[k - 1 - 1] if k > 1 else 0)
 		vars_expl.append(var_expl_k)
-	return X_man, vars_expl
+	return X_man, np.array(vars_expl)
 
 
 def get_variance_explained(X_rec, X):
