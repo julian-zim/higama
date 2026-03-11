@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name MOUSE_models-train
+#SBATCH --job-name MOUSECON_models-train
 #SBATCH --partition=gpu
 # --qos=gpu-lim
 #SBATCH --gres=gpu:1
@@ -9,8 +9,8 @@
 #SBATCH --time=1-01:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-2019-stringer/out/slurm/models-train.%A.out
-#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-2019-stringer/out/slurm/models-train.%A.err
+#SBATCH --output=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-control/out/slurm/models-train.%A.out
+#SBATCH --error=/lisc/home/user/zimmermann/Files/Workspace/hobe/organisms/mouse-control/out/slurm/models-train.%A.err
 
 module load Python/3.12.3-GCCcore-13.3.0
 source "${HOME}/.venv/hgm/bin/activate"
