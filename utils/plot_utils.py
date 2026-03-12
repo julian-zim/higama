@@ -707,6 +707,38 @@ def plot_loss(filename, loss, *args, **kwargs):
 
 #region score
 
+def plot_performance_histogram(neuron_scores, neuron_scores_control=None, control_cutoff=False,
+							   bins=20, title='scores',
+							   save_path=None):
+	values = [np.median(v[1]) for v in neuron_scores.values()]
+	plt.hist(
+		values,
+		bins=bins,
+		weights=np.ones(len(values)) / len(values) * 100,
+		alpha=0.5,
+		color='blue',
+		label='gcamp'
+	)
+
+	if neuron_scores_control:
+		values_control = [np.median(v[1]) for v in neuron_scores_control.values()]
+		plt.hist(
+			values_control,
+			bins=bins,
+			weights=np.ones(len(values_control)) / len(values_control) * 100,
+			alpha=0.5,
+			color='red',
+			label='control (shuffled)'
+		)
+
+	plt.xlabel('hgm score')
+	plt.ylabel('Count')
+	plt.title(title)
+
+	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	plt.show()
+
+
 def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True,
 						  title='scores', limits=None, force_medians=False, plot_size=30,
 						  save_path=None):
