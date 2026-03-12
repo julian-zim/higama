@@ -2,8 +2,8 @@ import os
 
 
 def get_model_path(shuffle_id):
-	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/MODEL/mouse-control')
+	local_path = os.path.join(os.path.expanduser('~'), 'Desktop/MODEL/worm-control')
 	if os.path.exists(local_path):
 		return os.path.join(local_path, f'shuffle_{shuffle_id}')
 	else:
-		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/mouse-control'
+		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/worm-control'

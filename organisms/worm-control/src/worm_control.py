@@ -9,7 +9,10 @@ import jax
 import jax.numpy as jnp
 import optax
 
-from utils_worm_control import read_utils
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../worm-2025-fieseler/src'))
+from utils_worm import read_utils
+from utils_worm_control import read_utils as read_utils_control
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from organism import Organism
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
@@ -140,7 +143,7 @@ class Worm(Organism):
 		return 'REV'
 
 	def get_model_path(self):
-		return read_utils.get_model_path(self.shuffle_id)
+		return read_utils_control.get_model_path(self.shuffle_id)
 
 	def run(self):
 		for model_variant in self.model_variants:
