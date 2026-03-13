@@ -1,3 +1,4 @@
+#region imports
 import sys, os
 import numpy as np
 import scipy as sp
@@ -6,6 +7,7 @@ import pandas as pd
 from utils_fly import read_utils
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from organism import Organism
+#endregion
 
 
 class Fly(Organism):

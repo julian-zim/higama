@@ -80,6 +80,11 @@ __pypackages__/
 
 # ============= OUT ==============
 
+# robot
+organisms/robot-2026-zimmermann/out/*
+!organisms/robot-2026-zimmermann/out/keep/
+!organisms/robot-2026-zimmermann/out/keep/**
+
 # worm
 organisms/worm-2025-fieseler/out/*
 !organisms/worm-2025-fieseler/out/keep/

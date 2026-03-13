@@ -1,0 +1,28 @@
+{
+  "os":  "Linux-6.8.0-101-generic-x86_64-with-glibc2.39",
+  "python":  "CPython 3.12.3",
+  "startedAt":  "2026-03-13T19:56:58.970616Z",
+  "program":  "/home/julian-zim/Files/Cloud/OneDrive/OneFiles/Linux/ZimmerLab/MSc_Thesis/Workspace/hobe/organisms/worm-2025-fieseler/src/./sweep/sweep_bom_ns.py",
+  "codePath":  "organisms/worm-2025-fieseler/src/sweep/sweep_bom_ns.py",
+  "codePathLocal":  "sweep/sweep_bom_ns.py",
+  "git":  {
+    "remote":  "git@github.com:julian-zim/msc_thesis.git",
+    "commit":  "503a7f3e5f5ef607edc6d59490c6c16f907908e2"
+  },
+  "email":  "a12144285@unet.univie.ac.at",
+  "root":  "./out/",
+  "host":  "SCHINKEN",
+  "executable":  "/home/julian-zim/.venv/hgm/bin/python",
+  "cpu_count":  4,
+  "cpu_count_logical":  8,
+  "disk":  {
+    "/":  {
+      "total":  "474247471104",
+      "used":  "287108374528"
+    }
+  },
+  "memory":  {
+    "total":  "16557641728"
+  },
+  "writerId":  "r8lk4h6hdc011j20t5itnxe120pja1i3"
+}

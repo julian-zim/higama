@@ -28,11 +28,10 @@ def main():
 				  file_id,
 				  names, variants,
 				  robot_hyperparameters, robot_sweep_parameters, data_variant='gcamp')
-	# robot.sweep()
-	robot.train()
-	robot.run()
-	robot.train_full()
-	robot.run_full()
+	robot.do(action='train')
+	robot.do(action='run')
+	robot.do(action='train', full=True)
+	robot.do(action='run', full=True)
 
 
 if __name__ == '__main__':

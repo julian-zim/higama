@@ -19,13 +19,11 @@ def main():
 	names = ['bom']
 	variants = ['ns']
 
-	# file_ids = list(range(0, 8+1))
-	file_ids = [2]
+	file_ids = [0, 1, 3, 4, 5, 6, 7, 8]
+	# file_ids = [2]
 
 	mouse = Mouse(file_ids, names, variants, mouse_hyperparameters, mouse_sweep_parameters)
-	mouse.sweep()
-	# mouse.train()
-	# mouse.run()
+	mouse.do(action='sweep')
 
 
 if __name__ == '__main__':

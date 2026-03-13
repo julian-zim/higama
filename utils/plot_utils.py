@@ -58,7 +58,9 @@ def subplot(datas,
 	fig.subplots_adjust(top=1. - top_space_rel)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 
@@ -141,7 +143,9 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	fig.subplots_adjust(top=1. - top_space_rel)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 	if vars_expl is not None:
@@ -231,7 +235,9 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 	fig.subplots_adjust(top=1. - top_space_rel)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 	if vars_expl is not None:
@@ -366,6 +372,15 @@ def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_ex
 #endregion
 
 
+#region manifolds wrappers
+def plot_manifold_by_gating():
+	pass
+
+def plot_manifold_by_states():
+	pass
+#endregion
+
+
 #region traces
 
 """
@@ -450,7 +465,9 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 	fig.subplots_adjust(top=1. - top_space_rel, hspace=0.5)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 """
@@ -536,7 +553,9 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 	fig.subplots_adjust(top=1. - top_space_rel, hspace=0.5)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 """
@@ -615,7 +634,9 @@ def plot_traces(traces, states=None, label='state',
 	fig.subplots_adjust(top=1. - top_space_rel, hspace=0.5)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 """
@@ -693,7 +714,9 @@ def plot_losses_splits(filenames, losses, losses_reference=None,
 	fig.subplots_adjust(top=1. - top_space_rel)
 	fig.tight_layout(rect=(0., 0., 1., 1. - top_space_rel))
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 def plot_losses(filename, losses, *args, **kwargs):
@@ -735,7 +758,9 @@ def plot_performance_histogram(neuron_scores, neuron_scores_control=None, contro
 	plt.ylabel('Count')
 	plt.title(title)
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 
@@ -887,7 +912,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
 	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True,
@@ -1044,7 +1071,9 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
 	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 #endregion
@@ -1097,7 +1126,9 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 	ax_bottom.grid(False)
 
 	plt.tight_layout()
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 
@@ -1188,7 +1219,9 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 
 	# plt.rcParams.update(plt.rcParamsDefault)
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 
@@ -1232,7 +1265,9 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 			ax.invert_yaxis()
 			ax.set_title(name + '_bot')
 
-	if save_path is not None: plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
 

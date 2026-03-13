@@ -23,9 +23,7 @@ def main():
 	file_ids = [0]
 
 	fly = Fly(file_ids, names, variants, fly_hyperparameters, fly_sweep_parameters)
-	fly.sweep()
-	# fly.train()
-	# fly.run()
+	fly.do(action='sweep')
 
 
 if __name__ == '__main__':

@@ -19,13 +19,11 @@ def main():
 	names = ['hgm']
 	variants = ['ss']
 
-	file_ids = list(range(0, 33+1))
+	file_ids = list(range(27, 33+1))
 	# file_ids = [19]
 
 	worm = Worm(file_ids, names, variants, worm_hyperparameters, worm_sweep_parameters)
-	worm.sweep()
-	# worm.train()
-	# worm.run()
+	worm.do(action='sweep')
 
 
 if __name__ == '__main__':

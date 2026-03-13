@@ -15,14 +15,14 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	# file_ids_gcamp = list(range(0, 33+1))
-	file_ids_gcamp = [19]
+	file_ids_gcamp = list(range(0, 33+1))
+	# file_ids_gcamp = [19]
 
 	for shuffle_id in range(100):
 		print(f'\n=================== SHUFFLE {shuffle_id} ===================')
 		worm_gcamp = Worm(shuffle_id, file_ids_gcamp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gcamp')
-		worm_gcamp.train()
-		worm_gcamp.run()
+		worm_gcamp.do(action='train')
+		worm_gcamp.do(action='run')
 
 
 if __name__ == '__main__':

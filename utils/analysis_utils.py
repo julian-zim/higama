@@ -1,3 +1,4 @@
+#region imports
 import os, sys
 import numpy as np
 import pandas as pd
@@ -5,6 +6,38 @@ import json
 sys.path.append(os.path.join(os.getcwd(), '../../'))
 from utils import train_utils
 from models import model_utils
+#endregion
+
+
+def assemble_scores(boms_scores_per_neuron, hgms_scores_per_neuron):
+	neurons_labels = [scores_per_neuron[0].columns for scores_per_neuron in hgms_scores_per_neuron]
+
+	boms_scores_per_neuron = [np.array([split.values[0] for split in scores]) for scores in boms_scores_per_neuron]
+	hgms_scores_per_neuron = [np.array([split.values[0] for split in scores]) for scores in hgms_scores_per_neuron]
+
+	neuron_scores = dict()
+	boms_scores_per_neuron_avg = [np.mean(scores, axis=0) for scores in boms_scores_per_neuron]
+	hgms_scores_per_neuron_avg = [np.mean(scores, axis=0) for scores in hgms_scores_per_neuron]
+	for label_list, score_bom_list, score_hgm_list in zip(neurons_labels, boms_scores_per_neuron_avg, hgms_scores_per_neuron_avg):
+		sort_indices = np.argsort(score_hgm_list)[::-1]
+		label_list = label_list[sort_indices]
+		score_bom_list = score_bom_list[sort_indices]
+		score_hgm_list = score_hgm_list[sort_indices]
+
+		for i in range(len(label_list)):
+			label = label_list[i]
+			if label != '' and label[-1] != '_':
+				score_bom_new, score_hgm_new = np.array(score_bom_list[i]), np.array(score_hgm_list[i])
+				if len(score_hgm_new.shape) == 0:
+					score_bom_new = score_bom_new.reshape(1, 1)
+					score_hgm_new = score_hgm_new.reshape(1, 1)
+				if label not in neuron_scores.keys():
+					neuron_scores[label] = (score_bom_new, score_hgm_new)
+				else:
+					score_bom_prev, score_hgm_prev = neuron_scores[label]
+					neuron_scores[label] = (np.vstack([score_bom_prev, score_bom_new]), np.vstack([score_hgm_prev, score_hgm_new]))
+
+	return neuron_scores
 
 
 def get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00'):
@@ -24,12 +57,79 @@ def get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00'):
 	return bom_folder, hgm_folder
 
 
-def read_data(organism, file_id):
+# single
+
+def read_filename(organism, file_id, data_variant='gcamp'):
 	match organism:
+		case 'robot':
+			from utils_robot import read_utils
+			path = os.path.join(read_utils.get_data_path(), f'exported_data_gcamp')
+			filename = read_utils.get_filename(read_utils.get_file_handle(path, file_id)).replace('worm', 'wyrm')
+			return filename
+		case 'worm':
+			from utils_worm import read_utils
+			path = os.path.join(read_utils.get_data_path(), f'exported_data_{data_variant}')
+			return read_utils.get_filename(read_utils.get_file_handle(path, file_id))
+		case 'fly':
+			from utils_fly import read_utils
+			path = os.path.join(read_utils.get_data_path(), 'brain')
+			return read_utils.get_filename(read_utils.get_file_handle(path, file_id))
+		case 'mouse':
+			from utils_mouse import read_utils
+			path = os.path.join(read_utils.get_data_path(), '6163622/sessions')
+			filename = read_utils.get_filename(read_utils.get_filepath(path, file_id))
+			return filename
+		case _:
+			raise ValueError
+
+
+def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
+	match organism:
+		case 'robot':
+			from utils_robot import read_utils, generate_utils
+
+			path = os.path.join(read_utils.get_data_path(), 'exported_data_gcamp')
+
+			# read
+			(filename_gcamp,
+			 discrete_states, eigenworms) = read_utils.get_data(path, file_id)
+
+			# clear nan values
+			mask = eigenworms.notna().all(axis=1)
+
+			eigenworms = eigenworms[mask]
+			discrete_states = discrete_states[mask]
+
+			# preprocess
+			pass
+
+			# generate
+			weights, neurons, bhl_selection = generate_data
+
+			(filename,
+			 modes,
+			 traces_reconstructed,
+			 traces_residual,
+			 traces,
+			 params,
+			 params_manifold) = generate_utils.artificialize(weights, 'hgm',
+															 filename_gcamp,
+															 neurons,
+															 eigenworms,
+															 discrete_states[bhl_selection],
+															 n_dimensions=len(bhl_selection))
+
+			# # kill all information in behavior
+			# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
+			# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
+
+			return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, params,
+																   params_manifold)
+
 		case 'worm':
 			from utils_worm import read_utils
 
-			path = os.path.join(read_utils.get_data_path(), 'exported_data_gcamp')
+			path = os.path.join(read_utils.get_data_path(), f'exported_data_{data_variant}')
 
 			# read
 			(filename,
@@ -112,39 +212,79 @@ def read_data(organism, file_id):
 			raise ValueError
 
 
-def read_models(model_path, filename, model_variant, manual, full=True):
-	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00')
+def read_models(filename, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
+	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant, ll='ll00')
 
-	bom_params = train_utils.load_params(os.path.join(model_path, 'Full' if full else 'Splits', 'params', bom_folder),
-										 filename)
-	hgm_params = train_utils.load_params(os.path.join(model_path, 'Full' if full else 'Splits', 'params', hgm_folder),
-										 filename)
+	bom_params = train_utils.load_params(
+		os.path.join(model_path, 'Full' if full else 'Splits', 'params', bom_folder), filename)
+	hgm_params = train_utils.load_params(
+		os.path.join(model_path, 'Full' if full else 'Splits', 'params', hgm_folder), filename)
 
 	return bom_params, hgm_params
 
 
-def read_predictions(model_path, filename, model_variant, manual, full=True):
-	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00')
+def read_predictions(filename, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
+	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant, ll='ll00')
 
-	_, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss = train_utils.load_predictions(
+	bom_spn, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss = train_utils.load_predictions(
 		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', bom_folder), filename)
-	_, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss = train_utils.load_predictions(
+	hgm_spn, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss = train_utils.load_predictions(
 		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', hgm_folder), filename)
 
-	return ((None, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss),
-			(None, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss))
+	return ((bom_spn, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss),
+			(hgm_spn, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss))
 
 
-def read_scores(model_path, filename, model_variant, manual, full=False):
-	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00')
+def read_scores(filename, model_path, model_variant, data_variant='gcamp', manual=False, full=False):
+	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant, ll='ll00')
 
-	bom_spn, _, _, _, _, _, _ = train_utils.load_predictions(
+	bom_spn, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss = train_utils.load_predictions(
 		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', bom_folder), filename)
-	hgm_spn, _, _, _, _, _, _ = train_utils.load_predictions(
+	hgm_spn, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss = train_utils.load_predictions(
 		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', hgm_folder), filename)
 
-	return ((bom_spn, None, None, None, None, None, None),
-			(hgm_spn, None, None, None, None, None, None))
+	return ((bom_spn, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss),
+			(hgm_spn, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss))
+
+
+def get_losses(filename, model_path, model_variant, data_variant='gcamp', manual=False, full=False):
+	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant, ll='ll00')
+
+	(bom_losses_train,
+	 bom_man_losses_train,
+	 bom_res_losses_train,
+	 bom_mpe_losses_train,
+	 bom_losses_test,
+	 bom_man_losses_test,
+	 bom_res_losses_test,
+	 bom_mpe_losses_test) = train_utils.load_losses(
+		os.path.join(model_path, 'Full' if full else 'Splits', 'history', bom_folder), filename)
+	(hgm_losses_train,
+	 hgm_man_losses_train,
+	 hgm_res_losses_train,
+	 hgm_mpe_losses_train,
+	 hgm_losses_test,
+	 hgm_man_losses_test,
+	 hgm_res_losses_test,
+	 hgm_mpe_losses_test) = train_utils.load_losses(
+		os.path.join(model_path, 'Full' if full else 'Splits', 'history', hgm_folder), filename)
+
+	return ((bom_losses_train,
+			 bom_man_losses_train,
+			 bom_res_losses_train,
+			 bom_mpe_losses_train,
+			 bom_losses_test,
+			 bom_man_losses_test,
+			 bom_res_losses_test,
+			 bom_mpe_losses_test),
+			(hgm_losses_train,
+			 hgm_man_losses_train,
+			 hgm_res_losses_train,
+			 hgm_mpe_losses_train,
+			 hgm_losses_test,
+			 hgm_man_losses_test,
+			 hgm_res_losses_test,
+			 hgm_mpe_losses_test))
 
 
 def postprocess_manifold(man, traces, params):
@@ -158,3 +298,42 @@ def postprocess_manifold(man, traces, params):
 		manifold_vars_expl.append(var_explained)
 
 	return manifolds, manifold_vars_expl
+
+
+# multiple
+
+def read_filenames(organism, file_ids, data_variant='gcamp'):
+	filenames = [read_filename(organism, file_id, data_variant) for file_id in file_ids]
+	return filenames
+
+
+def read_datas(organism, file_ids, generate_data=None):
+	datas = [read_data(organism, file_id, generate_data) for file_id in file_ids]
+	return list(zip(*datas))
+
+
+def read_modelss(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
+	modelss = [read_models(filename, model_path, model_variant, data_variant, manual, full) for filename in filenames]
+	return list(zip(*modelss))
+
+
+def read_predictionss(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
+	predictionss = [read_predictions(filename, model_path, model_variant, data_variant, manual, full) for filename in filenames]
+	boms_params, hgms_params = list(zip(*predictionss))
+	return list(zip(*boms_params)), list(zip(*hgms_params))
+
+
+def read_scoress(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
+	scoress = [read_scores(filename, model_path, model_variant, data_variant, manual, full) for filename in filenames]
+	return list(zip(*scoress))
+
+
+def get_lossess(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
+	lossess = [get_losses(filename, model_path, model_variant, data_variant, manual, full) for filename in filenames]
+	boms_losses, hgms_losses = list(zip(*lossess))
+	return list(zip(*boms_losses)), list(zip(*hgms_losses))
+
+
+def postprocess_manifolds(mans, tracess, paramss):
+	manifolds = [postprocess_manifold(man, traces, params) for man, traces, params in zip(mans, tracess, paramss)]
+	return manifolds

@@ -1,3 +1,4 @@
+#region imports
 import sys, os
 import numpy as np
 import scipy as sp
@@ -7,6 +8,7 @@ from utils_robot import read_utils
 from utils_robot import generate_utils
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from organism import Organism
+#endregion
 
 
 class Robot(Organism):

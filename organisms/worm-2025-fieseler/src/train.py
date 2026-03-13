@@ -19,20 +19,18 @@ def main():
 	file_ids_gcamp = [19]
 
 	worm_gcamp = Worm(file_ids_gcamp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gcamp')
-	# worm_gcamp.sweep()
-	worm_gcamp.train()
-	worm_gcamp.run()
-	worm_gcamp.train_full()
-	worm_gcamp.run_full()
+	worm_gcamp.do(action='train')
+	worm_gcamp.do(action='run')
+	worm_gcamp.do(action='train', full=True)
+	worm_gcamp.do(action='run', full=True)
 
 
 	# file_ids_gfp = list(range(0, 7+1))
 	# # file_ids_gfp = [2]
 	#
 	# worm_gfp = Worm(file_ids_gfp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gfp')
-	# # worm_gfp.sweep()
-	# worm_gfp.train()
-	# worm_gfp.run()
+	# worm_gfp.do(action='train')
+	# worm_gfp.do(action='run')
 
 
 if __name__ == '__main__':

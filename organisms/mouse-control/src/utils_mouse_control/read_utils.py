@@ -6,4 +6,4 @@ def get_model_path(shuffle_id):
 	if os.path.exists(local_path):
 		return os.path.join(local_path, f'shuffle_{shuffle_id}')
 	else:
-		return '/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/mouse-control'
+		return os.path.join('/lisc/data/scratch/neurobiology/zimmer/zimmermann/MODEL/mouse-control', f'shuffle_{shuffle_id}')
