@@ -15,7 +15,6 @@ class Robot(Organism):
 	bhl_selection: list
 
 	def __init__(self, weights, neuron_labels, bhl_selection, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
-		self.subfolder = 'robot-2026-zimmermann'
 		self.weights = weights
 		self.neuron_labels = neuron_labels
 		self.bhl_selection = bhl_selection

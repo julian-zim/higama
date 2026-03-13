@@ -22,17 +22,17 @@ def main():
 	# worm_gcamp.sweep()
 	worm_gcamp.train()
 	worm_gcamp.run()
-	worm_gcamp.train_on_all()
-	worm_gcamp.run_on_all()
+	worm_gcamp.train_full()
+	worm_gcamp.run_full()
 
 
-	file_ids_gfp = list(range(0, 7+1))
-	# file_ids_gfp = [2]
-
-	worm_gfp = Worm(file_ids_gfp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gfp')
-	# worm_gfp.sweep()
-	worm_gfp.train()
-	worm_gfp.run()
+	# file_ids_gfp = list(range(0, 7+1))
+	# # file_ids_gfp = [2]
+	#
+	# worm_gfp = Worm(file_ids_gfp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gfp')
+	# # worm_gfp.sweep()
+	# worm_gfp.train()
+	# worm_gfp.run()
 
 
 if __name__ == '__main__':

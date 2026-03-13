@@ -11,7 +11,6 @@ from organism import Organism
 class Worm(Organism):
 
 	def __init__(self, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
-		self.subfolder = 'worm-2025-fieseler'
 		super().__init__(file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant)
 
 	def get_split_class(self):

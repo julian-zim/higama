@@ -58,6 +58,11 @@ def read_data(organism, file_id):
 
 			return filename, traces, eigenworms, discrete_states, (continuous_behaviors, kymograph)
 
+		case 'fly':
+			from utils_fly import read_utils
+
+			raise NotImplementedError
+
 		case 'mouse':
 			from utils_mouse import read_utils
 
@@ -103,45 +108,40 @@ def read_data(organism, file_id):
 
 			return filename, traces, motion_pcs[0], classes, (continuous_behaviors, motion_masks, motion_pcs[1])
 
-		case 'fly':
-			from utils_fly import read_utils
-
-			raise NotImplementedError
-
 		case _:
 			raise ValueError
 
 
-def read_models(model_path, filename, model_variant, manual):
+def read_models(model_path, filename, model_variant, manual, full=True):
 	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00')
 
-	bom_params = train_utils.load_params(os.path.join(model_path, 'ALL', 'params', bom_folder),
+	bom_params = train_utils.load_params(os.path.join(model_path, 'Full' if full else 'Splits', 'params', bom_folder),
 										 filename)
-	hgm_params = train_utils.load_params(os.path.join(model_path, 'ALL', 'params', hgm_folder),
+	hgm_params = train_utils.load_params(os.path.join(model_path, 'Full' if full else 'Splits', 'params', hgm_folder),
 										 filename)
 
 	return bom_params, hgm_params
 
 
-def read_predictions(model_path, filename, model_variant, manual):
+def read_predictions(model_path, filename, model_variant, manual, full=True):
 	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00')
 
 	_, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss = train_utils.load_predictions(
-		os.path.join(model_path, 'ALL', 'predictions', bom_folder), filename)
+		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', bom_folder), filename)
 	_, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss = train_utils.load_predictions(
-		os.path.join(model_path, 'ALL', 'predictions', hgm_folder), filename)
+		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', hgm_folder), filename)
 
 	return ((None, bom_man, bom_rec, bom_res, bom_pres, bom_resss, bom_bss),
 			(None, hgm_man, hgm_rec, hgm_res, hgm_pres, hgm_resss, hgm_bss))
 
 
-def read_scores(model_path, filename, model_variant, manual):
+def read_scores(model_path, filename, model_variant, manual, full=False):
 	bom_folder, hgm_folder = get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00')
 
 	bom_spn, _, _, _, _, _, _ = train_utils.load_predictions(
-		os.path.join(model_path, 'predictions', bom_folder), filename)
+		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', bom_folder), filename)
 	hgm_spn, _, _, _, _, _, _ = train_utils.load_predictions(
-		os.path.join(model_path, 'predictions', hgm_folder), filename)
+		os.path.join(model_path, 'Full' if full else 'Splits', 'predictions', hgm_folder), filename)
 
 	return ((bom_spn, None, None, None, None, None, None),
 			(hgm_spn, None, None, None, None, None, None))

@@ -31,8 +31,8 @@ def main():
 	# robot.sweep()
 	robot.train()
 	robot.run()
-	robot.train_on_all()
-	robot.run_on_all()
+	robot.train_full()
+	robot.run_full()
 
 
 if __name__ == '__main__':

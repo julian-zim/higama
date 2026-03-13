@@ -32,7 +32,7 @@ class Lambdas(NamedTuple):
 	cca_lambdas: tuple[float, float]
 
 
-def run_dataset_on_all(model, model_params, traces, behavior, model_variant):
+def run_dataset_full(model, model_params, traces, behavior, model_variant):
 	# predict from all for traces
 	model_predictions = [
 		model.predict_and_score(params, traces.values, behavior.values) for params in model_params
@@ -63,49 +63,7 @@ def run_dataset_on_all(model, model_params, traces, behavior, model_variant):
 	return None, models_man, models_rec, models_res, models_pres, models_resss, models_bss
 
 
-def run_dataset(model, model_params, splits, traces, behavior, model_variant):
-	# predict from eval set for neuron scores
-	model_predictions = [
-		model.predict_and_score(params, traces.values[eval], behavior.values[eval]) for params, (train, eval) in
-		zip(model_params, splits)
-	]
-
-	models_spn = [
-		pd.DataFrame(data=np.array(split[0])[None], columns=traces.columns)
-		for split in model_predictions
-	]
-
-	# predict from all for traces
-	model_predictions = [
-		model.predict_and_score(params, traces.values, behavior.values) for params in model_params
-	]
-
-	models_man = [
-		pd.DataFrame(data=np.array(split[1]), columns=[f'M{i+1}' for i in range(np.array(split[1]).shape[1])])
-		for split in model_predictions
-	]
-	(models_rec,
-	 models_res,
-	 models_pres) = tuple([
-							  pd.DataFrame(data=np.array(split[m]), columns=traces.columns)
-							  for split in model_predictions
-						  ] for m in [2, 3, 4])
-
-	models_resss, models_bss = None, None
-	if model_variant == 'ss':
-		(models_resss,
-		 models_bss) = tuple(
-			[
-				pd.DataFrame(data=np.array(split[m]), columns=[f'SS{j+1}' for j in range(np.array(split[m]).shape[1])])
-				for split in model_predictions
-			] for m in [5, 6]
-		)
-
-	print('Done.', end='')
-	return models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss
-
-
-def train_dataset_on_all(model, N, B, S, hyperparams):
+def train_dataset_full(model, N, B, S, hyperparams):
 	# region hyperparamters ===============================================================
 	seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(
 		3), jax.random.PRNGKey(4)
@@ -188,6 +146,48 @@ def train_dataset_on_all(model, N, B, S, hyperparams):
 			np.stack(man_losses_per_split),
 			np.stack(res_losses_per_split),
 			np.stack(mpe_losses_per_split))
+
+
+def run_dataset(model, model_params, splits, traces, behavior, model_variant):
+	# predict from eval set for neuron scores
+	model_predictions = [
+		model.predict_and_score(params, traces.values[eval], behavior.values[eval]) for params, (train, eval) in
+		zip(model_params, splits)
+	]
+
+	models_spn = [
+		pd.DataFrame(data=np.array(split[0])[None], columns=traces.columns)
+		for split in model_predictions
+	]
+
+	# predict from all for traces
+	model_predictions = [
+		model.predict_and_score(params, traces.values, behavior.values) for params in model_params
+	]
+
+	models_man = [
+		pd.DataFrame(data=np.array(split[1]), columns=[f'M{i+1}' for i in range(np.array(split[1]).shape[1])])
+		for split in model_predictions
+	]
+	(models_rec,
+	 models_res,
+	 models_pres) = tuple([
+							  pd.DataFrame(data=np.array(split[m]), columns=traces.columns)
+							  for split in model_predictions
+						  ] for m in [2, 3, 4])
+
+	models_resss, models_bss = None, None
+	if model_variant == 'ss':
+		(models_resss,
+		 models_bss) = tuple(
+			[
+				pd.DataFrame(data=np.array(split[m]), columns=[f'SS{j+1}' for j in range(np.array(split[m]).shape[1])])
+				for split in model_predictions
+			] for m in [5, 6]
+		)
+
+	print('Done.', end='')
+	return models_spn, models_man, models_rec, models_res, models_pres, models_resss, models_bss
 
 
 def train_dataset(model, splits, N, B, S, hyperparams):
@@ -314,7 +314,6 @@ class Organism(ABC):
 	hyperparameters: dict
 	file_ids: list
 	filenames: list
-	subfolder: str
 
 	def __init__(self, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
 		self.file_ids = file_ids
@@ -369,7 +368,7 @@ class Organism(ABC):
 
 		return reg_lambdas
 
-	def run_on_all(self):
+	def run_full(self):
 		for model_variant in self.model_variants:
 			if model_variant == 'ns':
 				from models import bom as bom, hgm as hgm
@@ -394,7 +393,7 @@ class Organism(ABC):
 				for file_id in self.file_ids:
 					filename, traces, behavior, classes, aux = self.read(file_id, self.data_variant)
 
-					model_params = train_utils.load_params(os.path.join(f'{self.get_model_path()}/ALL', 'params', model_folder), filename)
+					model_params = train_utils.load_params(os.path.join(f'{self.get_model_path()}', 'Full', 'params', model_folder), filename)
 
 					print(f'\n\t{file_id}: {filename}... ', end='')
 					(model_spn,
@@ -403,7 +402,7 @@ class Organism(ABC):
 					 model_res,
 					 model_pres,
 					 model_resss,
-					 model_bss) = run_dataset_on_all(model, model_params, traces, behavior, model_variant)
+					 model_bss) = run_dataset_full(model, model_params, traces, behavior, model_variant)
 
 					train_utils.save_predictions(
 						filename,
@@ -414,58 +413,9 @@ class Organism(ABC):
 						 model_pres,
 						 model_resss,
 						 model_bss),
-						save_path=os.path.join(os.path.join(f'{self.get_model_path()}/ALL', 'predictions', model_folder)))
+						save_path=os.path.join(os.path.join(f'{self.get_model_path()}', 'Full', 'predictions', model_folder)))
 
-	def run(self):
-		for model_variant in self.model_variants:
-			if model_variant == 'ns':
-				from models import bom as bom, hgm as hgm
-			elif model_variant == 'ss':
-				from models import bom_ss as bom, hgm_ss as hgm
-			else:
-				raise ValueError(f'Unknown model variant: {model_variant}. Use either \'ns\' or \'ss\'.')
-
-			for model_name in self.model_names:
-				try:
-					model = {'bom': bom, 'hgm': hgm}[model_name]
-				except KeyError:
-					raise KeyError(f'Unknown model name: {model_name}. Use either \'bom\' or \'hgm\'.')
-
-				hyperparams = self.hyperparameters.copy()
-				hyperparams['reg_lambdas'] = hyperparams['reg_lambdas'][model_variant][model_name]
-
-				model_folder = (f'{self.data_variant}_{model_name}_{model_variant}_'
-								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in hyperparams['reg_lambdas'].keys()]))
-
-				print(f'\nRunning {model_name}_{model_variant}:', end='')
-				for file_id in self.file_ids:
-					filename, traces, behavior, classes, aux = self.read(file_id, self.data_variant)
-					splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.shape[0]),
-																				   classes[[self.get_split_class()]].values))
-
-					model_params = train_utils.load_params(os.path.join(f'{self.get_model_path()}', 'params', model_folder), filename)
-
-					print(f'\n\t{file_id}: {filename}... ', end='')
-					(model_spn,
-					 model_man,
-					 model_rec,
-					 model_res,
-					 model_pres,
-					 model_resss,
-					 model_bss) = run_dataset(model, model_params, splits, traces, behavior, model_variant)
-
-					train_utils.save_predictions(
-						filename,
-						(model_spn,
-						 model_man,
-						 model_rec,
-						 model_res,
-						 model_pres,
-						 model_resss,
-						 model_bss),
-						save_path=os.path.join(os.path.join(f'{self.get_model_path()}', 'predictions', model_folder)))
-
-	def train_on_all(self):
+	def train_full(self):
 		for model_variant in self.model_variants:
 			if model_variant == 'ns':
 				from models import bom as bom, hgm as hgm
@@ -494,18 +444,67 @@ class Organism(ABC):
 					(params,
 					 losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 					 losses, man_losses, res_losses, mpe_losses
-					 ) = train_dataset_on_all(model,
+					 ) = train_dataset_full(model,
 									   traces.values,
 									   behavior.values,
 									   classes.values,
 									   hyperparams)
 
 					train_utils.save_params(filename, params,
-											os.path.join(f'{self.get_model_path()}/ALL', 'params', model_folder))
+											os.path.join(f'{self.get_model_path()}', 'Full', 'params', model_folder))
 					train_utils.save_losses(filename, np.stack([
 						losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 						losses, man_losses, res_losses, mpe_losses
-					]), os.path.join(f'{self.get_model_path()}/ALL', 'history', model_folder))
+					]), os.path.join(f'{self.get_model_path()}', 'Full', 'history', model_folder))
+
+	def run(self):
+		for model_variant in self.model_variants:
+			if model_variant == 'ns':
+				from models import bom as bom, hgm as hgm
+			elif model_variant == 'ss':
+				from models import bom_ss as bom, hgm_ss as hgm
+			else:
+				raise ValueError(f'Unknown model variant: {model_variant}. Use either \'ns\' or \'ss\'.')
+
+			for model_name in self.model_names:
+				try:
+					model = {'bom': bom, 'hgm': hgm}[model_name]
+				except KeyError:
+					raise KeyError(f'Unknown model name: {model_name}. Use either \'bom\' or \'hgm\'.')
+
+				hyperparams = self.hyperparameters.copy()
+				hyperparams['reg_lambdas'] = hyperparams['reg_lambdas'][model_variant][model_name]
+
+				model_folder = (f'{self.data_variant}_{model_name}_{model_variant}_'
+								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in hyperparams['reg_lambdas'].keys()]))
+
+				print(f'\nRunning {model_name}_{model_variant}:', end='')
+				for file_id in self.file_ids:
+					filename, traces, behavior, classes, aux = self.read(file_id, self.data_variant)
+					splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.shape[0]),
+																				   classes[[self.get_split_class()]].values))
+
+					model_params = train_utils.load_params(os.path.join(f'{self.get_model_path()}', 'Splits', 'params', model_folder), filename)
+
+					print(f'\n\t{file_id}: {filename}... ', end='')
+					(model_spn,
+					 model_man,
+					 model_rec,
+					 model_res,
+					 model_pres,
+					 model_resss,
+					 model_bss) = run_dataset(model, model_params, splits, traces, behavior, model_variant)
+
+					train_utils.save_predictions(
+						filename,
+						(model_spn,
+						 model_man,
+						 model_rec,
+						 model_res,
+						 model_pres,
+						 model_resss,
+						 model_bss),
+						save_path=os.path.join(os.path.join(f'{self.get_model_path()}', 'Splits', 'predictions', model_folder)))
 
 	def train(self):
 		for model_variant in self.model_variants:
@@ -545,11 +544,11 @@ class Organism(ABC):
 									   hyperparams)
 
 					train_utils.save_params(filename, params,
-											os.path.join(f'{self.get_model_path()}', 'params', model_folder))
+											os.path.join(f'{self.get_model_path()}', 'Splits', 'params', model_folder))
 					train_utils.save_losses(filename, np.stack([
 						losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 						losses, man_losses, res_losses, mpe_losses
-					]), os.path.join(f'{self.get_model_path()}', 'history', model_folder))
+					]), os.path.join(f'{self.get_model_path()}', 'Splits', 'history', model_folder))
 
 	def sweep(self):
 		log_path = '/lisc/data/scratch/neurobiology/zimmer/zimmermann/Sweeps/'
@@ -592,7 +591,7 @@ class Organism(ABC):
 											 hyperparams,
 											 log_path)
 
-					project_name = f'{self.subfolder.split('-')[0]} {model_name}_{model_variant}-{f'll{int(hyperparams['loss_man_lambda'] * 100):02d}'} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
+					project_name = f'{os.path.basename(self.get_model_path()).split('-')[0]} {model_name}_{model_variant}-{f'll{int(hyperparams['loss_man_lambda'] * 100):02d}'} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
 					sweep_id = wandb.sweep(sweep=sweep_cfg, project=project_name)
 
 					print(f'\n\t{file_id}: {filename}... ', end='')

@@ -15,6 +15,7 @@ from utils_mouse_control import read_utils as read_utils_control
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from organism import Organism
+import organism
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../'))
 from utils import train_utils
 from models import trainer
@@ -24,95 +25,6 @@ class Lambdas(NamedTuple):
 	loss_lambdas: tuple[float, float]
 	reg_lambdas: tuple[float, float]
 	cca_lambdas: tuple[float, float]
-
-
-def train_dataset(model, splits, N, B, S, hyperparams):
-	# region hyperparamters ===============================================================
-	seeds = jax.random.PRNGKey(0), jax.random.PRNGKey(1), jax.random.PRNGKey(2), jax.random.PRNGKey(
-		3), jax.random.PRNGKey(4)
-
-	max_epochs = hyperparams['max_epochs']
-	max_patience = hyperparams['max_patience']
-	learning_rate = hyperparams['learning_rate']
-	n_dimensions = hyperparams['dimensions']
-
-	lambdas = Lambdas(
-		loss_lambdas=(hyperparams['loss_man_lambda'], hyperparams['loss_res_lambda']),
-		reg_lambdas=tuple(hyperparams['reg_lambdas'][param] for param in hyperparams['reg_lambdas'].keys()),
-		cca_lambdas=(hyperparams['ccadiag_lambda'], hyperparams['ccaunit_lambda'])
-	)
-	# endregion ===========================================================================
-
-	N, B, S = jnp.asarray(N), jnp.asarray(B), jnp.asarray(S)
-
-	# training loop ==============================
-	params_per_split = list()
-	(losses_train_per_split,
-	 man_losses_train_per_split,
-	 res_losses_train_per_split,
-	 mpe_losses_train_per_split) = list(), list(), list(), list()
-	(losses_per_split,
-	 man_losses_per_split,
-	 res_losses_per_split,
-	 mpe_losses_per_split) = list(), list(), list(), list()
-	for s_id, (train, eval) in enumerate(splits):
-		# region splitting and initializing (this also moves the data to the GPU) ==========================
-		N_train, N_eval = N[train], N[eval]
-		B_train, B_eval = B[train], B[eval]
-		S_train, S_eval = S[train], S[eval]
-
-		params = model.init_params(N_train, B_train, S_train,
-								   n_dimensions,
-								   seeds)
-
-		optimizer = optax.adam(
-			learning_rate=optax.cosine_decay_schedule(init_value=learning_rate, decay_steps=max_epochs,
-													  alpha=1E-4))
-		# optimizer = optax.adam(learning_rate=learning_rate)
-		optimizer = optax.masked(optimizer, {'prep': False, 'model': True})
-		opt_state = optimizer.init(params)
-		# endregion ========================================================================================
-
-		# train the split
-		(params,
-		 losses_train, man_losses_train, res_losses_train, mpe_losses_train,
-		 losses, man_losses, res_losses, mpe_losses, epoch_end
-		 ) = trainer.train(lambdas,
-						   max_epochs, max_patience,
-						   model, optimizer.update,
-						   opt_state, params,
-						   N_train, B_train, S_train,
-						   N_eval, B_eval, S_eval)
-
-		# save the split
-		params_per_split.append(jax.device_get(params))
-
-		losses_train_per_split.append(jax.device_get(losses_train))
-		man_losses_train_per_split.append(jax.device_get(man_losses_train))
-		res_losses_train_per_split.append(jax.device_get(res_losses_train))
-		mpe_losses_train_per_split.append(jax.device_get(mpe_losses_train))
-
-		losses_per_split.append(jax.device_get(losses))
-		man_losses_per_split.append(jax.device_get(man_losses))
-		res_losses_per_split.append(jax.device_get(res_losses))
-		mpe_losses_per_split.append(jax.device_get(mpe_losses))
-
-		# log
-		print(f'{f'Stopped after {epoch_end} epochs: ' if epoch_end < max_epochs else ''}Split {s_id} completed. ',
-			  end='')
-
-	# ============================================
-
-	# return
-	return (params_per_split,
-			np.stack(losses_train_per_split),
-			np.stack(man_losses_train_per_split),
-			np.stack(res_losses_train_per_split),
-			np.stack(mpe_losses_train_per_split),
-			np.stack(losses_per_split),
-			np.stack(man_losses_per_split),
-			np.stack(res_losses_per_split),
-			np.stack(mpe_losses_per_split))
 
 
 def run_dataset(model, model_params, splits, traces, behavior, model_variant):
@@ -135,7 +47,6 @@ class Mouse(Organism):
 	shuffle_id: int
 
 	def __init__(self, shuffle_id, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
-		self.subfolder = 'IRRELEVANT'
 		self.shuffle_id = shuffle_id
 		super().__init__(file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant)
 
@@ -172,32 +83,29 @@ class Mouse(Organism):
 				for file_id in self.file_ids:
 					filename, traces, behavior, classes, aux = self.read(file_id, self.data_variant)
 					splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.shape[0]),
-																				   classes[[
-																					   self.get_split_class()]].values))
+																				   classes[[self.get_split_class()]].values))
 
-					model_params = train_utils.load_params(
-						os.path.join(f'{self.get_model_path()}', 'params', model_folder), filename)
+					model_params = train_utils.load_params(os.path.join(f'{self.get_model_path()}', 'Splits', 'params', model_folder), filename)
 
 					print(f'\n\t{file_id}: {filename}... ', end='')
 					(model_spn,
-					 _,
-					 _,
-					 _,
-					 _,
-					 _,
-					 _) = run_dataset(model, model_params, splits, traces, behavior, model_variant)
+					 model_man,
+					 model_rec,
+					 model_res,
+					 model_pres,
+					 model_resss,
+					 model_bss) = run_dataset(model, model_params, splits, traces, behavior, model_variant)
 
 					train_utils.save_predictions(
 						filename,
 						(model_spn,
-						 None,
+						 model_man,
 						 None,
 						 None,
 						 None,
 						 None,
 						 None),
-						save_path=os.path.join(
-							os.path.join(f'{self.get_model_path()}', 'predictions', model_folder)))
+						save_path=os.path.join(os.path.join(f'{self.get_model_path()}', 'Splits', 'predictions', model_folder)))
 
 	def train(self):
 		for model_variant in self.model_variants:
@@ -226,25 +134,24 @@ class Mouse(Organism):
 				for file_id in self.file_ids:
 					filename, traces, behavior, classes, aux = self.read(file_id, self.data_variant)
 					splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.shape[0]),
-																				   classes[[
-																					   self.get_split_class()]].values))
+																				   classes[[self.get_split_class()]].values))
 
 					print(f'\n\t{file_id}: {filename}... ', end='')
 					(params,
 					 losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 					 losses, man_losses, res_losses, mpe_losses
-					 ) = train_dataset(model, splits,
+					 ) = organism.train_dataset(model, splits,
 									   traces.values,
 									   behavior.values,
 									   classes.values,
 									   hyperparams)
 
 					train_utils.save_params(filename, params,
-											os.path.join(f'{self.get_model_path()}', 'params', model_folder))
+											os.path.join(f'{self.get_model_path()}', 'Splits', 'params', model_folder))
 					# train_utils.save_losses(filename, np.stack([
 					# 	losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 					# 	losses, man_losses, res_losses, mpe_losses
-					# ]), os.path.join(f'{self.get_model_path()}', 'history', model_folder))
+					# ]), os.path.join(f'{self.get_model_path()}', 'Splits', 'history', model_folder))
 
 	def read(self, file_id, data_variant='gcamp'):
 		if data_variant != 'gcamp':

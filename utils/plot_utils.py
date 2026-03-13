@@ -117,7 +117,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 
 		ax = axes[i // plots_per_row, i % plots_per_row]
 		ax.set_title(f'{filenames[i]}' +
-					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
+					 (f'\nTotal: {sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
@@ -209,7 +209,7 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 		ax = axes[i // plots_per_row, i % plots_per_row]
 
 		ax.set_title(f'{filenames[i]}' +
-					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
+					 (f'\nTotal: {sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
@@ -299,7 +299,7 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 
 		ax = axes[i // plots_per_row, i % plots_per_row]
 		ax.set_title(f'{filenames[i]}' +
-					 (f'\n{sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
+					 (f'\nTotal: {sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
 					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
