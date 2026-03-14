@@ -94,8 +94,10 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
-	colormap = mplcolors.ListedColormap(plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('plasma').N))[:, :3] * 0.8, name='plasma_dark')
-	normalizer = plt.Normalize(np.stack([colors_.values for colors_ in coloring]).min(), np.stack([colors_.values for colors_ in coloring]).max())  # normalize globally
+	colormap = mplcolors.ListedColormap(
+		plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('plasma').N))[:, :3] * 0.8, name='plasma_dark')
+	normalizer = plt.Normalize(np.stack([colors_.values for colors_ in coloring]).min(),
+							   np.stack([colors_.values for colors_ in coloring]).max())  # normalize globally
 	# fig.legend(
 	# 	handles=[(patches.Patch(color=colormap(i / len(coloring[0].columns)), alpha=0.3, label=coloring[0].columns[i])) for i in range(len(coloring[0].columns))],
 	# 	loc='center',
@@ -106,7 +108,7 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 	#endregion
 
 	#region plot
-	scale = [] #[-1, 0, 1]
+	scale = []  #[-1, 0, 1]
 	for i, (modes_, colors_) in enumerate(zip(modes[:n_plots], coloring[:n_plots])):
 
 		lc_points = np.array([modes_.iloc[:, 0], modes_.iloc[:, 1]]).T.reshape(-1, 1, 2)
@@ -120,12 +122,15 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 		ax = axes[i // plots_per_row, i % plots_per_row]
 		ax.set_title(f'{filenames[i]}' +
 					 (f'\nTotal: {sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
-					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
+					 (
+						 f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
 		ax.plot(modes_.iloc[:, 0], modes_.iloc[:, 1], alpha=0)
 		ax.add_collection(lc)
@@ -150,7 +155,8 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 
 	if vars_expl is not None:
 		if vars_expl_rs is not None:
-			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean() * 100:.1f}%)')
+			print(
+				f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean() * 100:.1f}%)')
 		else:
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
@@ -184,16 +190,19 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
 	if states is not None:
-		colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
+		colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8,
+											name='hsv_dark')
 		fig.legend(
-			handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
+			handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i]))
+					 for i in range(len(states[0].columns))],
 			loc='center',
 			bbox_to_anchor=(0.5, 1. - top_space_rel * 4 / 6),
 			ncol=1,
 			fontsize='large'
 		)
 	else:
-		colormap = mplcolors.ListedColormap(plt.get_cmap('bwr')(np.linspace(0, 1, plt.get_cmap('bwr').N))[:, :3] * 1.0, name='bwr_const')
+		colormap = mplcolors.ListedColormap(plt.get_cmap('bwr')(np.linspace(0, 1, plt.get_cmap('bwr').N))[:, :3] * 1.0,
+											name='bwr_const')
 		states = [pd.DataFrame(data=np.zeros((mode.shape[0], 1), dtype=np.float16), columns=['-']) for mode in modes]
 	#endregion
 
@@ -214,12 +223,15 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 
 		ax.set_title(f'{filenames[i]}' +
 					 (f'\nTotal: {sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
-					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
+					 (
+						 f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
 		ax.plot(modes_.iloc[:, 0], modes_.iloc[:, 1], alpha=0)
 		ax.add_collection(lc)
@@ -242,7 +254,8 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 
 	if vars_expl is not None:
 		if vars_expl_rs is not None:
-			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean() * 100:.1f}%)')
+			print(
+				f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean() * 100:.1f}%)')
 		else:
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
@@ -278,16 +291,19 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 	fig.text(0.5, 1. - top_space_rel * 1 / 6, title, ha='center', va='center', fontsize=20)
 
 	if states is not None:
-		colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8, name='hsv_dark')
+		colormap = mplcolors.ListedColormap(plt.get_cmap('hsv')(np.linspace(0, 1, plt.get_cmap('hsv').N))[:, :3] * 0.8,
+											name='hsv_dark')
 		fig.legend(
-			handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i])) for i in range(len(states[0].columns))],
+			handles=[(patches.Patch(color=colormap(i / len(states[0].columns)), alpha=0.3, label=states[0].columns[i]))
+					 for i in range(len(states[0].columns))],
 			loc='center',
 			bbox_to_anchor=(0.5, 1. - top_space_rel * 4 / 6),
 			ncol=1,
 			fontsize='large'
 		)
 	else:
-		colormap = mplcolors.ListedColormap(plt.get_cmap('bwr')(np.linspace(0, 1, plt.get_cmap('bwr').N))[:, :3] * 1.0, name='bwr_const')
+		colormap = mplcolors.ListedColormap(plt.get_cmap('bwr')(np.linspace(0, 1, plt.get_cmap('bwr').N))[:, :3] * 1.0,
+											name='bwr_const')
 		states = [pd.DataFrame(data=np.zeros((mode.shape[0], 1), dtype=np.float16), columns=['-']) for mode in modes]
 	#endregion
 
@@ -306,14 +322,18 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 		ax = axes[i // plots_per_row, i % plots_per_row]
 		ax.set_title(f'{filenames[i]}' +
 					 (f'\nTotal: {sum(vars_expl[i]) * 100:.1f}%' if vars_expl is not None else '') +
-					 (f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
+					 (
+						 f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
 		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 		ax.set_zlabel((f' {vars_expl[i][2] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
-					  + (f' ({vars_expl_rs[i][2] * 100:.1f}%)' if vars_expl_rs is not None and len(vars_expl_rs[i]) > 1 else ''), fontsize=9)
+					  + (f' ({vars_expl_rs[i][2] * 100:.1f}%)' if vars_expl_rs is not None and len(
+			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
 		# ax.plot([modes_.iloc[:, 0], modes_.iloc[:, 1], modes_.iloc[:, 2]], alpha=0)
 		ax.add_collection3d(lc)
@@ -340,6 +360,7 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 				for i, ax in enumerate(axes.ravel()):
 					ax.view_init(elev=30, azim=frame + i * 45)  # offset if you want
 				return []  # axes.ravel()
+
 			anim = FuncAnimation(fig, update, frames=range(0, 360, 2), interval=50, blit=False)
 			anim.save(f'{save_path}.gif', writer='pillow', fps=30)
 		else:
@@ -348,7 +369,8 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 
 	if vars_expl is not None:
 		if vars_expl_rs is not None:
-			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean():.1f}%)')
+			print(
+				f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}% ({np.array(vars_expl_rs).sum(axis=1).mean():.1f}%)')
 		else:
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
@@ -365,9 +387,11 @@ def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_ex
 
 	for i in range(n_plots):
 		plot_manifolds_3d([filenames[i]], [modes[i]], [states[i]] if states is not None else None,
-						  [vars_expl[i]] if vars_expl is not None else None, [vars_expl_rs[i]] if vars_expl_rs is not None else None,
+						  [vars_expl[i]] if vars_expl is not None else None,
+						  [vars_expl_rs[i]] if vars_expl_rs is not None else None,
 						  sort=sort, title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
 						  save_path=f'{save_path}/{filenames[i]}' if save_path is not None else None)
+
 
 #endregion
 
@@ -376,8 +400,11 @@ def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_ex
 def plot_manifold_by_gating():
 	pass
 
+
 def plot_manifold_by_states():
 	pass
+
+
 #endregion
 
 
@@ -386,9 +413,11 @@ def plot_manifold_by_states():
 """
 Plots two pairs of traces in red and green black, with the respective first one being opaque and the second transparent
 """
+
+
 def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None, states=None, label='state',
-							title='trace pairs per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
-							save_path=None):
+							 title='trace pairs per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
+							 save_path=None):
 	columns = [column for column in traces[0].columns if column != '']
 	if n_plots is None:
 		n_plots = len(columns)
@@ -470,9 +499,12 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
+
 """
 Plots single trace in black and optional splits in cycling colors, with the first being opaques and the second transparents
 """
+
+
 def plot_traces_splits(traces, traces_reference=None, traces_initial=None, states=None, label='state',
 					   title='traces per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
 					   save_path=None):
@@ -482,7 +514,8 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 	if ylimits is None:
 		traces_all = np.array(
 			[trace[columns].values for trace in traces] +
-			([trace_reference[columns].values for trace_reference in traces_reference] if traces_reference is not None else []) +
+			([trace_reference[columns].values for trace_reference in
+			  traces_reference] if traces_reference is not None else []) +
 			([traces_initial[columns].values] if traces_initial is not None else [])
 		)
 		ylimits = (traces_all.min(), traces_all.max())
@@ -558,9 +591,12 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
+
 """
 Plots traces cycling color according to pyplots policy, with the first one black
 """
+
+
 def plot_traces(traces, states=None, label='state',
 				title='traces', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
 				save_path=None):
@@ -622,7 +658,7 @@ def plot_traces(traces, states=None, label='state',
 				heatmap.T, aspect='auto',
 				cmap=mplcolors.LinearSegmentedColormap.from_list(
 					'middle_third',
-					plt.get_cmap('binary')(np.linspace(0, 1/2, 256))
+					plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))
 				),
 				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], *ylimits]
 			)
@@ -639,14 +675,18 @@ def plot_traces(traces, states=None, label='state',
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
+
 """
 plot_traces wrapper for numpy arrays
 """
+
+
 def plot_traces_np(traces, *args, **kwargs):
 	if type(traces) is not list:
 		traces = [traces]
 	traces = [trace if type(trace) is pd.DataFrame else pd.DataFrame(trace) for trace in traces]
 	plot_traces(traces, *args, **kwargs)
+
 
 #endregion
 
@@ -697,7 +737,8 @@ def plot_losses_splits(filenames, losses, losses_reference=None,
 		ax = axes[i // plots_per_row, i % plots_per_row]
 		ax.set_title(f'{filenames[i]}\n' +
 					 f'(model: {np.mean(losses_per_split_m1[:, -1], axis=0) * 100:.2f}E-2' +
-					 (f', comp: {np.mean(losses_per_split_m2[:, -1], axis=0) * 100:.2f}E-2)' if losses_reference is not None else ''),
+					 (
+						 f', comp: {np.mean(losses_per_split_m2[:, -1], axis=0) * 100:.2f}E-2)' if losses_reference is not None else ''),
 					 fontsize=10)
 
 		colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -719,11 +760,14 @@ def plot_losses_splits(filenames, losses, losses_reference=None,
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
+
 def plot_losses(filename, losses, *args, **kwargs):
 	plot_losses_splits(np.array([filename]), [losses], *args, **kwargs)
 
+
 def plot_loss(filename, loss, *args, **kwargs):
 	plot_losses(filename, np.array([loss]), *args, **kwargs)
+
 
 #endregion
 
@@ -731,15 +775,17 @@ def plot_loss(filename, loss, *args, **kwargs):
 #region score
 
 def plot_performance_histogram(neuron_scores, neuron_scores_control=None, control_cutoff=False,
-							   bins=20, title='scores',
+							   bins=20, title='scores', range=None,
 							   save_path=None):
 	values = [np.median(v[1]) for v in neuron_scores.values()]
 	plt.hist(
 		values,
 		bins=bins,
+		range=range,
 		weights=np.ones(len(values)) / len(values) * 100,
 		alpha=0.5,
 		color='blue',
+		edgecolor='k',
 		label='gcamp'
 	)
 
@@ -748,15 +794,18 @@ def plot_performance_histogram(neuron_scores, neuron_scores_control=None, contro
 		plt.hist(
 			values_control,
 			bins=bins,
+			range=range,
 			weights=np.ones(len(values_control)) / len(values_control) * 100,
 			alpha=0.5,
 			color='red',
-			label='control (shuffled)'
+			edgecolor='k',
+			label='control'
 		)
 
 	plt.xlabel('hgm score')
 	plt.ylabel('Count')
 	plt.title(title)
+	plt.legend()
 
 	if save_path is not None:
 		os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -764,16 +813,16 @@ def plot_performance_histogram(neuron_scores, neuron_scores_control=None, contro
 	plt.show()
 
 
-def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True,
+def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True, horizontal_bps=True,
 						  title='scores', limits=None, force_medians=False, plot_size=30,
 						  save_path=None):
 	#region setup
 	threshold = 0.95
 
-	plt.figure(figsize=(plot_size * 1/3, plot_size * 1/3))
+	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
 	plt.title(title)
-	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25/60, labelpad=50)
-	plt.ylabel('HGM r2 score (median)', fontsize=plot_size * 25/60)
+	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25 / 60, labelpad=50)
+	plt.ylabel('HGM r2 score (median)', fontsize=plot_size * 25 / 60)
 	plt.grid(False)
 
 	if limits is None:
@@ -821,7 +870,8 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 	plt.plot([x_min, x_max], [0, 0], color='gray', linewidth=1, linestyle='--')
 	plt.plot([0, 0], [y_min, y_max], color='gray', linewidth=1, linestyle='--')
-	plt.plot([min(x_min, y_min), (max(x_max, y_max))], [min(x_min, y_min), max(x_max, y_max)], color='black', linestyle='--')
+	plt.plot([min(x_min, y_min), (max(x_max, y_max))], [min(x_min, y_min), max(x_max, y_max)], color='black',
+			 linestyle='--')
 
 	#endregion
 
@@ -838,7 +888,8 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 			x = np.median(scores_bom)
 			y = np.median(scores_hgm)
 
-			plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0, alpha=0.5)
+			plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0,
+						alpha=0.5)
 
 			boxplot_xticks_control.append(x)
 			boxplot_xtick_labels_control.append(f'{key}')
@@ -846,9 +897,10 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 			if len(scores_hgm) > 1 or force_medians:
 				boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 										showfliers=False)
-				boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-										showfliers=False, vert=False)
-				for box in [boxplot_v, boxplot_h]:
+				if horizontal_bps:
+					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+											showfliers=False, vert=False)
+				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
 					for patch in box['boxes']:
 						patch.set_facecolor('tomato')
 						patch.set_alpha(0.5)
@@ -858,14 +910,17 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 		for x, label in zip(boxplot_xticks_control, boxplot_xtick_labels_control):
 			if x_min <= x <= x_max:
-				plt.text(x, -0.035, label, color='red', ha='center', va='top', rotation=45, fontsize=plot_size * 15/40,
+				plt.text(x, -0.035, label, color='red', ha='center', va='top', rotation=45,
+						 fontsize=plot_size * 15 / 40,
 						 transform=plt.gca().get_xaxis_transform())
 	#endregion ================================================================================================================
 
 	if neuron_scores_control is not None:
 		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
-		high_score_hgm_control = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]), threshold)
-		plt.plot([x_min, x_max + x_step], [high_score_hgm_control, high_score_hgm_control], color='black', linestyle='--')
+		high_score_hgm_control = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]),
+											 threshold)
+		plt.plot([x_min, x_max + x_step], [high_score_hgm_control, high_score_hgm_control], color='black',
+				 linestyle='--')
 
 	#region GCAMP =============================================================================================================
 	boxplot_xticks, boxplot_xtick_labels = list(), list()
@@ -891,9 +946,10 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 		if len(scores_hgm) > 1 or force_medians:
 			boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
-			boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-									showfliers=False, vert=False)
-			for box in [boxplot_v, boxplot_h]:
+			if horizontal_bps:
+				boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+										showfliers=False, vert=False)
+			for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
 				for patch in box['boxes']:
 					patch.set_facecolor('skyblue')
 					patch.set_alpha(0.5)
@@ -903,7 +959,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
 		if x_min <= x <= x_max:
-			plt.text(x, -0.035, label, color='blue', ha='center', va='top', rotation=45, fontsize=plot_size * 15/40,
+			plt.text(x, -0.035, label, color='blue', ha='center', va='top', rotation=45, fontsize=plot_size * 15 / 40,
 					 transform=plt.gca().get_xaxis_transform())
 	#endregion =================================================================================================================
 
@@ -917,22 +973,24 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
-def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True,
+
+def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True, horizontal_bps=True,
 						  title='scores', limits=None, force_medians=False, plot_size=30,
 						  save_path=None):
 	#region setup
 	threshold = 0.95
 
-	plt.figure(figsize=(plot_size * 1/3, plot_size * 1/3))
+	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
 	plt.title(title)
-	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25/60, labelpad=50)
-	plt.ylabel('HGM-BOM r2 score improvement (median)', fontsize=plot_size * 25/60)
+	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25 / 60, labelpad=50)
+	plt.ylabel('HGM-BOM r2 score improvement (median)', fontsize=plot_size * 25 / 60)
 	plt.grid(False)
 	plt.gca().grid(False)
 
 	if limits is None:
 		x_all = np.array([score for scores_bom, scores_hgm in neuron_scores.values() for score in scores_bom])
-		y_all = np.array([score for scores_bom, scores_hgm in neuron_scores.values() for score in scores_hgm - scores_bom])
+		y_all = np.array(
+			[score for scores_bom, scores_hgm in neuron_scores.values() for score in scores_hgm - scores_bom])
 
 		if neuron_scores_control is not None:
 			x_all = np.concatenate(
@@ -941,7 +999,8 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 			)
 			y_all = np.concatenate(
 				[y_all,
-				 np.array([score for scores_bom, scores_hgm in neuron_scores_control.values() for score in scores_hgm - scores_bom])]
+				 np.array([score for scores_bom, scores_hgm in neuron_scores_control.values() for score in
+						   scores_hgm - scores_bom])]
 			)
 
 		x_min, x_max = x_all.min(), x_all.max()
@@ -991,7 +1050,8 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 			x = np.median(scores_bom)
 			y = np.median(scores_hgm - scores_bom)
 
-			plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0, alpha=0.5)
+			plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='tomato', edgecolor='black',
+						linewidth=1.0, alpha=0.5)
 
 			boxplot_yticks_control.append(y)
 			boxplot_ytick_labels_control.append(f'{key}')
@@ -999,9 +1059,10 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 			if len(scores_hgm) > 1 or force_medians:
 				boxplot_v = plt.boxplot(scores_hgm - scores_bom, positions=[x], widths=bp_pxs[0], patch_artist=True,
 										showfliers=False)
-				boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-										showfliers=False, vert=False)
-				for box in [boxplot_v, boxplot_h]:
+				if horizontal_bps:
+					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+											showfliers=False, vert=False)
+				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
 					for patch in box['boxes']:
 						patch.set_facecolor('tomato')
 						patch.set_alpha(0.5)
@@ -1020,8 +1081,10 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 	if neuron_scores_control is not None:
 		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
-		high_score_hgm_impr_control = np.quantile(np.concatenate([pair[1] - pair[0] for pair in neuron_scores_control.values()]), threshold)
-		plt.plot([x_min, x_max + x_step], [high_score_hgm_impr_control, high_score_hgm_impr_control], color='black', linestyle='--')
+		high_score_hgm_impr_control = np.quantile(
+			np.concatenate([pair[1] - pair[0] for pair in neuron_scores_control.values()]), threshold)
+		plt.plot([x_min, x_max + x_step], [high_score_hgm_impr_control, high_score_hgm_impr_control], color='black',
+				 linestyle='--')
 
 	#region GCAMP ===========================================================================================================
 	boxplot_yticks, boxplot_ytick_labels = list(), list()
@@ -1039,7 +1102,8 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 		if neuron_scores_control is not None and control_cutoff and y <= high_score_hgm_impr_control:
 			continue
 
-		plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
+		plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0,
+					alpha=0.5)
 
 		boxplot_yticks.append(y)
 		boxplot_ytick_labels.append(f'{key}')
@@ -1047,9 +1111,10 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 		if len(scores_hgm) > 1 or force_medians:
 			boxplot_v = plt.boxplot(scores_hgm - scores_bom, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
-			boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-									showfliers=False, vert=False)
-			for box in [boxplot_v, boxplot_h]:
+			if horizontal_bps:
+				boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+										showfliers=False, vert=False)
+			for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
 				for patch in box['boxes']:
 					patch.set_facecolor('skyblue')
 					patch.set_alpha(0.5)
@@ -1059,7 +1124,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 	for y, label in zip(boxplot_yticks, boxplot_ytick_labels):
 		if y >= y_min:
-			plt.text(1.01, y, label, color='blue', ha='left', va='center', rotation=0, fontsize=plot_size * 15/40,
+			plt.text(1.01, y, label, color='blue', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
 					 transform=plt.gca().get_yaxis_transform())
 	ax2 = plt.gca().secondary_yaxis('right')
 	ax2.set_yticks(boxplot_yticks)
@@ -1076,10 +1141,12 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
 
+
 #endregion
 
 
-def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', label_behavior='behavior', height_ratios=(1, 4),
+def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', label_behavior='behavior',
+					   height_ratios=(1, 4),
 					   timestamps=None, zlimits_activity=None, zlimits_behavior=None, cmap='rainbow', neuron_ids=False,
 					   save_path=None):
 	if behavior is not None:
@@ -1118,7 +1185,8 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 		ax_bottom.set_yticklabels([traces.columns[i] for i in np.arange(0, traces.values.shape[1], 100)], fontsize=4)
 	else:
 		ax_bottom.set_yticks(np.arange(traces.values.shape[1]))
-		ax_bottom.set_yticklabels([column if not (column == '' or column[0].isdigit()) else '' for column in traces.columns], fontsize=4)
+		ax_bottom.set_yticklabels(
+			[column if not (column == '' or column[0].isdigit()) else '' for column in traces.columns], fontsize=4)
 		ax_bottom.set_xticks(np.arange(0, traces.values.shape[0], traces.values.shape[0] // 10))
 		if timestamps is not None:
 			ax_bottom.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
@@ -1179,7 +1247,8 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 	colors = [color_pool[idx] for idx in index_orders]
 
 	for idx in range(3):
-		plt.bar(x_positions, bars.loc[order[idx]], width=bar_width, bottom=y_positions[idx], color=colors[idx], edgecolor='none')
+		plt.bar(x_positions, bars.loc[order[idx]], width=bar_width, bottom=y_positions[idx], color=colors[idx],
+				edgecolor='none')
 
 	if normalized and bar_labels is not None:
 		bar_labels_color_pool = [cm.get_cmap('Greys')(v) for v in [0.1, 0.9, 0.1]]
@@ -1194,15 +1263,18 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 		idx = 0
 		for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
 			# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
-			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center', fontsize=10)
+			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center',
+					 fontsize=10)
 		idx = 1
 		for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
 			# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
-			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='top', fontsize=10)
+			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='top',
+					 fontsize=10)
 		idx = 2
 		for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
 			# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
-			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center', fontsize=10)
+			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center',
+					 fontsize=10)
 
 	plt.yticks(np.arange(0, 1.05, 0.05) * max_y, labels=[f'{val:.1f}%' for val in np.arange(0, 105, 5) * max_y])
 	plt.xticks(x_positions, labels)
@@ -1237,13 +1309,16 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 			name = markers_reconstructed.columns[i * 4].split('-')[0]
 
 			ax = axes[0, i]
-			ax.scatter(markers_reconstructed[f'{name}-top_x'].values, markers_reconstructed[f'{name}-top_y'].values, color='red', alpha=0.1, s=5)
+			ax.scatter(markers_reconstructed[f'{name}-top_x'].values, markers_reconstructed[f'{name}-top_y'].values,
+					   color='red', alpha=0.1, s=5)
 
 			if join_topbot:
-				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values, color='red', alpha=0.1, s=5)
+				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values,
+						   color='red', alpha=0.1, s=5)
 			else:
 				ax = axes[1, i]
-				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values, color='red', alpha=0.1, s=5)
+				ax.scatter(markers_reconstructed[f'{name}-bot_x'].values, markers_reconstructed[f'{name}-bot_y'].values,
+						   color='red', alpha=0.1, s=5)
 
 	for i in range(4):
 		name = markers.columns[i * 4].split('-')[0]
@@ -1271,14 +1346,18 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 	plt.show()
 
 
-def plot_hyperparams(hyperparams, hyperparams_verbose, datasets=None, ll='ll00', histograms=False, space='logarithmic', total_mean=True, save_dirpath=None):
+def plot_hyperparams(hyperparams, hyperparams_verbose, datasets=None, ll='ll00', histograms=False, space='logarithmic',
+					 total_mean=True, save_dirpath=None):
 	if save_dirpath is not None:
 		os.makedirs(save_dirpath, exist_ok=True)
 
-	variants_x_models = [f'{variant}_{model}' for variant in hyperparams_verbose[ll].keys() for model in hyperparams_verbose[ll][variant].keys()]
+	variants_x_models = [f'{variant}_{model}' for variant in hyperparams_verbose[ll].keys() for model in
+						 hyperparams_verbose[ll][variant].keys()]
 
 	if datasets is None:
-		datasets = sorted(list(set([dataset for variant in hyperparams_verbose[ll].keys() for model in hyperparams_verbose[ll][variant].keys() for dataset in hyperparams_verbose[ll][variant][model]])))
+		datasets = sorted(list(set([dataset for variant in hyperparams_verbose[ll].keys() for model in
+									hyperparams_verbose[ll][variant].keys() for dataset in
+									hyperparams_verbose[ll][variant][model]])))
 
 	for dataset in datasets:
 		identifier = f'{ll} {dataset} ({'log' if space == 'logarithmic' else 'lin'} space)'
@@ -1337,7 +1416,8 @@ def plot_hyperparams(hyperparams, hyperparams_verbose, datasets=None, ll='ll00',
 					y_values = hyperparams_verbose[ll][variant][model][dataset]['mpe_loss']['all'][::-1]
 					means = hyperparams_verbose[ll][variant][model][dataset][hyperparam]['mean']
 					if total_mean:
-						total_means = {mean_type: hyperparams[mean_type][ll][variant][model][hyperparam] for mean_type in hyperparams.keys()}
+						total_means = {mean_type: hyperparams[mean_type][ll][variant][model][hyperparam] for mean_type
+									   in hyperparams.keys()}
 
 					plot.set_title(f'{hyperparam} ({x_values.shape[0]} runs)', fontsize=10)
 
@@ -1345,17 +1425,20 @@ def plot_hyperparams(hyperparams, hyperparams_verbose, datasets=None, ll='ll00',
 						x_values = np.log10(x_values)
 						means = {mean_type: np.log10(means[mean_type]) for mean_type in means.keys()}
 						if total_mean:
-							total_means = {mean_type: np.log10(total_means[mean_type]) for mean_type in total_means.keys()}
+							total_means = {mean_type: np.log10(total_means[mean_type]) for mean_type in
+										   total_means.keys()}
 
 					if histograms:
 						plot.hist(y_values, bins=25)
 					else:
 						plot.plot(x_values, y_values, marker='o', linestyle='None', alpha=0.5)
 						# plot.plot([x_values[0], x_values[-1]], [means['linear'], means['linear']], label='local mean', color='C2', alpha=0.33)
-						plot.plot([means['geometric']] * 2, [y_values[0], y_values[-1]], label=f'local mean: {means['geometric']:.2f}', color='C2')
+						plot.plot([means['geometric']] * 2, [y_values[0], y_values[-1]],
+								  label=f'local mean: {means['geometric']:.2f}', color='C2')
 						if total_mean:
 							# plot.plot([x_values[0], x_values[-1]], [total_means['linear'], total_means['linear']], label='global mean', color='C1', alpha=0.33)
-							plot.plot([total_means['geometric']] * 2, [y_values[0], y_values[-1]], label=f'global mean: {total_means['geometric']:.2f}', color='C1')
+							plot.plot([total_means['geometric']] * 2, [y_values[0], y_values[-1]],
+									  label=f'global mean: {total_means['geometric']:.2f}', color='C1')
 
 						plot.xaxis.set_major_locator(MultipleLocator(0.5))
 						for label in plot.get_xticklabels():

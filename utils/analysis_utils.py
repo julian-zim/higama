@@ -325,7 +325,8 @@ def read_predictionss(filenames, model_path, model_variant, data_variant='gcamp'
 
 def read_scoress(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
 	scoress = [read_scores(filename, model_path, model_variant, data_variant, manual, full) for filename in filenames]
-	return list(zip(*scoress))
+	boms_spn, hgms_spn = list(zip(*scoress))
+	return list(zip(*boms_spn)), list(zip(*hgms_spn))
 
 
 def get_lossess(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
