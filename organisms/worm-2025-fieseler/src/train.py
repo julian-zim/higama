@@ -15,8 +15,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	# file_ids_gcamp = list(range(0, 33+1))
-	file_ids_gcamp = [19]
+	file_ids_gcamp = list(range(0, 33+1))
+	# file_ids_gcamp = [19]
 
 	worm_gcamp = Worm(file_ids_gcamp, names, variants, worm_hyperparameters, worm_sweep_parameters, data_variant='gcamp')
 	worm_gcamp.do(action='train')

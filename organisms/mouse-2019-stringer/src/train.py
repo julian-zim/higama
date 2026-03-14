@@ -15,8 +15,8 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	# file_ids = list(range(0, 8+1))
-	file_ids = [2]
+	file_ids = list(range(0, 8+1))
+	# file_ids = [2]
 
 	mouse = Mouse(file_ids, names, variants, mouse_hyperparameters, mouse_sweep_parameters)
 	mouse.do(action='train')
