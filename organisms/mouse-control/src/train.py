@@ -15,7 +15,7 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	file_ids = [0, 1, 3, 4, 5, 6, 7, 8]
+	file_ids = list(range(0, 8+1))
 	# file_ids = [2]
 
 	for shuffle_id in range(100):
