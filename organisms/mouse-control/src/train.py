@@ -18,11 +18,12 @@ def main():
 	file_ids = list(range(0, 8+1))
 	# file_ids = [2]
 
-	for shuffle_id in range(100):
-		print(f'\n=================== SHUFFLE {shuffle_id} ===================')
-		mouse = Mouse(shuffle_id, file_ids, names, variants, mouse_hyperparameters, mouse_sweep_parameters)
-		mouse.do(action='train')
-		mouse.do(action='run')
+	for file_id in file_ids:
+		for shuffle_id in range(100):
+			print(f'\n=================== SHUFFLE {shuffle_id} ===================')
+			mouse = Mouse(shuffle_id, [file_id], names, variants, mouse_hyperparameters, mouse_sweep_parameters)
+			mouse.do(action='train')
+			mouse.do(action='run')
 
 
 if __name__ == '__main__':
