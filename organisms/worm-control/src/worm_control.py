@@ -75,7 +75,8 @@ class Worm(Organism):
 				hyperparams['reg_lambdas'] = hyperparams['reg_lambdas'][model_variant][model_name]
 
 				model_folder = (f'{self.data_variant}_{model_name}_{model_variant}_'
-								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in hyperparams['reg_lambdas'].keys()]))
+								+ '_'.join([f'{param.split('_')[0]}{hyperparams['reg_lambdas'][param]:.2E}' for param in
+											hyperparams['reg_lambdas'].keys()]))
 
 				if action == 'sweep':
 					sweep_cfg = self.sweep_config.copy()
@@ -89,14 +90,19 @@ class Worm(Organism):
 						splits = [(np.arange(traces.shape[0]), np.arange(traces.shape[0]))]
 					else:
 						splits = list(StratifiedKFold(n_splits=5, shuffle=False).split(np.zeros(traces.shape[0]),
-																					   classes[[self.get_split_class()]].values))
+																					   classes[[
+																						   self.get_split_class()]].values))
 
 					print(f'\n\t{file_id}: {filename}... ', end='')
 					match action:
 						case 'run':
 							model_params = train_utils.load_params(
-								os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'params', model_folder),
+								os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'params',
+											 model_folder),
 								filename)
+
+							os.remove(os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'params',
+												   model_folder, f'{filename}.msgpack'))
 
 							(model_spn,
 							 model_man,
@@ -109,14 +115,15 @@ class Worm(Organism):
 							train_utils.save_predictions(
 								filename,
 								(model_spn,
-								 None,
-								 None,
-								 None,
-								 None,
-								 None,
-								 None),
+								 model_man,
+								 model_rec,
+								 model_res,
+								 model_pres,
+								 model_resss,
+								 model_bss),
 								save_path=os.path.join(
-									os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'predictions',
+									os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits',
+												 'predictions',
 												 model_folder)))
 
 						case 'train':
@@ -124,28 +131,29 @@ class Worm(Organism):
 							 losses_train, man_losses_train, res_losses_train, mpe_losses_train,
 							 losses, man_losses, res_losses, mpe_losses
 							 ) = organism.train_dataset(model, splits,
-											   traces.values,
-											   behavior.values,
-											   classes.values,
-											   hyperparams)
+														traces.values,
+														behavior.values,
+														classes.values,
+														hyperparams)
 
 							train_utils.save_params(filename, params,
-													os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits',
+													os.path.join(f'{self.get_model_path()}',
+																 'Full' if full else 'Splits',
 																 'params', model_folder))
 
-							# train_utils.save_losses(filename, np.stack([
-							# 	losses_train, man_losses_train, res_losses_train, mpe_losses_train,
-							# 	losses, man_losses, res_losses, mpe_losses
-							# ]), os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'history', model_folder))
+						# train_utils.save_losses(filename, np.stack([
+						# 	losses_train, man_losses_train, res_losses_train, mpe_losses_train,
+						# 	losses, man_losses, res_losses, mpe_losses
+						# ]), os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'history', model_folder))
 
 						case 'sweep':
 							def sweep_dataset_wrapper():
 								return organism.sweep_dataset(model, splits,
-													 traces.values,
-													 behavior.values,
-													 classes.values,
-													 hyperparams,
-													 log_path)
+															  traces.values,
+															  behavior.values,
+															  classes.values,
+															  hyperparams,
+															  log_path)
 
 							project_name = f'{os.path.basename(self.get_model_path()).split('-')[0]} {model_name}_{model_variant}-{f'll{int(hyperparams['loss_man_lambda'] * 100):02d}'} {time.strftime("%d.%m %Hh%M", time.localtime())} {file_id} {filename}'
 							sweep_id = wandb.sweep(sweep=sweep_cfg, project=project_name)

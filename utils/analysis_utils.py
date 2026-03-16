@@ -23,6 +23,28 @@ def get_plot_class(organism):
 			raise ValueError()
 
 
+def get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00'):
+	if manual:
+		with open('../../hyperparams_manual.json', 'r') as f:
+			reg_lambdas = json.load(f)
+	else:
+		with open('../../hyperparams.json', 'r') as f:
+			reg_lambdas = json.load(f)['geometric'][ll]
+	bom_folder = (f'{data_variant}_bom_{model_variant}_'
+				  + '_'.join([f'{param.split('_')[0]}{reg_lambdas[model_variant]['bom'][param]:.2E}' for param in
+							  reg_lambdas[model_variant]['bom'].keys()]))
+	hgm_folder = (f'{data_variant}_hgm_{model_variant}_'
+				  + '_'.join([f'{param.split('_')[0]}{reg_lambdas[model_variant]['hgm'][param]:.2E}' for param in
+							  reg_lambdas[model_variant]['hgm'].keys()]))
+
+	return bom_folder, hgm_folder
+
+
+def get_significant_neurons(filename, model_variant):
+	significant_neurons = pd.read_csv(f'../../out/data/significant_neurons/{filename}/{model_variant}_model.csv', index_col=0)
+	return list(significant_neurons.columns)
+
+
 def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
 	neurons_labels = [scores_per_neuron[0].columns for scores_per_neuron in hgms_scores_per_neuron]
 
@@ -52,23 +74,6 @@ def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
 					neuron_scores[label] = (np.vstack([score_bom_prev, score_bom_new]), np.vstack([score_hgm_prev, score_hgm_new]))
 
 	return neuron_scores
-
-
-def get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00'):
-	if manual:
-		with open('../../hyperparams_manual.json', 'r') as f:
-			reg_lambdas = json.load(f)
-	else:
-		with open('../../hyperparams.json', 'r') as f:
-			reg_lambdas = json.load(f)['geometric'][ll]
-	bom_folder = (f'{data_variant}_bom_{model_variant}_'
-				  + '_'.join([f'{param.split('_')[0]}{reg_lambdas[model_variant]['bom'][param]:.2E}' for param in
-							  reg_lambdas[model_variant]['bom'].keys()]))
-	hgm_folder = (f'{data_variant}_hgm_{model_variant}_'
-				  + '_'.join([f'{param.split('_')[0]}{reg_lambdas[model_variant]['hgm'][param]:.2E}' for param in
-							  reg_lambdas[model_variant]['hgm'].keys()]))
-
-	return bom_folder, hgm_folder
 
 
 # single

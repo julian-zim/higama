@@ -98,6 +98,8 @@ class Mouse(Organism):
 								os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'params', model_folder),
 								filename)
 
+							os.remove(os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'params', model_folder, f'{filename}.msgpack'))
+
 							(model_spn,
 							 model_man,
 							 model_rec,
@@ -109,12 +111,12 @@ class Mouse(Organism):
 							train_utils.save_predictions(
 								filename,
 								(model_spn,
-								 None,
-								 None,
-								 None,
-								 None,
-								 None,
-								 None),
+								 model_man,
+								 model_rec,
+								 model_res,
+								 model_pres,
+								 model_resss,
+								 model_bss),
 								save_path=os.path.join(
 									os.path.join(f'{self.get_model_path()}', 'Full' if full else 'Splits', 'predictions',
 												 model_folder)))
