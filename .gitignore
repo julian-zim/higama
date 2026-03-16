@@ -90,6 +90,11 @@ organisms/worm-2025-fieseler/out/*
 !organisms/worm-2025-fieseler/out/keep/
 !organisms/worm-2025-fieseler/out/keep/**
 
+# worm-control
+organisms/worm-control/out/*
+!organisms/worm-control/out/keep/
+!organisms/worm-control/out/keep/**
+
 # fly
 organisms/fly-2023-schaffer/out/*
 !organisms/fly-2023-schaffer/out/keep/
@@ -99,4 +104,9 @@ organisms/fly-2023-schaffer/out/*
 organisms/mouse-2019-stringer/out/*
 !organisms/mouse-2019-stringer/out/keep/
 !organisms/mouse-2019-stringer/out/keep/**
+
+# mouse-control
+organisms/mouse-control/out/*
+!organisms/mouse-control/out/keep/
+!organisms/mouse-control/out/keep/**
 
