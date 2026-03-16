@@ -14,12 +14,12 @@ from organism import Organism
 class Robot(Organism):
 	weights: tuple
 	neuron_labels: int
-	bhl_selection: list
+	states: list
 
-	def __init__(self, weights, neuron_labels, bhl_selection, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
+	def __init__(self, weights, neuron_labels, states, file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant='gcamp'):
 		self.weights = weights
 		self.neuron_labels = neuron_labels
-		self.bhl_selection = bhl_selection
+		self.states = states
 		super().__init__(file_ids, model_names, model_variants, hyperparameters, sweep_config, data_variant)
 
 	def get_split_class(self):
@@ -58,8 +58,8 @@ class Robot(Organism):
 														 filename_gcamp,
 														 self.neuron_labels,
 														 eigenworms,
-														 discrete_states[self.bhl_selection],
-														 n_dimensions=len(self.bhl_selection))
+														 discrete_states[self.states],
+														 n_dimensions=len(self.states))
 
 		# # kill all information in behavior
 		# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)

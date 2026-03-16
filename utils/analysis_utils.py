@@ -9,7 +9,21 @@ from models import model_utils
 #endregion
 
 
-def assemble_scores(boms_scores_per_neuron, hgms_scores_per_neuron):
+def get_plot_class(organism):
+	match organism:
+		case 'robot':
+			return 'REV', 'reversal'
+		case 'worm':
+			return 'REV', 'reversal'
+		case 'fly':
+			return 'still', 'quiescent'
+		case 'mouse':
+			return 'run', 'running'
+		case _:
+			raise ValueError()
+
+
+def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
 	neurons_labels = [scores_per_neuron[0].columns for scores_per_neuron in hgms_scores_per_neuron]
 
 	boms_scores_per_neuron = [np.array([split.values[0] for split in scores]) for scores in boms_scores_per_neuron]
@@ -104,7 +118,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			pass
 
 			# generate
-			weights, neurons, bhl_selection = generate_data
+			weights, neurons, states = generate_data
 
 			(filename,
 			 modes,
@@ -116,8 +130,8 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 															 filename_gcamp,
 															 neurons,
 															 eigenworms,
-															 discrete_states[bhl_selection],
-															 n_dimensions=len(bhl_selection))
+															 discrete_states[states],
+															 n_dimensions=len(states))
 
 			# # kill all information in behavior
 			# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)

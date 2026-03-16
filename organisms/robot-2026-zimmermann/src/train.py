@@ -15,19 +15,16 @@ def main():
 	names = ['bom', 'hgm']
 	variants = ['ns', 'ss']
 
-	# file_id = list(range(0, 33+1))
-	file_id = [19]
+	# file_ids = list(range(0, 33+1))
+	file_ids = [19, 20, 21, 22, 23]
 
 	weights = (0.1, -0.25, 1.)
 
 	neuron_labels = [f'N{i}' for i in range(50)]
-	# states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
-	bhl_selection = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN']
+	states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
 
-	robot = Robot(weights, neuron_labels, bhl_selection,
-				  file_id,
-				  names, variants,
-				  robot_hyperparameters, robot_sweep_parameters, data_variant='gcamp')
+	robot = Robot(weights, neuron_labels, states,
+				  file_ids, names, variants, robot_hyperparameters, robot_sweep_parameters, data_variant='gcamp')
 	robot.do(action='train')
 	robot.do(action='run')
 	robot.do(action='train', full=True)

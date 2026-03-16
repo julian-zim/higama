@@ -1,574 +1,580 @@
-from collections import defaultdict
-from typing import Callable, Dict, Iterable, Tuple, Union
+from typing import Dict, Tuple, Optional, Iterable, List
+import os
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import OrderedDict
-import json
-
-try:
-	import seaborn as sns
-
-	_HAS_SNS = True
-except Exception:
-	_HAS_SNS = False
-	from scipy.stats import gaussian_kde
-
-
-def merge_neuron_scores_per_shuffle(
-		neuron_scores_per_shuffle: Iterable[Dict[str, Tuple[np.ndarray, np.ndarray]]],
-		stack: bool = False,
-		ignore_missing: bool = True
-) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
-	"""
-	Merge a list of per-shuffle dicts into a single dict where each value is a tuple
-	of numpy arrays (bom_values, hgm_values).
-
-	Behavior:
-	  - For each neuron label, collect the per-shuffle entries into lists.
-	  - Convert those lists to numpy arrays before returning:
-		  * If all entries for a neuron have identical numeric shapes and stacking succeeds,
-			results will be a numeric ndarray with shape (n_shuffles_present, ...).
-		  * Otherwise, results will be an object-dtype ndarray: np.array(list, dtype=object).
-	  - If a neuron is missing from some shuffles and ignore_missing=False, None placeholders
-		are inserted. The function will attempt to replace None with NaNs matching the shape
-		of the first non-None entry (useful for numeric arrays), otherwise None will remain
-		and the returned array will be object-dtype.
-
-	Returns:
-	  merged: dict mapping label -> (bom_values_array, hgm_values_array)
-	"""
-	bom_collect = defaultdict(list)
-	hgm_collect = defaultdict(list)
-
-	shuffle_list = list(neuron_scores_per_shuffle)
-	# gather the set of all labels that appear anywhere
-	all_labels = set()
-	for d in shuffle_list:
-		all_labels.update(d.keys())
-
-	for d in shuffle_list:
-		for label in all_labels:
-			if label in d:
-				pair = d[label]
-				bom_collect[label].append(pair[0])
-				hgm_collect[label].append(pair[1])
-			else:
-				if not ignore_missing:
-					bom_collect[label].append(None)
-					hgm_collect[label].append(None)
-				# if ignore_missing, we simply skip this shuffle for this neuron
-
-	def to_numpy_array(lst):
-		"""Convert a python list of entries into a numpy array.
-
-		- If all entries are None -> return empty object array of length 0.
-		- Try to replace None with NaN-filled arrays/scalars when possible (if first non-None
-		  entry is a numeric ndarray or numeric scalar).
-		- Try np.stack for homogeneous numeric arrays (stack==True or not; we always attempt stacking
-		  to produce numeric arrays when possible). If stacking fails, return object-dtype array.
-		"""
-		if len(lst) == 0:
-			return np.array([], dtype=object)
-
-		# detect first non-None
-		first_non_none = None
-		for x in lst:
-			if x is not None:
-				first_non_none = x
-				break
-
-		if first_non_none is None:
-			# all None -> return object-dtype array of None
-			return np.array(lst, dtype=object)
-
-		# If there are None placeholders, try to replace them with NaN equivalents
-		if any(x is None for x in lst):
-			filled = []
-			for x in lst:
-				if x is not None:
-					filled.append(x)
-				else:
-					# create NaN placeholder matching shape/type of first_non_none
-					if isinstance(first_non_none, np.ndarray):
-						try:
-							nan_fill = np.full(first_non_none.shape, np.nan, dtype=first_non_none.dtype)
-						except Exception:
-							# fallback to float NaNs
-							nan_fill = np.full(first_non_none.shape, np.nan, dtype=float)
-						filled.append(nan_fill)
-					else:
-						# scalar or other: use np.nan
-						filled.append(np.nan)
-			lst = filled
-
-		# Now try to stack into a numeric ndarray
-		try:
-			stacked = np.stack(lst, axis=0)
-			# Normalize stacked shapes:
-			# - If stacking produced a 1D array of scalars, make it (n, 1)
-			# - Otherwise collapse all trailing dimensions into a single feature dimension
-			if stacked.ndim == 1:
-				stacked = stacked.reshape(stacked.shape[0], 1)
-			else:
-				# collapse dims after the first into one feature dimension
-				stacked = stacked.reshape(stacked.shape[0], -1)
-			return stacked
-		except Exception:
-			# stacking failed (incompatible shapes or types) -> return object array
-			return np.array(lst, dtype=object)
-
-	merged = {}
-	for label in sorted(all_labels):
-		bom_list = bom_collect[label]
-		hgm_list = hgm_collect[label]
-
-		bom_out = to_numpy_array(bom_list)
-		hgm_out = to_numpy_array(hgm_list)
-
-		merged[label] = (bom_out, hgm_out)
-
-	return merged
+import math
 
 
 def compute_neuron_percentiles(
-		neuron_scores_actual: Dict[str, Tuple[np.ndarray, np.ndarray]],
-		neuron_scores_per_shuffle: Iterable[Dict[str, Tuple[np.ndarray, np.ndarray]]],
-		model: Union[str, int] = 'hgm',
-		agg_func: Callable[[np.ndarray], float] = None,
+	neuron_scores: Dict[str, Tuple[np.ndarray, np.ndarray]],
+	neuron_scores_shuffle: Dict[str, Tuple[np.ndarray, np.ndarray]],
+	model: str = 'hgm',
 ) -> Dict[str, float]:
+	"""Compute mid-rank percentiles for each neuron.
+
+	For each neuron label:
+	  - `neuron_scores[label][idx]` must be a single scalar (or length-1
+		array) containing the observed score for the chosen model.
+	  - `neuron_scores_shuffle[label][idx]` must be a 1-D array of control
+		samples (e.g. length 100). If not 1-D it will be flattened.
+
+	The percentile is computed as:
+	  pct = (count(ctrl < obs) + 0.5 * count(ctrl == obs)) / N * 100
+
+	Returns a dict mapping neuron label -> percentile (float in [0,100]) or
+	np.nan for neurons without controls or empty control arrays.
 	"""
-	For each neuron key in `neuron_scores_actual`, compute the percentile of the actual score
-	relative to the distribution built from `neuron_scores_per_shuffle`.
 
-	Args:
-	  neuron_scores_actual: dict mapping neuron_label -> (bom_array, hgm_array)
-		(matches the structure produced by your `assemble` function).
-	  neuron_scores_per_shuffle: iterable (list) of shuffle dicts,
-		each mapping neuron_label -> (bom_array, hgm_array).
-	  model: 'hgm' or 'bom' or 0/1 integer selecting the tuple element.
-	  agg_func: function to reduce an array to a scalar (default: np.nanmean of flattened array).
+	def _model_index(m: str) -> int:
+		mm = m.lower()
+		if mm == 'hgm':
+			return 1
+		if mm == 'bom':
+			return 0
+		raise ValueError("model must be 'hgm' or 'bom'")
 
-	Returns:
-	  dict mapping neuron_label -> percentile (0..100) where percentile p means
-	  actual > p% of shuffle values; ties are handled using mid-rank:
-	  (count_less + 0.5 * count_equal) / N * 100.
-	"""
-	# choose index 0=bom, 1=hgm
-	if isinstance(model, str):
-		model = model.lower()
-		if model == 'bom':
-			model_index = 0
-		elif model == 'hgm':
-			model_index = 1
-		else:
-			raise ValueError("model must be 'bom' or 'hgm' (or 0/1).")
-	else:
-		model_index = int(model)
+	idx = _model_index(model)
+	percentiles: Dict[str, float] = {}
 
-	if agg_func is None:
-		def agg_func_default(x: np.ndarray) -> float:
-			# flatten and take nanmean by default
-			if x is None:
-				return np.nan
-			x = np.asarray(x)
-			if x.size == 0:
-				return np.nan
-			return float(np.nanmean(x))
-
-		agg_func = agg_func_default
-
-	percentiles = {}
-	# Convert shuffles to list to iterate multiple times if needed
-	shuffles_list = list(neuron_scores_per_shuffle)
-
-	for label, actual_pair in neuron_scores_actual.items():
+	for label in neuron_scores.keys():
+		# get observed scalar
 		try:
-			actual_arr = actual_pair[model_index]
+			observed_arr = neuron_scores[label][idx]
 		except Exception:
-			percentiles[label] = np.nan
+			# mark missing/invalid observed as NaN
+			percentiles[label] = float('nan')
 			continue
 
-		actual_value = agg_func(actual_arr)
-
-		# Build distribution across shuffles for this neuron label
-		dist_values = []
-		for shuffle_dict in shuffles_list:
-			if label not in shuffle_dict:
-				# some shuffles might not contain this neuron -> skip
-				continue
-			shuffle_arr = shuffle_dict[label][model_index]
-			val = agg_func(shuffle_arr)
-			# If agg returns nan (e.g. empty), skip
-			if np.isnan(val):
-				continue
-			dist_values.append(val)
-
-		if len(dist_values) == 0 or np.isnan(actual_value):
-			percentiles[label] = np.nan
+		obs_a = np.asarray(observed_arr)
+		if obs_a.ndim == 0:
+			obs = float(obs_a)
+		elif obs_a.size == 1:
+			obs = float(obs_a.ravel()[0])
+		else:
+			# non-scalar observed -> mark NaN
+			percentiles[label] = float('nan')
 			continue
 
-		dist = np.asarray(dist_values)
-		count_less = np.sum(dist < actual_value)
-		count_equal = np.sum(dist == actual_value)
-		N = len(dist)
+		# get control array for same neuron
+		if label not in neuron_scores_shuffle:
+			percentiles[label] = float('nan')
+			continue
 
-		# mid-rank percentile
-		pct = (count_less + 0.5 * count_equal) / N * 100.0
+		ctrl_arr = neuron_scores_shuffle[label][idx]
+		if ctrl_arr is None:
+			percentiles[label] = float('nan')
+			continue
+
+		ctrl = np.asarray(ctrl_arr)
+		if ctrl.size == 0:
+			percentiles[label] = float('nan')
+			continue
+
+		if ctrl.ndim != 1:
+			# flatten any higher-dim control array to 1-D
+			ctrl = ctrl.ravel()
+
+		less = np.sum(ctrl < obs)
+		equal = np.sum(ctrl == obs)
+		n = float(ctrl.size)
+		pct = (less + 0.5 * equal) / n * 100.0
 		percentiles[label] = float(pct)
 
 	return percentiles
 
 
-# Plot distributions for neurons: histogram of shuffle values + actual value marker
 
+def plot_control_histograms(
+	neuron_scores: Dict[str, Tuple[np.ndarray, np.ndarray]],
+	neuron_scores_shuffle: Dict[str, Tuple[np.ndarray, np.ndarray]],
+	neuron_labels: Optional[Iterable[str]] = None,
+	model: str = 'hgm',
+	bins: int = 40,
+	ncols: int = 3,
+	figsize_per_plot: Tuple[int, int] = (6, 3),
+	save_path: Optional[str] = None,
+) -> List[str]:
+	"""Plot histogram of control distribution for each requested neuron.
 
-def agg_default(x):
-	if x is None:
-		return np.nan
-	a = np.asarray(x)
-	if a.size == 0:
-		return np.nan
-	return float(np.nanmean(a))
+	If `save_path` is provided, this function will save each neuron's histogram
+	as a separate PNG file in that directory under the `neurons/` subfolder
+	named {label}.png (dpi=300). It will always display a combined
+	multi-panel figure and also save that combined figure as `all.png` inside
+	`save_path` when provided.
 
-
-def compute_dist_and_percentile(label, neuron_scores_actual, neuron_scores_per_shuffle,
-								model_index=1, agg_func=agg_default):
-	# get actual scalar
-	if label not in neuron_scores_actual:
-		return None, None, "missing_actual"
-	actual_arr = neuron_scores_actual[label][model_index]
-	actual_val = agg_func(actual_arr)
-	# gather shuffle values
-	dist = []
-	for shuffle_dict in neuron_scores_per_shuffle:
-		if label not in shuffle_dict:
-			continue
-		val = agg_func(shuffle_dict[label][model_index])
-		if np.isnan(val):
-			continue
-		dist.append(val)
-	if len(dist) == 0 or np.isnan(actual_val):
-		return np.array(dist), actual_val, "insufficient_shuffles"
-	dist = np.asarray(dist)
-	# mid-rank percentile
-	count_less = np.sum(dist < actual_val)
-	count_equal = np.sum(dist == actual_val)
-	N = len(dist)
-	pct = (count_less + 0.5 * count_equal) / N * 100.0
-	return dist, actual_val, pct
-
-
-def plot_first_n_neurons(neuron_scores_actual, neuron_scores_per_shuffle,
-						 model='hgm', agg_func=agg_default, n=None,
-						 neuron_labels=None, bins=30, figsize=(18, 7), threshold=95):
+	Returns the list of labels that were plotted.
 	"""
-	Plot neurons according to selection logic:
-	  - If `neuron_labels` is provided, plot those (up to n).
-	  - Else if `threshold` is not None, compute percentiles and select neurons with
-		percentile >= threshold. If that selection is non-empty, plot those neurons.
-		If the caller provided `n` (an integer), the results are capped to `n`; if
-		`n` is None (the default), all selected neurons are plotted. If the selection
-		is empty, plot ALL neurons (no cap).
-	  - Else (threshold is None), fall back to original behavior: choose top-n by actual value.
 
-	Args:
-	  threshold: percentile cutoff (0-100). Use None to disable threshold selection.
-	"""
-	# keep a copy of the original model argument for percentile computation
-	original_model_arg = model
+	def _model_index(m: str) -> int:
+		mm = m.lower()
+		if mm == 'hgm':
+			return 1
+		if mm == 'bom':
+			return 0
+		raise ValueError("model must be 'hgm' or 'bom'")
 
-	# determine model index (and normalize `model` for later use)
-	if isinstance(model, str):
-		model = model.lower()
-		if model == 'bom':
-			model_index = 0
-		elif model == 'hgm':
-			model_index = 1
-		else:
-			raise ValueError("model must be 'bom' or 'hgm'")
-	else:
-		model_index = int(model)
+	idx = _model_index(model)
 
-	# Determine which neuron labels to plot
+	# choose labels
 	if neuron_labels is None:
-		if threshold is not None:
-			# compute percentiles for all neurons
-			percentiles = compute_neuron_percentiles(
-				neuron_scores_actual, neuron_scores_per_shuffle,
-				model=original_model_arg, agg_func=agg_func
-			)
-			# select labels meeting the threshold
-			selected = [label for label, pct in percentiles.items() if not np.isnan(pct) and pct >= threshold]
-			# sort selected by percentile descending (so most significant first)
-			selected.sort(key=lambda L: percentiles[L], reverse=True)
-
-			if len(selected) > 0:
-				# If caller provided n (int), cap to n; otherwise (n is None) plot all selected
-				if n is None:
-					chosen = selected
-				else:
-					chosen = selected[:n]
-			else:
-				# none meet the threshold -> plot ALL neurons (no cap)
-				chosen = list(neuron_scores_actual.keys())
-		else:
-			# original behavior: choose top-n by actual aggregated value
-			entries = []
-			for label, pair in neuron_scores_actual.items():
-				val = agg_func(pair[model_index])
-				entries.append((label, val))
-			entries = [e for e in entries if not np.isnan(e[1])]
-			entries.sort(key=lambda kv: kv[1], reverse=True)
-			chosen = [label for label, _ in entries][:n]
-			if len(chosen) < n:
-				for label in neuron_scores_actual.keys():
-					if label not in chosen:
-						chosen.append(label)
-					if len(chosen) >= n:
-						break
+		labels = list(neuron_scores.keys())
 	else:
-		# explicit list provided by user: respect it but cap at n
-		chosen = list(neuron_labels)[:n]
+		labels = list(neuron_labels)
+		if len(labels) == 0:
+			labels = list(neuron_scores.keys())
 
-	# Remove neurons that are missing actual values entirely (user requested to skip them).
-	# A neuron is considered missing if it's not in neuron_scores_actual or its aggregated
-	# actual value is NaN.
-	filtered_chosen = []
-	for label in chosen:
-		if label not in neuron_scores_actual:
-			# skip missing actual
-			continue
-		try:
-			actual_val_check = agg_func(neuron_scores_actual[label][model_index])
-		except Exception:
-			# treat as missing if aggregation fails
-			continue
-		if np.isnan(actual_val_check):
-			continue
-		filtered_chosen.append(label)
-
-	# use filtered list for plotting
-	chosen = filtered_chosen
-
-	# plotting grid: maximum 5 plots per row, create as many rows as needed
-	total_to_plot = len(chosen)
-	# determine number of columns (at most 5)
-	cols = min(5, total_to_plot) if total_to_plot > 0 else 1
-	rows = int(np.ceil(total_to_plot / cols)) if total_to_plot > 0 else 1
-
-	# Compute automatic figure size so each subplot has enough space.
-	# Derive a per-subplot base from the provided `figsize` defaults:
-	base_fig_w, base_fig_h = figsize
-	# historically figsize=(18,7) was used for up to 5 cols and 2 rows, so
-	# use that as baseline per-axis sizes
-	per_col_w = max(2.5, base_fig_w / 5.0)
-	per_row_h = max(2.5, base_fig_h / 2.0)
-
-	fig_w = per_col_w * cols
-	fig_h = per_row_h * rows
-	# clamp to avoid absurdly large figures
-	fig_w = min(fig_w, 40)
-	fig_h = min(fig_h, 25)
-
-	fig, axes = plt.subplots(rows, cols, figsize=(fig_w, fig_h), constrained_layout=True)
-	axes = np.array(axes).flatten()
-
-	# if nothing to plot, show message and return
-	if total_to_plot == 0:
-		fig.text(0.5, 0.5, "No neurons selected to plot.", ha='center', va='center', fontsize=12)
-		thresh_msg = f" (percentile>= {threshold})" if threshold is not None else ""
-		plt.suptitle(
-			f"Shuffle distributions and actual scores (model={original_model_arg}){thresh_msg} — plotted 0 neurons",
-			y=1.02)
-		plt.show()
+	if len(labels) == 0:
 		return []
 
-	# safe default for loop index
-	i = -1
+	# prepare save dirs if needed
+	neurons_dir = None
+	if save_path is not None:
+		os.makedirs(save_path, exist_ok=True)
+		neurons_dir = os.path.join(save_path, 'neurons')
+		os.makedirs(neurons_dir, exist_ok=True)
 
-	for i, label in enumerate(chosen):
-		ax = axes[i]
-		dist, actual_val, pct_or_status = compute_dist_and_percentile(label,
-																	  neuron_scores_actual,
-																	  neuron_scores_per_shuffle,
-																	  model_index=model_index,
-																	  agg_func=agg_func)
-		if isinstance(pct_or_status, str):
-			# status message: missing or insufficient
-			ax.text(0.5, 0.5, f"{label}\nStatus: {pct_or_status}",
-					ha='center', va='center', transform=ax.transAxes)
-			ax.set_title(label)
-			ax.set_ylabel("")
-			ax.set_xlabel("")
-			ax.set_yticks([])
+	# create individual plots if saving requested
+	plotted: List[str] = []
+	for label in labels:
+		# observed
+		try:
+			obs_arr = neuron_scores[label][idx]
+		except Exception:
+			continue
+		obs_a = np.asarray(obs_arr)
+		if obs_a.ndim == 0:
+			obs = float(obs_a)
+		elif obs_a.size == 1:
+			obs = float(obs_a.ravel()[0])
+		else:
 			continue
 
-		pct = pct_or_status
-		# histogram
-		if len(dist) > 0:
-			ax.hist(dist, bins=bins, density=True, alpha=0.6, color='C0', edgecolor='k')
-			if _HAS_SNS:
-				try:
-					sns.kdeplot(dist, ax=ax, color='C1')
-				except Exception:
-					pass
-			else:
-				# fallback KDE using scipy
-				try:
-					kde = gaussian_kde(dist)
-					xs = np.linspace(np.min(dist), np.max(dist), 200)
-					ax.plot(xs, kde(xs), color='C1', lw=1)
-				except Exception:
-					pass
+		# controls
+		if label not in neuron_scores_shuffle:
+			continue
+		ctrl_arr = neuron_scores_shuffle[label][idx]
+		if ctrl_arr is None:
+			continue
+		ctrl = np.asarray(ctrl_arr)
+		if ctrl.size == 0:
+			continue
+		if ctrl.ndim != 1:
+			ctrl = ctrl.ravel()
+
+		# always create figure for display, and save individual if requested
+		fig, ax = plt.subplots(figsize=figsize_per_plot)
+		try:
+			plt.style.use('seaborn-whitegrid')
+		except Exception:
+			pass
+
+
+		# Control histogram: tomato
+		counts, edges, patches = ax.hist(ctrl, bins=bins, color='tomato', alpha=0.85, edgecolor='black', linewidth=0.4)
+		for p in patches:
+			p.set_linewidth(0.4)
+
+		median = float(np.nanmedian(ctrl))
+		mean = float(np.nanmean(ctrl))
+		# Observation line: blue
+		l_obs = ax.axvline(obs, color='blue', linewidth=2.0, label='observed')
+		# Median/mean lines for control: red
+		l_med = ax.axvline(median, color='red', linestyle='--', linewidth=1.4, label='median')
+		l_mean = ax.axvline(mean, color='red', linestyle=':', linewidth=1.4, label='mean')
+
+		less = np.sum(ctrl < obs)
+		equal = np.sum(ctrl == obs)
+		n_ctrl = float(ctrl.size)
+		pct = (less + 0.5 * equal) / n_ctrl * 100.0
+
+		ax_text = f"pct={pct:.1f}\nmedian={median:.3g}\nmean={mean:.3g}"
+		# place the small info box near top-right of axes
+		ax.text(0.98, 0.95, ax_text, transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(facecolor='white', alpha=0.75, edgecolor='none'))
+
+		ax.set_title(f"{label}")
+		ax.set_ylabel('Count')
+		ax.set_xlabel('Control value')
+		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
+
+		if neurons_dir is not None:
+			save_fname = os.path.join(neurons_dir, f"{label}.png")
+			fig.tight_layout()
+			fig.savefig(save_fname, dpi=300)
+
+		plt.close(fig)
+		plotted.append(label)
+
+	# combined multi-panel figure (always displayed)
+	n = len(labels)
+	ncols = max(1, min(ncols, n))
+	nrows = math.ceil(n / ncols)
+	fig = plt.figure(figsize=(figsize_per_plot[0] * ncols, figsize_per_plot[1] * nrows))
+
+	try:
+		plt.style.use('seaborn-whitegrid')
+	except Exception:
+		pass
+
+	displayed: List[str] = []
+	for i, label in enumerate(labels):
+		ax = fig.add_subplot(nrows, ncols, i + 1)
+
+		# observed
+		try:
+			obs_arr = neuron_scores[label][idx]
+		except Exception:
+			ax.text(0.5, 0.5, f"Missing observed for {label}", ha='center', va='center')
+			ax.set_title(label)
+			continue
+
+		obs_a = np.asarray(obs_arr)
+		if obs_a.ndim == 0:
+			obs = float(obs_a)
+		elif obs_a.size == 1:
+			obs = float(obs_a.ravel()[0])
 		else:
-			ax.text(0.5, 0.5, "no shuffle values", ha='center', va='center', transform=ax.transAxes)
+			ax.text(0.5, 0.5, f"Observed for {label} not scalar", ha='center', va='center')
+			ax.set_title(label)
+			continue
 
-		# mark actual value
-		ax.axvline(actual_val, color='red', linestyle='--', lw=2, label=f'actual ({actual_val:.3g})')
-		title_extra = f" — percentile {pct:.1f}" if not np.isnan(pct) else ""
-		ax.set_title(f"{label}{title_extra}")
-		ax.legend(loc='upper right', fontsize='small')
-		ax.set_xlabel("aggregated score (mean)")
-		ax.set_ylabel("density")
+		# controls
+		if label not in neuron_scores_shuffle:
+			ax.text(0.5, 0.5, f"No control for {label}", ha='center', va='center')
+			ax.set_title(label)
+			continue
 
-	# hide unused axes if any
-	if i >= 0:
-		for j in range(i + 1, len(axes)):
-			axes[j].axis('off')
+		ctrl_arr = neuron_scores_shuffle[label][idx]
+		if ctrl_arr is None:
+			ax.text(0.5, 0.5, f"No control for {label}", ha='center', va='center')
+			ax.set_title(label)
+			continue
 
-	thresh_msg = f" (percentile>= {threshold})" if threshold is not None else ""
-	plt.suptitle(
-		f"Shuffle distributions and actual scores (model={original_model_arg}){thresh_msg} — plotted {total_to_plot} neurons",
-		y=1.02)
+		ctrl = np.asarray(ctrl_arr)
+		if ctrl.size == 0:
+			ax.text(0.5, 0.5, f"Empty control for {label}", ha='center', va='center')
+			ax.set_title(label)
+			continue
+
+		if ctrl.ndim != 1:
+			ctrl = ctrl.ravel()
+
+
+		# Control histogram: tomato
+		counts, edges, patches = ax.hist(ctrl, bins=bins, color='tomato', alpha=0.85, edgecolor='black', linewidth=0.4)
+		for p in patches:
+			p.set_linewidth(0.4)
+
+		median = float(np.nanmedian(ctrl))
+		mean = float(np.nanmean(ctrl))
+
+		# Observation line: blue
+		l_obs = ax.axvline(obs, color='blue', linewidth=2.0, label='observed')
+		# Median/mean lines for control: red
+		l_med = ax.axvline(median, color='red', linestyle='--', linewidth=1.4, label='median')
+		l_mean = ax.axvline(mean, color='red', linestyle=':', linewidth=1.4, label='mean')
+
+		less = np.sum(ctrl < obs)
+		equal = np.sum(ctrl == obs)
+		n_ctrl = float(ctrl.size)
+		pct = (less + 0.5 * equal) / n_ctrl * 100.0
+
+		ax_text = f"pct={pct:.1f}\nmedian={median:.3g}\nmean={mean:.3g}"
+		ax.text(0.98, 0.95, ax_text, transform=ax.transAxes, ha='right', va='top', fontsize=9, bbox=dict(facecolor='white', alpha=0.75, edgecolor='none'))
+
+		ax.set_title(f"{label}")
+		ax.set_ylabel('Count')
+		ax.set_xlabel('Control value')
+		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
+		displayed.append(label)
+
+	# hide any empty subplots
+	for j in range(n, nrows * ncols):
+		fig.add_subplot(nrows, ncols, j + 1).axis('off')
+
+	plt.tight_layout()
+	# if save_path provided, save combined figure as all.png
+	if save_path is not None:
+		try:
+			combined_path = os.path.join(save_path, 'all.png')
+			fig.tight_layout()
+			fig.savefig(combined_path, dpi=300)
+		except Exception:
+			pass
+
 	plt.show()
+	return displayed
 
 
-def plot_percentile_hist(percentiles, bins=50, title=None, threshold=None,
-						 figsize=(8, 4), save_path=None, show=True):
-	"""
-	Plot a histogram of percentiles.
+
+def plot_percentile_hist(percentiles: Dict[str, float], bins: int = 50, title: Optional[str] = None, threshold: Optional[float] = None, figsize: Tuple[int, int] = (6, 4), save_path: Optional[str] = None):
+	"""Plot histogram of percentile values across neurons.
 
 	Args:
-	  percentiles: dict mapping label->percentile (0..100) or an iterable/array of percentile values.
-	  bins: histogram bins (int or sequence)
-	  title: optional title string
-	  threshold: optional percentile threshold to mark with a vertical line (e.g., 95)
-	  figsize: figure size tuple
-	  save_path: if provided, save the figure to this path
-	  show: whether to call plt.show() (set False for headless runs)
+		percentiles: mapping label -> percentile (0-100). NaNs are ignored.
+		bins: number of histogram bins.
+		title: optional title for the plot.
+		threshold: optional vertical line at this percentile value.
+		figsize: figure size in inches.
 
 	Returns:
-	  (counts, bin_edges) as returned by plt.hist
+		(fig, ax) tuple with the matplotlib Figure and Axes.
 	"""
-	# Accept dict or iterable
-	if isinstance(percentiles, dict):
-		vals = [v for v in percentiles.values() if not np.isnan(v)]
-	else:
-		vals = [float(v) for v in percentiles if not np.isnan(v)]
+	# collect valid percentile values
+	vals = np.array([v for v in percentiles.values() if v is not None and not (isinstance(v, float) and np.isnan(v))])
 
-	fig, ax = plt.subplots(1, 1, figsize=figsize, constrained_layout=True)
-	if len(vals) == 0:
-		ax.text(0.5, 0.5, 'No percentile values to plot', ha='center', va='center')
-		if title is None:
-			ax.set_title('Percentile histogram')
-		else:
+	fig, ax = plt.subplots(figsize=figsize)
+	if vals.size == 0:
+		ax.text(0.5, 0.5, 'No valid percentile values to plot', ha='center', va='center')
+		if title:
 			ax.set_title(title)
-		if save_path:
-			fig.savefig(save_path)
-		if show:
-			plt.show()
-		return np.array([]), np.array([])
+		return fig, ax
 
-	counts, bin_edges, patches = ax.hist(vals, bins=bins, color='C0', edgecolor='k', alpha=0.7)
-	ax.set_xlabel('percentile')
-	ax.set_ylabel('count')
-	if title is None:
-		ax.set_title('Percentile distribution')
-	else:
+
+	# Histogram: skyblue for control/percentiles
+	counts, edges, patches = ax.hist(vals, bins=bins, color='skyblue', edgecolor='black', linewidth=0.5, alpha=0.9)
+
+	mean = float(np.nanmean(vals))
+	median = float(np.nanmedian(vals))
+
+	# Mean/median lines: blue
+	l_mean = ax.axvline(mean, color='blue', linestyle=':', linewidth=1.8, label=f'mean={mean:.1f}')
+	l_median = ax.axvline(median, color='blue', linestyle='--', linewidth=1.6, label=f'median={median:.1f}')
+
+	if threshold is not None:
+		ax.axvline(threshold, color='blue', linestyle='-', linewidth=1.6, label=f'threshold={threshold}')
+		n_above = int(np.sum(vals >= threshold))
+		pct_above = n_above / vals.size * 100.0
+		thr_text = f'{n_above}/{vals.size} ({pct_above:.1f}%) ≥ {threshold:.0f}% thr'
+
+	ax.set_xlabel('Percentile')
+	ax.set_ylabel('Count')
+	if title:
 		ax.set_title(title)
 
-	# annotate summary statistics
-	mean = float(np.mean(vals))
-	med = float(np.median(vals))
-	ax.axvline(mean, color='C2', linestyle='-', linewidth=1, label=f'mean {mean:.1f}')
-	ax.axvline(med, color='C3', linestyle='--', linewidth=1, label=f'median {med:.1f}')
-
-	# prepare threshold annotation count default
-	above = 0
-	# draw threshold line and include count in its legend label so it is clearly visible
-	above = 0
+	legend = ax.legend(fontsize=9)
+	# position threshold text left and below the legend, slightly to the right
 	if threshold is not None:
-		above = sum(1 for v in vals if v >= threshold)
-		ax.axvline(threshold, color='red', linestyle='-.', linewidth=1.5,
-				   label=f'threshold {threshold} (n={above})')
-
-	# create legend (legend now contains the threshold + count)
-	legend = ax.legend(loc='upper left', fontsize='small')
-
-	# Additionally, indicate how many neurons are at 100% (or effectively 100).
-	# Use a small epsilon to account for floating rounding.
-	try:
-		count_100 = int(sum(1 for v in vals if v >= 100.0 - 1e-8))
-	except Exception:
-		count_100 = 0
-
-	if count_100 > 0:
-		# Try to place the annotation just below the legend bbox in axes coords.
 		try:
 			fig.canvas.draw()
-			try:
-				renderer = fig.canvas.get_renderer()
-			except Exception:
-				renderer = getattr(fig.canvas, 'renderer', None)
-
-			if renderer is not None:
-				bbox_disp = legend.get_window_extent(renderer)
-				bbox_axes = ax.transAxes.inverted().transform_bbox(bbox_disp)
-				ann_x = bbox_axes.x0
-				ann_y = bbox_axes.y0 - 0.03
-				# clamp to inside axes
-				ann_x = min(max(ann_x, 0.01), 0.95)
-				ann_y = max(ann_y, 0.01)
-			else:
-				ann_x, ann_y = 0.05, 0.80
+			# get_window_extent may require a renderer; use get_tightbbox fallback
+			renderer = fig.canvas.get_renderer()
+			bbox = legend.get_window_extent(renderer=renderer)
+			bbox_axes = ax.transAxes.inverted().transform([[bbox.x0, bbox.y0], [bbox.x1, bbox.y1]])
+			x0_axes, y0_axes = bbox_axes[0]
+			# place text slightly to the right of legend's left edge and slightly below its bottom
+			text_x = min(0.95, x0_axes + 0.02)
+			text_y = max(0.01, y0_axes - 0.03)
 		except Exception:
-			ann_x, ann_y = 0.05, 0.80
+			text_x, text_y = 0.04, 0.88
 
-		ax.text(ann_x, ann_y, f'100%: {count_100}', ha='left', va='top', transform=ax.transAxes,
-				bbox=dict(boxstyle='round', facecolor='white', alpha=0.9), fontsize='small')
+		ax.text(text_x, text_y, thr_text, transform=ax.transAxes,
+				ha='left', va='top', fontsize=9, bbox=dict(facecolor='white', alpha=0.8, edgecolor='none'))
 
-	if save_path:
-		fig.savefig(save_path)
-	if show:
-		plt.show()
+	# save if requested
+	if save_path is not None:
+		d = os.path.dirname(save_path)
+		if d:
+			os.makedirs(d, exist_ok=True)
+		fig.tight_layout()
+		fig.savefig(f"{save_path}.png", dpi=300)
 
-	return counts, bin_edges
+	plt.tight_layout()
+	plt.show()
+	return fig, ax
 
 
-def build_sorted_percentiles(percentiles, neuron_scores,
-							 model_index=1, agg_func=agg_default):
-	entries = []
-	for label, pct in percentiles.items():
-		# skip missing/NaN percentiles
-		if pct is None or np.isnan(pct):
-			continue
-		# skip if neuron not present
-		if label not in neuron_scores:
-			continue
-		# get aggregated actual HGM value for tie-breaking
+
+def plot_performance_histogram(
+	neuron_scores: Dict[str, Tuple[np.ndarray, np.ndarray]],
+	neuron_scores_shuffle: Dict[str, Tuple[np.ndarray, np.ndarray]],
+	model: str = 'hgm',
+	bins: int = 50,
+	figsize: Tuple[int, int] = (7, 4),
+	title: Optional[str] = None,
+	save_path: Optional[str] = None,
+):
+	"""Plot a histogram of per-neuron median performance values (second tuple index by default).
+
+	For each neuron in `neuron_scores` this function will:
+	  - extract the observed value at the chosen model index (must be scalar)
+	  - extract the control samples at the same index (if available) and compute the median
+
+	The primary histogram shows the distribution of control medians across neurons. The
+	observed values are overlaid (as a semi-transparent histogram) and the mean/median for
+	the observed distribution are drawn with vertical lines (same color, different linestyles).
+
+	Returns (fig, ax).
+	"""
+
+	def _model_index(m: str) -> int:
+		mm = m.lower()
+		if mm == 'hgm':
+			return 1
+		if mm == 'bom':
+			return 0
+		raise ValueError("model must be 'hgm' or 'bom'")
+
+	idx = _model_index(model)
+
+	labels = list(neuron_scores.keys())
+	if len(labels) == 0:
+		raise ValueError('neuron_scores is empty')
+
+	# Collect per-neuron medians for observed tuples and control tuples.
+	obs_vals = []
+	ctrl_medians = []
+	for label in labels:
+		# observed tuple -> convert each element to a scalar by taking median if needed
 		try:
-			actual_val = agg_func(neuron_scores[label][model_index])
+			obs_tuple = neuron_scores[label]
 		except Exception:
+			# missing observed entry
 			continue
-		if actual_val is None or np.isnan(actual_val):
+		if not isinstance(obs_tuple, (list, tuple)):
+			# unexpected format; try to coerce
+			obs_tuple = (obs_tuple,)
+
+		# try to extract the model index element and reduce it to a scalar median
+		try:
+			obs_elem = obs_tuple[idx]
+		except Exception:
+			# tuple too short
 			continue
-		entries.append((label, float(pct), float(actual_val)))
 
-	# Sort by percentile desc, then actual_val desc
-	entries.sort(key=lambda t: (t[1], t[2]), reverse=True)
+		obs_arr = np.asarray(obs_elem)
+		if obs_arr.size == 0:
+			# skip empty
+			continue
+		# if array-like, take median; if scalar, take as-is
+		obs_scalar = float(np.nanmedian(obs_arr)) if obs_arr.size > 1 else float(obs_arr.ravel()[0])
+		obs_vals.append(obs_scalar)
 
-	# Create an OrderedDict mapping label -> (percentile, actual_val)
-	ordered = OrderedDict((label, (pct, actual)) for label, pct, actual in entries)
+		# control tuple -> similarly reduce to scalar median for the same index
+		ctrl_scalar = None
+		if label in neuron_scores_shuffle:
+			ctrl_tuple = neuron_scores_shuffle[label]
+			if isinstance(ctrl_tuple, (list, tuple)) and len(ctrl_tuple) > idx:
+				ctrl_elem = ctrl_tuple[idx]
+				if ctrl_elem is not None:
+					ctrl_arr = np.asarray(ctrl_elem)
+					if ctrl_arr.size > 0:
+						ctrl_scalar = float(np.nanmedian(ctrl_arr))
 
-	return entries, ordered
+		if ctrl_scalar is not None:
+			ctrl_medians.append(ctrl_scalar)
+
+	ctrl_medians = np.asarray(ctrl_medians)
+	obs_vals = np.asarray(obs_vals)
+
+	fig, ax = plt.subplots(figsize=figsize)
+	try:
+		plt.style.use('seaborn-whitegrid')
+	except Exception:
+		pass
+
+	if ctrl_medians.size == 0 and obs_vals.size == 0:
+		ax.text(0.5, 0.5, 'No data to plot', ha='center', va='center')
+		if title:
+			ax.set_title(title)
+		return fig, ax
+
+	# Use common bin edges and normalize histograms to fractions so that
+	# differing sample sizes (e.g. few controls vs many neurons) are comparable.
+	combined = None
+	if ctrl_medians.size > 0 and obs_vals.size > 0:
+		combined = np.concatenate([ctrl_medians, obs_vals])
+	elif ctrl_medians.size > 0:
+		combined = ctrl_medians
+	elif obs_vals.size > 0:
+		combined = obs_vals
+
+	bin_edges = None
+	if combined is not None:
+		try:
+			bin_edges = np.histogram_bin_edges(combined, bins=bins)
+		except Exception:
+			bin_edges = bins
+
+	# plot control medians normalized to fraction of controls
+	if ctrl_medians.size > 0:
+		if bin_edges is not None:
+			bins_use = bin_edges
+		else:
+			bins_use = bins
+		weights_ctrl = np.ones_like(ctrl_medians, dtype=float) / float(ctrl_medians.size)
+
+		counts_ctrl, edges_ctrl, patches_ctrl = ax.hist(
+			ctrl_medians,
+			bins=bins_use,
+			weights=weights_ctrl,
+			color='tomato',
+			alpha=0.85,
+			edgecolor='black',
+			linewidth=0.4,
+			label='control medians',
+		)
+		for p in patches_ctrl:
+			p.set_linewidth(0.4)
+
+	# plot observed medians normalized to fraction of neurons
+	if obs_vals.size > 0:
+		if bin_edges is not None:
+			bins_use = bin_edges
+		else:
+			bins_use = bins
+		weights_obs = np.ones_like(obs_vals, dtype=float) / float(obs_vals.size)
+
+		counts_obs, edges_obs, patches_obs = ax.hist(
+			obs_vals,
+			bins=bins_use,
+			weights=weights_obs,
+			color='skyblue',
+			alpha=0.6,
+			edgecolor='black',
+			linewidth=0.4,
+			label='observed medians',
+		)
+		for p in patches_obs:
+			p.set_linewidth(0.4)
+
+	# draw mean/median lines for observed (same color, different linestyles)
+	if obs_vals.size > 0:
+		obs_mean = float(np.nanmean(obs_vals))
+		obs_med = float(np.nanmedian(obs_vals))
+
+		# Mean/median lines for observed: blue
+		ax.axvline(obs_mean, color='blue', linestyle=':', linewidth=1.8, label=f'obs mean={obs_mean:.3g}')
+		ax.axvline(obs_med, color='blue', linestyle='--', linewidth=1.6, label=f'obs median={obs_med:.3g}')
+
+	# draw mean/median for control medians
+	if ctrl_medians.size > 0:
+		ctrl_mean = float(np.nanmean(ctrl_medians))
+		ctrl_med = float(np.nanmedian(ctrl_medians))
+
+		# Mean/median lines for control: red
+		ax.axvline(ctrl_mean, color='red', linestyle=':', linewidth=1.6, label=f'ctrl mean={ctrl_mean:.3g}')
+		ax.axvline(ctrl_med, color='red', linestyle='--', linewidth=1.4, label=f'ctrl median={ctrl_med:.3g}')
+
+	ax.set_xlabel('Value (model index {})'.format(idx))
+	ax.set_ylabel('Count')
+	if title:
+		ax.set_title(title)
+	else:
+		ax.set_title('Performance histogram (median of controls)')
+
+	ax.legend(fontsize=9)
+
+	# save if requested
+	if save_path is not None:
+		d = os.path.dirname(save_path)
+		if d:
+			os.makedirs(d, exist_ok=True)
+		fig.tight_layout()
+		fig.savefig(f"{save_path}.png", dpi=300)
+
+	plt.tight_layout()
+	plt.show()
+	return fig, ax
+
+
 

@@ -261,7 +261,8 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 
 
 def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
-					  title='manifolds', n_plots=None, plots_per_row=4, top_space=3, animate=False,
+					  animate=False,
+					  title='manifolds', n_plots=None, plots_per_row=4, top_space=3,
 					  save_path=None):
 	if n_plots is None:
 		n_plots = len(filenames)
@@ -375,8 +376,9 @@ def plot_manifolds_3d(filenames, modes, states=None, vars_expl=None, vars_expl_r
 			print(f'{np.array(vars_expl).sum(axis=1).mean() * 100:.1f}%')
 
 
-def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None, sort=False,
-						  titles=None, n_plots=None, top_space=3, animate=False,
+def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_expl_rs=None,
+						  animate=False,
+						  titles=None, n_plots=None, top_space=3,
 						  save_path=None):
 	if n_plots is None:
 		n_plots = len(filenames)
@@ -389,20 +391,8 @@ def plot_manifolds_3d_sep(filenames, modes, states=None, vars_expl=None, vars_ex
 		plot_manifolds_3d([filenames[i]], [modes[i]], [states[i]] if states is not None else None,
 						  [vars_expl[i]] if vars_expl is not None else None,
 						  [vars_expl_rs[i]] if vars_expl_rs is not None else None,
-						  sort=sort, title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
+						  title=titles[i], n_plots=1, plots_per_row=1, top_space=top_space, animate=animate,
 						  save_path=f'{save_path}/{filenames[i]}' if save_path is not None else None)
-
-
-#endregion
-
-
-#region manifolds wrappers
-def plot_manifold_by_gating():
-	pass
-
-
-def plot_manifold_by_states():
-	pass
 
 
 #endregion
@@ -774,47 +764,10 @@ def plot_loss(filename, loss, *args, **kwargs):
 
 #region score
 
-def plot_performance_histogram(neuron_scores, neuron_scores_control=None, control_cutoff=False,
-							   bins=20, title='scores', range=None,
-							   save_path=None):
-	values = [np.median(v[1]) for v in neuron_scores.values()]
-	plt.hist(
-		values,
-		bins=bins,
-		range=range,
-		weights=np.ones(len(values)) / len(values) * 100,
-		alpha=0.5,
-		color='blue',
-		edgecolor='k',
-		label='gcamp'
-	)
 
-	if neuron_scores_control:
-		values_control = [np.median(v[1]) for v in neuron_scores_control.values()]
-		plt.hist(
-			values_control,
-			bins=bins,
-			range=range,
-			weights=np.ones(len(values_control)) / len(values_control) * 100,
-			alpha=0.5,
-			color='red',
-			edgecolor='k',
-			label='control'
-		)
-
-	plt.xlabel('hgm score')
-	plt.ylabel('Count')
-	plt.title(title)
-	plt.legend()
-
-	if save_path is not None:
-		os.makedirs(os.path.dirname(save_path), exist_ok=True)
-		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
-	plt.show()
-
-
-def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True, horizontal_bps=True,
-						  title='scores', limits=None, force_medians=False, plot_size=30,
+def plot_performance_plot(neuron_scores, neuron_scores_control=None,
+						  horizontal_bps=True, control_cutoff=True, force_medians=False, plot_size=30,
+						  title='scores', limits=None,
 						  save_path=None):
 	#region setup
 	threshold = 0.95
@@ -875,46 +828,6 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 	#endregion
 
-	#region CONTROL ===========================================================================================================
-	if neuron_scores_control is not None:
-		boxplot_xticks_control, boxplot_xtick_labels_control = list(), list()
-
-		for key in neuron_scores_control.keys():
-			scores_bom, scores_hgm = neuron_scores_control[key]
-			if len(scores_hgm.shape) == 0:
-				scores_bom = scores_bom.reshape(1, 1)
-				scores_hgm = scores_hgm.reshape(1, 1)
-
-			x = np.median(scores_bom)
-			y = np.median(scores_hgm)
-
-			plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0,
-						alpha=0.5)
-
-			boxplot_xticks_control.append(x)
-			boxplot_xtick_labels_control.append(f'{key}')
-
-			if len(scores_hgm) > 1 or force_medians:
-				boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
-										showfliers=False)
-				if horizontal_bps:
-					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-											showfliers=False, vert=False)
-				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
-					for patch in box['boxes']:
-						patch.set_facecolor('tomato')
-						patch.set_alpha(0.5)
-					for median in box['medians']:
-						median.set_color('lightsteelblue')
-						median.set_linewidth(1)
-
-		for x, label in zip(boxplot_xticks_control, boxplot_xtick_labels_control):
-			if x_min <= x <= x_max:
-				plt.text(x, -0.035, label, color='red', ha='center', va='top', rotation=45,
-						 fontsize=plot_size * 15 / 40,
-						 transform=plt.gca().get_xaxis_transform())
-	#endregion ================================================================================================================
-
 	if neuron_scores_control is not None:
 		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
 		high_score_hgm_control = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]),
@@ -963,6 +876,46 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 					 transform=plt.gca().get_xaxis_transform())
 	#endregion =================================================================================================================
 
+	#region CONTROL ===========================================================================================================
+	if neuron_scores_control is not None:
+		boxplot_xticks_control, boxplot_xtick_labels_control = list(), list()
+
+		for key in neuron_scores_control.keys():
+			scores_bom, scores_hgm = neuron_scores_control[key]
+			if len(scores_hgm.shape) == 0:
+				scores_bom = scores_bom.reshape(1, 1)
+				scores_hgm = scores_hgm.reshape(1, 1)
+
+			x = np.median(scores_bom)
+			y = np.median(scores_hgm)
+
+			plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0,
+						alpha=0.5)
+
+			boxplot_xticks_control.append(x)
+			boxplot_xtick_labels_control.append(f'{key}')
+
+			if len(scores_hgm) > 1 or force_medians:
+				boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
+										showfliers=False)
+				if horizontal_bps:
+					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+											showfliers=False, vert=False)
+				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
+					for patch in box['boxes']:
+						patch.set_facecolor('tomato')
+						patch.set_alpha(0.5)
+					for median in box['medians']:
+						median.set_color('lightsteelblue')
+						median.set_linewidth(1)
+
+		for x, label in zip(boxplot_xticks_control, boxplot_xtick_labels_control):
+			if x_min <= x <= x_max:
+				plt.text(x, -0.035, label, color='red', ha='center', va='top', rotation=45,
+						 fontsize=plot_size * 15 / 40,
+						 transform=plt.gca().get_xaxis_transform())
+	#endregion ================================================================================================================
+
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
 	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
 	y_ticks_pos = np.arange(y_min, y_max, y_step)
@@ -974,8 +927,9 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None, control_cut
 	plt.show()
 
 
-def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cutoff=True, horizontal_bps=True,
-						  title='scores', limits=None, force_medians=False, plot_size=30,
+def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
+						  horizontal_bps=True, control_cutoff=True, force_medians=False, plot_size=30,
+						  title='scores', limits=None,
 						  save_path=None):
 	#region setup
 	threshold = 0.95
@@ -1037,48 +991,6 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 
 	#endregion
 
-	#region CONTROL =========================================================================================================
-	if neuron_scores_control is not None:
-		boxplot_yticks_control, boxplot_ytick_labels_control = list(), list()
-
-		for key in neuron_scores_control.keys():
-			scores_bom, scores_hgm = neuron_scores_control[key]
-			if len(scores_hgm.shape) == 0:
-				scores_bom = scores_bom.reshape(1, 1)
-				scores_hgm = scores_hgm.reshape(1, 1)
-
-			x = np.median(scores_bom)
-			y = np.median(scores_hgm - scores_bom)
-
-			plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='tomato', edgecolor='black',
-						linewidth=1.0, alpha=0.5)
-
-			boxplot_yticks_control.append(y)
-			boxplot_ytick_labels_control.append(f'{key}')
-
-			if len(scores_hgm) > 1 or force_medians:
-				boxplot_v = plt.boxplot(scores_hgm - scores_bom, positions=[x], widths=bp_pxs[0], patch_artist=True,
-										showfliers=False)
-				if horizontal_bps:
-					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-											showfliers=False, vert=False)
-				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
-					for patch in box['boxes']:
-						patch.set_facecolor('tomato')
-						patch.set_alpha(0.5)
-					for median in box['medians']:
-						median.set_color('lightsteelblue')
-						median.set_linewidth(1)
-
-		for y, label in zip(boxplot_yticks_control, boxplot_ytick_labels_control):
-			if y >= y_min:
-				plt.text(1.01, y, label, color='red', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
-						 transform=plt.gca().get_yaxis_transform())
-		ax2 = plt.gca().secondary_yaxis('right')
-		ax2.set_yticks(boxplot_yticks_control)
-		ax2.set_yticklabels([])
-	#endregion =================================================================================================================
-
 	if neuron_scores_control is not None:
 		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
 		high_score_hgm_impr_control = np.quantile(
@@ -1129,6 +1041,48 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None, control_cut
 	ax2 = plt.gca().secondary_yaxis('right')
 	ax2.set_yticks(boxplot_yticks)
 	ax2.set_yticklabels([])
+	#endregion =================================================================================================================
+
+	#region CONTROL =========================================================================================================
+	if neuron_scores_control is not None:
+		boxplot_yticks_control, boxplot_ytick_labels_control = list(), list()
+
+		for key in neuron_scores_control.keys():
+			scores_bom, scores_hgm = neuron_scores_control[key]
+			if len(scores_hgm.shape) == 0:
+				scores_bom = scores_bom.reshape(1, 1)
+				scores_hgm = scores_hgm.reshape(1, 1)
+
+			x = np.median(scores_bom)
+			y = np.median(scores_hgm - scores_bom)
+
+			plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='tomato', edgecolor='black',
+						linewidth=1.0, alpha=0.5)
+
+			boxplot_yticks_control.append(y)
+			boxplot_ytick_labels_control.append(f'{key}')
+
+			if len(scores_hgm) > 1 or force_medians:
+				boxplot_v = plt.boxplot(scores_hgm - scores_bom, positions=[x], widths=bp_pxs[0], patch_artist=True,
+										showfliers=False)
+				if horizontal_bps:
+					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+											showfliers=False, vert=False)
+				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
+					for patch in box['boxes']:
+						patch.set_facecolor('tomato')
+						patch.set_alpha(0.5)
+					for median in box['medians']:
+						median.set_color('lightsteelblue')
+						median.set_linewidth(1)
+
+		for y, label in zip(boxplot_yticks_control, boxplot_ytick_labels_control):
+			if y >= y_min:
+				plt.text(1.01, y, label, color='red', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
+						 transform=plt.gca().get_yaxis_transform())
+		ax2 = plt.gca().secondary_yaxis('right')
+		ax2.set_yticks(boxplot_yticks_control)
+		ax2.set_yticklabels([])
 	#endregion =================================================================================================================
 
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
