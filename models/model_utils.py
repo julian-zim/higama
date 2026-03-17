@@ -4,7 +4,7 @@ import jax.numpy as jnp
 
 @jax.jit
 def orthonormalize_qr(A):
-	Q, R = jnp.linalg.qr(A)
+	Q, R = jnp.linalg.qr(A, mode='reduced')
 	signs = jnp.sign(jnp.diag(R))  # fix sign ambiguity for a deterministic mapping
 	return Q * jnp.where(signs == 0, 1.0, signs)
 
