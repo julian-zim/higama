@@ -5,6 +5,22 @@ import matplotlib.pyplot as plt
 import math
 
 
+def compute_neuron_percentiles_f(neuron_scores, neuron_scores_shuffle):
+	percentiles = dict()
+	for label in neuron_scores.keys():
+		score = neuron_scores[label]
+		control_scores = neuron_scores_shuffle[label]
+		better_bom = score[0] > control_scores[0]
+		better_hgm = score[1] > control_scores[1]
+		# better_bom_ratio = sum(better_bom) / len(control_scores[0])
+		better_bom_ratio = sum(better_bom)
+		# better_hgm_ratio = sum(better_hgm) / len(control_scores[1])
+		better_hgm_ratio = sum(better_hgm)
+		percentiles[label] = (better_bom_ratio, better_hgm_ratio)
+
+	return percentiles
+
+
 def compute_neuron_percentiles(
 	neuron_scores: Dict[str, Tuple[np.ndarray, np.ndarray]],
 	neuron_scores_shuffle: Dict[str, Tuple[np.ndarray, np.ndarray]],
