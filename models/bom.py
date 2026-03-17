@@ -59,6 +59,7 @@ def predict_man(prep_n, N, UN):
 	UN_orth = model_utils.orthonormalize_qr(UN)
 
 	N_man = N_zs @ UN_orth
+	# N_zs_rec = N_man @ model_utils.get_reconstruction_matrix(N_man, N_zs)
 	N_zs_rec = N_man @ UN_orth.T
 
 	N_rec = N_zs_rec * N_std + N_mean

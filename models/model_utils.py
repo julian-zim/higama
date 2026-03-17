@@ -14,7 +14,8 @@ def get_reconstruction_matrix(X, Y):
 	# reconstruct Y (target) using X (predictor)
 
 	# return jnp.linalg.inv(X.T @ X) @ X.T @ Y
-	#
+	# return jnp.linalg.pinv(X.T @ X) @ X.T @ Y
+
 	# XTX = X.T @ X
 	# lam = 1E2 * jnp.finfo(XTX.dtype).eps * jnp.maximum(jnp.trace(XTX) / XTX.shape[0], 1.0)
 	# return jnp.linalg.solve(XTX + lam * jnp.eye(X.shape[1], dtype=X.dtype), X.T @ Y)
