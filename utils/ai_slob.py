@@ -213,7 +213,7 @@ def plot_control_histograms(
 		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
 
 		if neurons_dir is not None:
-			save_fname = os.path.join(neurons_dir, f"{label}.png")
+			save_fname = os.path.join(neurons_dir, f"r2-{np.median(neuron_scores[label][1]).item():.2f}_r2i-{np.median(neuron_scores[label][1]).item()-np.median(neuron_scores[label][0]).item():.2f}_n-{label}.png")
 			fig.tight_layout()
 			fig.savefig(save_fname, dpi=300)
 
