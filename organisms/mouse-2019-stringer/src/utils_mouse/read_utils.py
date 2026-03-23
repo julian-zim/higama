@@ -48,6 +48,13 @@ def get_filename(filepath):
 	return os.path.basename(filepath)
 
 
+def get_timestamps(filepath):
+	sampling_rate = get_sampling_rate(filepath)
+	max_idx = len(sp.io.loadmat(filepath, variable_names=['beh'])['beh']['runSpeed'][0][0])
+	timestamps = np.array([idx / sampling_rate for idx in range(max_idx)])
+	return timestamps
+
+
 def get_sampling_rate(filepath):
 	planes = sp.io.loadmat(filepath, variable_names=['stat'])['stat']['iplane'].max().item()
 	return {10: 3, 12: 2.5}[planes]

@@ -54,16 +54,15 @@ def get_filename(filepath):
 	return os.path.basename(filepath)
 
 
-def get_sampling_rate(filepath):
-	with h5py.File(filepath + '.nwb', 'r') as file_handle:
-		ts = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
-	return 1 / np.mean(ts[1:] - ts[:-1])
-
-
 def get_timestamps(filepath):
 	with h5py.File(filepath + '.nwb', 'r') as file_handle:
 		timestamps = file_handle['processing/behavioral state/behavioral state/timestamps'][:]
 	return timestamps
+
+
+def get_sampling_rate(filepath):
+	ts = get_timestamps(filepath)
+	return 1 / np.mean(ts[1:] - ts[:-1])
 
 
 def get_traces(filepath):

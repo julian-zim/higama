@@ -405,7 +405,7 @@ Plots two pairs of traces in red and green black, with the respective first one 
 """
 
 
-def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None, states=None, label='state',
+def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None, states=None, timestamps=None, label='state',
 							 title='trace pairs per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
 							 save_path=None):
 	columns = [column for column in traces[0].columns if column != '']
@@ -466,6 +466,14 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 			ax.plot(traces_reference[1][column], color='green', alpha=0.5, linewidth=1.0)
 		ax.plot(traces[0][column], color='C0', linewidth=1.0)
 		ax.plot(traces[1][column], color='green', linewidth=1.0)
+		if timestamps is not None:
+			magnitude = int(math.log10(timestamps[-1]))
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			conversion = len(timestamps) / timestamps[-1]
+			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
+			tick_positions = [tick * conversion for tick in ticks]
+			ax.set_xticks(tick_positions)
+			ax.set_xticklabels([f'{tick}s' for tick in ticks])
 
 		if states is not None:
 			ax.imshow(
@@ -495,7 +503,7 @@ Plots single trace in black and optional splits in cycling colors, with the firs
 """
 
 
-def plot_traces_splits(traces, traces_reference=None, traces_initial=None, states=None, label='state',
+def plot_traces_splits(traces, traces_reference=None, traces_initial=None, states=None, timestamps=None, label='state',
 					   title='traces per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
 					   save_path=None):
 	columns = [column for column in traces[0].columns if column != '']
@@ -558,6 +566,14 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 			if traces_reference is not None:
 				ax.plot(traces_reference[j][column], color=color, alpha=0.5, linewidth=1.0)
 			ax.plot(traces[j][column], color=color, linewidth=1.0)
+		if timestamps is not None:
+			magnitude = int(math.log10(timestamps[-1]))
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			conversion = len(timestamps) / timestamps[-1]
+			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
+			tick_positions = [tick * conversion for tick in ticks]
+			ax.set_xticks(tick_positions)
+			ax.set_xticklabels([f'{tick}s' for tick in ticks])
 
 		if states is not None:
 			ax.imshow(
@@ -587,7 +603,7 @@ Plots traces cycling color according to pyplots policy, with the first one black
 """
 
 
-def plot_traces(traces, states=None, label='state',
+def plot_traces(traces, states=None, timestamps=None, label='state',
 				title='traces', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
 				save_path=None):
 	if type(traces) is not list:
@@ -642,6 +658,14 @@ def plot_traces(traces, states=None, label='state',
 		ax.plot(traces[0][column].values, color='black', linewidth=1.0)
 		for trace in traces[1:]:
 			ax.plot(trace[column].values, linewidth=1.0)
+		if timestamps is not None:
+			magnitude = int(math.log10(timestamps[-1]))
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			conversion = len(timestamps) / timestamps[-1]
+			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
+			tick_positions = [tick * conversion for tick in ticks]
+			ax.set_xticks(tick_positions)
+			ax.set_xticklabels([f'{tick}s' for tick in ticks])
 
 		if states is not None:
 			ax.imshow(
@@ -1099,9 +1123,10 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 #endregion
 
 
-def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', label_behavior='behavior',
+def plot_heatmap_stack(traces, behavior=None, timestamps=None,
+					   label_traces='neuronal activity', label_behavior='behavior',
 					   height_ratios=(1, 4),
-					   timestamps=None, zlimits_activity=None, zlimits_behavior=None, cmap='rainbow', neuron_ids=False,
+					   zlimits_activity=None, zlimits_behavior=None, cmap='rainbow', neuron_ids=False,
 					   save_path=None):
 	if behavior is not None:
 		fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=(12, 6), sharex=True,
@@ -1122,7 +1147,13 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 		ax_top.set_yticklabels(behavior.columns, fontsize=8)
 		ax_top.set_xticks(np.arange(0, behavior.values.shape[0], behavior.values.shape[0] // 10))
 		if timestamps is not None:
-			ax_top.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
+			magnitude = int(math.log10(timestamps[-1]))
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			conversion = len(timestamps) / timestamps[-1]
+			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
+			tick_positions = [tick * conversion for tick in ticks]
+			ax_top.set_xticks(tick_positions)
+			ax_top.set_xticklabels([f'{tick}s' for tick in ticks])
 		fig.colorbar(im_top, ax=ax_top, orientation='vertical', fraction=0.05)
 		ax_top.grid(False)
 
@@ -1143,7 +1174,13 @@ def plot_heatmap_stack(traces, behavior=None, label_traces='neuronal activity', 
 			[column if not (column == '' or column[0].isdigit()) else '' for column in traces.columns], fontsize=4)
 		ax_bottom.set_xticks(np.arange(0, traces.values.shape[0], traces.values.shape[0] // 10))
 		if timestamps is not None:
-			ax_bottom.set_xticklabels([f'{ts:.0f}s' for ts in timestamps[::len(timestamps) // 10]])
+			magnitude = int(math.log10(timestamps[-1]))
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			conversion = len(timestamps) / timestamps[-1]
+			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
+			tick_positions = [tick * conversion for tick in ticks]
+			ax_bottom.set_xticks(tick_positions)
+			ax_bottom.set_xticklabels([f'{tick}s' for tick in ticks])
 	fig.colorbar(im_bottom, ax=ax_bottom, orientation='vertical', fraction=0.05)
 	ax_bottom.grid(False)
 

@@ -1,6 +1,7 @@
 #region imports
 import os, sys
 import numpy as np
+import scipy as sp
 import pandas as pd
 import json
 sys.path.append(os.path.join(os.getcwd(), '../../'))
@@ -112,6 +113,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			# read
 			(filename_gcamp,
 			 discrete_states, eigenworms) = read_utils.get_data(path, file_id)
+			timestamps = read_utils.get_timestamps(read_utils.get_file_handle(path, file_id))
 
 			# clear nan values
 			mask = eigenworms.notna().all(axis=1)
@@ -142,8 +144,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
 			# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
-			return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, params,
-																   params_manifold)
+			return filename, traces, eigenworms, discrete_states, timestamps, (modes, traces_reconstructed, traces_residual, params, params_manifold)
 
 		case 'worm':
 			from utils_worm import read_utils
@@ -156,6 +157,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			 continuous_behaviors,
 			 discrete_states, eigenworms,
 			 kymograph) = read_utils.get_data(path, file_id)
+			timestamps = read_utils.get_timestamps(read_utils.get_file_handle(path, file_id))
 
 			# clear nan values
 			mask = eigenworms.notna().all(axis=1)
@@ -175,12 +177,54 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			# preprocess
 			pass
 
-			return filename, traces, eigenworms, discrete_states, (continuous_behaviors, kymograph)
+			return filename, traces, eigenworms, discrete_states, timestamps, (continuous_behaviors, kymograph)
 
 		case 'fly':
 			from utils_fly import read_utils
 
-			raise NotImplementedError
+			path = os.path.join(read_utils.get_data_path(), 'brain')
+
+			# read
+			(filename,
+			 traces,
+			 states, markers) = read_utils.get_data(path, file_id)
+			timestamps = read_utils.get_timestamps(read_utils.get_filepath(path, file_id))
+
+			# clear nan values
+			mask = markers.notna().all(axis=1)
+
+			traces = traces[mask]
+			markers = markers[mask]
+			states = states[mask]
+
+			# naive ID unknown neurons
+			traces.columns = pd.Index([
+				f'{file_id:02d}_{n_id:03d}' if empty or type(label) is not str else label for n_id, (label, empty) in
+				enumerate(zip(traces.columns, traces.columns == ''))
+			])
+
+			# preprocess
+			def highpass_butter(x, fs, cutoff_hz, order=4, axis=0):
+				return sp.signal.sosfiltfilt(sp.signal.butter(order, cutoff_hz, btype='highpass', fs=fs, output='sos'),
+											 x, axis=axis)
+
+			sampling_rate = read_utils.get_sampling_rate(os.path.join(path, filename))
+			traces = pd.DataFrame(highpass_butter(traces.values, sampling_rate, 1 / 100), columns=traces.columns)
+			# markers_grad = pd.DataFrame(np.gradient(markers.values, axis=0), columns=markers.columns)
+
+			# add shifted markers in time
+			max_shift_seconds = 5
+			max_shift = int(max_shift_seconds * sampling_rate)
+			if max_shift > 0:
+				markers_shifted = dict()
+				for marker_label in markers.columns:
+					for s in range(1, int(max_shift) + 1):
+						shift_seconds = s / sampling_rate
+						markers_shifted[f'{marker_label}-{shift_seconds:.2f}s'] = np.pad(
+							markers[marker_label].values[:-s], ((s, 0),))
+				markers = pd.concat([markers, pd.DataFrame(markers_shifted, index=markers.index)], axis=1)
+
+			return filename, traces, markers, states, timestamps, None
 
 		case 'mouse':
 			from utils_mouse import read_utils
@@ -192,6 +236,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			 continuous_behaviors,
 			 motion_pcs,
 			 motion_masks) = read_utils.get_data(path, file_id, with_whisking=True)
+			timestamps = read_utils.get_timestamps(read_utils.get_filepath(path, file_id))
 
 			# clear nan values
 			# mask = motion_pcs[0].notna().all(axis=1)
@@ -225,7 +270,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 				columns=['run']
 			)
 
-			return filename, traces, motion_pcs[0], classes, (continuous_behaviors, motion_masks, motion_pcs[1])
+			return filename, traces, motion_pcs[0], classes, timestamps, (continuous_behaviors, motion_masks, motion_pcs[1])
 
 		case _:
 			raise ValueError
