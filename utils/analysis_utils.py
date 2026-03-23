@@ -93,7 +93,7 @@ def read_filename(organism, file_id, data_variant='gcamp'):
 		case 'fly':
 			from utils_fly import read_utils
 			path = os.path.join(read_utils.get_data_path(), 'brain')
-			return read_utils.get_filename(read_utils.get_file_handle(path, file_id))
+			return read_utils.get_filename(read_utils.get_filepath(path, file_id))
 		case 'mouse':
 			from utils_mouse import read_utils
 			path = os.path.join(read_utils.get_data_path(), '6163622/sessions')

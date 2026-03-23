@@ -146,7 +146,7 @@ def plot_control_histograms(
 	neurons_dir = None
 	if save_path is not None:
 		os.makedirs(save_path, exist_ok=True)
-		neurons_dir = os.path.join(save_path, 'neurons')
+		neurons_dir = os.path.join(save_path, 'individual')
 		os.makedirs(neurons_dir, exist_ok=True)
 
 	# create individual plots if saving requested
