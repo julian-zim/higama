@@ -3,6 +3,7 @@ import os, sys
 import numpy as np
 import scipy as sp
 import pandas as pd
+import ast
 import json
 sys.path.append(os.path.join(os.getcwd(), '../../'))
 from utils import train_utils
@@ -42,8 +43,8 @@ def get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00'):
 
 
 def get_significant_neurons(filename, model_variant):
-	significant_neurons = pd.read_csv(f'../../out/data/significant_neurons/{filename}/{model_variant}_model.csv', index_col=0)
-	return list(significant_neurons.columns)
+	significant_neurons = pd.read_pickle(f'../../out/data/significant_neurons/{filename}/{model_variant}_impr.pkl')
+	return significant_neurons
 
 
 def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
@@ -372,7 +373,7 @@ def read_filenames(organism, file_ids, data_variant='gcamp'):
 
 
 def read_datas(organism, file_ids, generate_data=None):
-	datas = [read_data(organism, file_id, generate_data) for file_id in file_ids]
+	datas = [read_data(organism, file_id, generate_data=generate_data) for file_id in file_ids]
 	return list(zip(*datas))
 
 

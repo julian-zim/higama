@@ -790,12 +790,10 @@ def plot_loss(filename, loss, *args, **kwargs):
 
 
 def plot_performance_plot(neuron_scores, neuron_scores_control=None,
-						  horizontal_bps=True, control_cutoff=True, force_medians=False, plot_size=30,
+						  horizontal_bps=True, threshold=0.95, control_cutoff=True, force_medians=False, plot_size=30,
 						  title='scores', limits=None,
 						  save_path=None):
 	#region setup
-	threshold = 0.95
-
 	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
 	plt.title(title)
 	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25 / 60, labelpad=50)
@@ -852,7 +850,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 
 	#endregion
 
-	if neuron_scores_control is not None:
+	if neuron_scores_control is not None and threshold is not None:
 		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
 		high_score_hgm_control = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]),
 											 threshold)
@@ -872,7 +870,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		y = np.median(scores_hgm)
 		# if neuron_scores_control is not None and control_cutoff and x <= high_score_bom_control:
 		# 	continue
-		if neuron_scores_control is not None and control_cutoff and y <= high_score_hgm_control:
+		if neuron_scores_control is not None and threshold is not None and control_cutoff and y <= high_score_hgm_control:
 			continue
 
 		plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
@@ -952,12 +950,10 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 
 
 def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
-						  horizontal_bps=True, control_cutoff=True, force_medians=False, plot_size=30,
+						  horizontal_bps=True, threshold=0.95, control_cutoff=True, force_medians=False, plot_size=30,
 						  title='scores', limits=None,
 						  save_path=None):
 	#region setup
-	threshold = 0.95
-
 	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
 	plt.title(title)
 	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25 / 60, labelpad=50)
@@ -1015,7 +1011,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 
 	#endregion
 
-	if neuron_scores_control is not None:
+	if neuron_scores_control is not None and threshold is not None:
 		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
 		high_score_hgm_impr_control = np.quantile(
 			np.concatenate([pair[1] - pair[0] for pair in neuron_scores_control.values()]), threshold)
@@ -1035,7 +1031,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		y = np.median(scores_hgm - scores_bom)
 		# if neuron_scores_control is not None and control_cutoff and x <= high_score_bom_control:
 		# 	continue
-		if neuron_scores_control is not None and control_cutoff and y <= high_score_hgm_impr_control:
+		if neuron_scores_control is not None and threshold is not None and control_cutoff and y <= high_score_hgm_impr_control:
 			continue
 
 		plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0,
