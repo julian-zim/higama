@@ -452,12 +452,13 @@ def plot_percentile_hist(percentiles: Dict[str, float], bins: int = 50, title: O
 	median = float(np.nanmedian(vals))
 
 	# Mean/median lines: blue
+	offset = - (edges[1] - edges[0])
 
-	l_mean = ax.axvline(mean, color='blue', linestyle=':', linewidth=1.8, label=f'mean={mean:.1f}')
-	l_median = ax.axvline(median, color='blue', linestyle='--', linewidth=1.6, label=f'median={median:.1f}')
+	l_mean = ax.axvline(mean + offset, color='blue', linestyle=':', linewidth=1.8, label=f'mean={mean:.1f}')
+	l_median = ax.axvline(median + offset, color='blue', linestyle='--', linewidth=1.6, label=f'median={median:.1f}')
 	l_threshold = None
 	if threshold is not None:
-		l_threshold = ax.axvline(threshold, color='blue', linestyle='-', linewidth=1.6, label=f'threshold={threshold}')
+		l_threshold = ax.axvline(threshold + offset, color='blue', linestyle='-', linewidth=1.6, label=f'threshold={threshold}')
 		n_above = int(np.sum(vals >= threshold))
 		pct_above = n_above / vals.size * 100.0
 		thr_text = f'{n_above}/{vals.size} ({pct_above:.1f}%) ≥ {threshold:.0f}% thr'
@@ -856,38 +857,43 @@ def volcano_plot(
 	ax.grid(True, linestyle=':', alpha=0.5)
 	# ax.legend()
 
-	# Label only the neurons with the best (lowest) p-value, sorted by x descending
+	# Label only the neurons with the best (lowest) p-value, sorted by x descending, and only if their ID does not start with a digit
 	if (n_label is None or n_label > 0) and len(valid_keys) > 0:
-		min_p = np.nanmin([p_values[k] for k in valid_keys])
-		idxs = [i for i, k in enumerate(valid_keys) if p_values[k] == min_p]
-		idxs_sorted = sorted(idxs, key=lambda i: x[i], reverse=True)
-		if n_label is None:
-			idxs_top = idxs_sorted  # label all with best p-value
+		# Filter valid_keys and their indices to only those whose first char is not a digit
+		non_digit_idxs = [i for i, k in enumerate(valid_keys) if not str(k)[0].isdigit()]
+		if len(non_digit_idxs) == 0:
+			pass  # nothing to label
 		else:
-			idxs_top = idxs_sorted[:n_label]
-		n_labels = len(idxs_top)
-		if n_labels > 0:
-			xlim_plot = ax.get_xlim()
-			ylim_plot = ax.get_ylim()
-			# Move label further to the right (e.g., 2% beyond right border)
-			x_label = xlim_plot[1] + 0.02 * (xlim_plot[1] - xlim_plot[0])
-			# Highest x gets highest y label position
-			y_positions = np.linspace(ylim_plot[1], ylim_plot[0], n_labels)
-			for i, idx in enumerate(idxs_top):
-				k = valid_keys[idx]
-				ax.annotate(
-					k,
-					xy=(x[idx], y[idx]),
-					xytext=(x_label, y_positions[i]),
-					textcoords='data',
-					fontsize=10,
-					color='black',
-					weight='bold',
-					ha='left',
-					va='center',
-					bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.3),
-					arrowprops=dict(arrowstyle='-', lw=1, color='gray', alpha=0.7, shrinkA=0, shrinkB=5)
-				)
+			min_p = np.nanmin([p_values[valid_keys[i]] for i in non_digit_idxs])
+			idxs = [i for i in non_digit_idxs if p_values[valid_keys[i]] == min_p]
+			idxs_sorted = sorted(idxs, key=lambda i: x[i], reverse=True)
+			if n_label is None:
+				idxs_top = idxs_sorted  # label all with best p-value
+			else:
+				idxs_top = idxs_sorted[:n_label]
+			n_labels = len(idxs_top)
+			if n_labels > 0:
+				xlim_plot = ax.get_xlim()
+				ylim_plot = ax.get_ylim()
+				# Move label further to the right (e.g., 2% beyond right border)
+				x_label = xlim_plot[1] + 0.02 * (xlim_plot[1] - xlim_plot[0])
+				# Highest x gets highest y label position
+				y_positions = np.linspace(ylim_plot[1], ylim_plot[0], n_labels)
+				for i, idx in enumerate(idx_top := idxs_top):
+					k = valid_keys[idx]
+					ax.annotate(
+						k,
+						xy=(x[idx], y[idx]),
+						xytext=(x_label, y_positions[i]),
+						textcoords='data',
+						fontsize=10,
+						color='black',
+						weight='bold',
+						ha='left',
+						va='center',
+						bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.3),
+						arrowprops=dict(arrowstyle='-', lw=1, color='gray', alpha=0.7, shrinkA=0, shrinkB=5)
+					)
 
 	plt.tight_layout()
 	if save_path:

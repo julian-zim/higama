@@ -796,8 +796,8 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 	#region setup
 	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
 	plt.title(title)
-	plt.xlabel('BOM r2 score (median)', fontsize=plot_size * 25 / 60, labelpad=50)
-	plt.ylabel('HGM r2 score (median)', fontsize=plot_size * 25 / 60)
+	plt.xlabel('BOM r2 score', fontsize=plot_size * 25 / 60, labelpad=50)
+	plt.ylabel('HGM r2 score', fontsize=plot_size * 25 / 60)
 	plt.grid(False)
 
 	if limits is None:

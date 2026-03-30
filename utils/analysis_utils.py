@@ -5,10 +5,27 @@ import scipy as sp
 import pandas as pd
 import ast
 import json
+
 sys.path.append(os.path.join(os.getcwd(), '../../'))
 from utils import train_utils
 from models import model_utils
+
+
 #endregion
+
+
+def get_class_labels(organism):
+	match organism:
+		case 'robot':
+			return ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
+		case 'worm':
+			return ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
+		case 'fly':
+			return ['still', 'walk', 'front-groom', 'back-groom', 'abdomen-move']
+		case 'mouse':
+			return ['run']
+		case _:
+			raise ValueError()
 
 
 def get_plot_class(organism):
@@ -56,7 +73,8 @@ def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
 	neuron_scores = dict()
 	boms_scores_per_neuron_avg = [np.mean(scores, axis=0) for scores in boms_scores_per_neuron]
 	hgms_scores_per_neuron_avg = [np.mean(scores, axis=0) for scores in hgms_scores_per_neuron]
-	for label_list, score_bom_list, score_hgm_list in zip(neurons_labels, boms_scores_per_neuron_avg, hgms_scores_per_neuron_avg):
+	for label_list, score_bom_list, score_hgm_list in zip(neurons_labels, boms_scores_per_neuron_avg,
+														  hgms_scores_per_neuron_avg):
 		sort_indices = np.argsort(score_hgm_list)[::-1]
 		label_list = label_list[sort_indices]
 		score_bom_list = score_bom_list[sort_indices]
@@ -73,7 +91,8 @@ def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
 					neuron_scores[label] = (score_bom_new, score_hgm_new)
 				else:
 					score_bom_prev, score_hgm_prev = neuron_scores[label]
-					neuron_scores[label] = (np.vstack([score_bom_prev, score_bom_new]), np.vstack([score_hgm_prev, score_hgm_new]))
+					neuron_scores[label] = (np.vstack([score_bom_prev, score_bom_new]),
+											np.vstack([score_hgm_prev, score_hgm_new]))
 
 	return neuron_scores
 
@@ -145,7 +164,8 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
 			# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
-			return filename, traces, eigenworms, discrete_states, timestamps, (modes, traces_reconstructed, traces_residual, params, params_manifold)
+			return filename, traces, eigenworms, discrete_states, timestamps, (modes, traces_reconstructed,
+																			   traces_residual, params, params_manifold)
 
 		case 'worm':
 			from utils_worm import read_utils
@@ -266,12 +286,14 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			sampling_rate = read_utils.get_sampling_rate(os.path.join(path, filename))
 			traces = pd.DataFrame(reconstruct_calcium(traces.values, fs=sampling_rate), columns=traces.columns)
 			classes = pd.DataFrame(
-				continuous_behaviors[['running_speed']].values > np.quantile(continuous_behaviors[['running_speed']].values,
-																			 0.05),
+				continuous_behaviors[['running_speed']].values > np.quantile(
+					continuous_behaviors[['running_speed']].values,
+					0.05),
 				columns=['run']
 			)
 
-			return filename, traces, motion_pcs[0], classes, timestamps, (continuous_behaviors, motion_masks, motion_pcs[1])
+			return filename, traces, motion_pcs[0], classes, timestamps, (continuous_behaviors, motion_masks,
+																		  motion_pcs[1])
 
 		case _:
 			raise ValueError
@@ -383,7 +405,8 @@ def read_modelss(filenames, model_path, model_variant, data_variant='gcamp', man
 
 
 def read_predictionss(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):
-	predictionss = [read_predictions(filename, model_path, model_variant, data_variant, manual, full) for filename in filenames]
+	predictionss = [read_predictions(filename, model_path, model_variant, data_variant, manual, full) for filename in
+					filenames]
 	boms_params, hgms_params = list(zip(*predictionss))
 	return list(zip(*boms_params)), list(zip(*hgms_params))
 
