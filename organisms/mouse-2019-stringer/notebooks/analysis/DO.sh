@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=ANALYSIS
 #SBATCH --partition=cpu
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=128G
 #SBATCH --time=21-00:00:00
 #SBATCH --mail-user=a12144285@unet.univie.ac.at
