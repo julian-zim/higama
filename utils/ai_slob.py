@@ -41,23 +41,30 @@ def compute_neuron_percentiles(
 	np.nan for neurons without controls or empty control arrays.
 	"""
 
-	def _model_index(m: str) -> int:
+	def _model_index_or_diff(m: str):
 		mm = m.lower()
-		if mm == 'hgm':
+		if mm in ('hgm',):
 			return 1
-		if mm == 'bom':
+		if mm in ('bom',):
 			return 0
-		raise ValueError("model must be 'hgm' or 'bom'")
+		if mm in ('improvement', 'diff', 'difference'):
+			return 'diff'
+		raise ValueError("model must be 'hgm', 'bom', or 'improvement' (or 'diff', 'difference')")
 
-	idx = _model_index(model)
+	mode = _model_index_or_diff(model)
 	percentiles: Dict[str, float] = {}
 
 	for label in neuron_scores.keys():
-		# get observed scalar
 		try:
-			observed_arr = neuron_scores[label][idx]
+			if mode == 'diff':
+				observed_arr = np.asarray(neuron_scores[label][1]) - np.asarray(neuron_scores[label][0])
+			else:
+				observed_arr = np.asarray(neuron_scores[label][mode]) if isinstance(mode, int) else None
 		except Exception:
-			# mark missing/invalid observed as NaN
+			percentiles[label] = float('nan')
+			continue
+
+		if observed_arr is None:
 			percentiles[label] = float('nan')
 			continue
 
@@ -67,16 +74,22 @@ def compute_neuron_percentiles(
 		elif obs_a.size == 1:
 			obs = float(obs_a.ravel()[0])
 		else:
-			# non-scalar observed -> mark NaN
 			percentiles[label] = float('nan')
 			continue
 
-		# get control array for same neuron
 		if label not in neuron_scores_shuffle:
 			percentiles[label] = float('nan')
 			continue
 
-		ctrl_arr = neuron_scores_shuffle[label][idx]
+		try:
+			if mode == 'diff':
+				ctrl_arr = np.asarray(neuron_scores_shuffle[label][1]) - np.asarray(neuron_scores_shuffle[label][0])
+			else:
+				ctrl_arr = np.asarray(neuron_scores_shuffle[label][mode]) if isinstance(mode, int) else None
+		except Exception:
+			percentiles[label] = float('nan')
+			continue
+
 		if ctrl_arr is None:
 			percentiles[label] = float('nan')
 			continue
@@ -87,7 +100,6 @@ def compute_neuron_percentiles(
 			continue
 
 		if ctrl.ndim != 1:
-			# flatten any higher-dim control array to 1-D
 			ctrl = ctrl.ravel()
 
 		less = np.sum(ctrl < obs)
@@ -99,102 +111,27 @@ def compute_neuron_percentiles(
 	return percentiles
 
 
-def empirical_p_value_two_sided(
-		neuron_scores: Dict[str, Tuple[np.ndarray, np.ndarray]],
-		neuron_scores_shuffle: Dict[str, Tuple[np.ndarray, np.ndarray]],
-		keys: Optional[Iterable[str]] = None,
-		model: str = 'hgm',
+def percentile_to_p_value_one_sided(
+	percentiles: Dict[str, float]
 ) -> Dict[str, float]:
 	"""
-	Compute two-sided empirical p-values for each neuron label.
+	Convert percentiles to right-sided (greater than or equal) one-sided p-values.
 
 	For each neuron label:
-	  - If model is 'improvement', 'diff', or 'difference', use the difference (index 1 - index 0) as the observed value.
-	  - Otherwise, use the value at the selected model index (1 for 'hgm', 0 for 'bom').
-	  - `neuron_scores_shuffle[label][idx]` must be a 1-D array of control samples. If not 1-D it will be flattened.
+	  - p-value = 1 - (percentile / 100)
+	  - If percentile is NaN or None, p-value is set to np.nan
 
-	The two-sided p-value is computed as:
-	  p_left = (count(ctrl <= obs) + 1) / (N + 1)
-	  p_right = (count(ctrl >= obs) + 1) / (N + 1)
-	  p_two_sided = 2 * min(p_left, p_right)
-	  p-value is capped at 1.0
-
-	Returns a dict mapping neuron label -> p-value (float in [0,1]) or np.nan for neurons without controls or empty control arrays.
+	Args:
+		percentiles: dict mapping neuron label to percentile (float in [0, 100])
+	Returns:
+		dict mapping neuron label to one-sided p-value (float in [0, 1])
 	"""
-
-	def _model_index_or_diff(m: str):
-		mm = m.lower()
-		if mm in ('improvement', 'diff', 'difference'):
-			return 'diff'
-		if mm == 'hgm':
-			return 1
-		if mm == 'bom':
-			return 0
-		raise ValueError("model must be 'hgm', 'bom', or 'improvement'/'diff'/'difference'")
-
-	idx_or_diff = _model_index_or_diff(model)
 	pvals: Dict[str, float] = {}
-
-	if keys is None:
-		keys = neuron_scores.keys()
-
-	for label in keys:
-		# get observed scalar or improvement
-		try:
-			arr = neuron_scores[label]
-			arr0 = np.asarray(arr[0])
-			arr1 = np.asarray(arr[1])
-			if idx_or_diff == 'diff':
-				if arr0.size == 1 and arr1.size == 1:
-					obs = float(arr1.ravel()[0]) - float(arr0.ravel()[0])
-				elif arr0.ndim == 0 and arr1.ndim == 0:
-					obs = float(arr1) - float(arr0)
-				else:
-					pvals[label] = float('nan')
-					continue
-				# For controls, use the difference of shuffles
-				ctrl0 = neuron_scores_shuffle[label][0]
-				ctrl1 = neuron_scores_shuffle[label][1]
-				if ctrl0 is None or ctrl1 is None:
-					pvals[label] = float('nan')
-					continue
-				ctrl = np.asarray(ctrl1) - np.asarray(ctrl0)
-			else:
-				arr_idx = np.asarray(arr[idx_or_diff])
-				if arr_idx.ndim == 0:
-					obs = float(arr_idx)
-				elif arr_idx.size == 1:
-					obs = float(arr_idx.ravel()[0])
-				else:
-					pvals[label] = float('nan')
-					continue
-				# get control array for same neuron
-				ctrl_arr = neuron_scores_shuffle[label][idx_or_diff]
-				if ctrl_arr is None:
-					pvals[label] = float('nan')
-					continue
-				ctrl = np.asarray(ctrl_arr)
-		except Exception:
-			pvals[label] = float('nan')
-			continue
-
-		if label not in neuron_scores_shuffle:
-			pvals[label] = float('nan')
-			continue
-		if ctrl.size == 0:
-			pvals[label] = float('nan')
-			continue
-		if ctrl.ndim != 1:
-			ctrl = ctrl.ravel()
-
-		n = len(ctrl)
-		left = np.sum(ctrl <= obs)
-		right = np.sum(ctrl >= obs)
-		p_left = (left + 1) / (n + 1)
-		p_right = (right + 1) / (n + 1)
-		p_two_sided = 2 * min(p_left, p_right)
-		pvals[label] = min(p_two_sided, 1.0)
-
+	for label, pct in percentiles.items():
+		if pct is None or (isinstance(pct, float) and np.isnan(pct)):
+			pvals[label] = np.nan
+		else:
+			pvals[label] = 1.0 - (pct / 100.0)
 	return pvals
 
 
@@ -219,15 +156,17 @@ def plot_control_histograms(
 	Returns the list of labels that were plotted.
 	"""
 
-	def _model_index(m: str) -> int:
+	def _model_index_or_diff(m: str):
 		mm = m.lower()
 		if mm == 'hgm':
 			return 1
 		if mm == 'bom':
 			return 0
-		raise ValueError("model must be 'hgm' or 'bom'")
+		if mm in ('improvement', 'diff', 'difference'):
+			return 'diff'
+		raise ValueError("model must be 'hgm', 'bom', or 'improvement'/'diff'/'difference'")
 
-	idx = _model_index(model)
+	mode = _model_index_or_diff(model)
 
 	# choose labels
 	if neuron_labels is None:
@@ -252,8 +191,15 @@ def plot_control_histograms(
 	for label in labels:
 		# observed
 		try:
-			obs_arr = neuron_scores[label][idx]
+			if mode == 'diff':
+				obs_arr = np.asarray(neuron_scores[label][1]) - np.asarray(neuron_scores[label][0])
+			elif isinstance(mode, int):
+				obs_arr = neuron_scores[label][mode]
+			else:
+				obs_arr = None
 		except Exception:
+			continue
+		if obs_arr is None:
 			continue
 		obs_a = np.asarray(obs_arr)
 		if obs_a.ndim == 0:
@@ -266,7 +212,15 @@ def plot_control_histograms(
 		# controls
 		if label not in neuron_scores_shuffle:
 			continue
-		ctrl_arr = neuron_scores_shuffle[label][idx]
+		try:
+			if mode == 'diff':
+				ctrl_arr = np.asarray(neuron_scores_shuffle[label][1]) - np.asarray(neuron_scores_shuffle[label][0])
+			elif isinstance(mode, int):
+				ctrl_arr = neuron_scores_shuffle[label][mode]
+			else:
+				ctrl_arr = None
+		except Exception:
+			continue
 		if ctrl_arr is None:
 			continue
 		ctrl = np.asarray(ctrl_arr)
@@ -305,14 +259,22 @@ def plot_control_histograms(
 		ax.text(0.98, 0.95, ax_text, transform=ax.transAxes, ha='right', va='top', fontsize=9,
 				bbox=dict(facecolor='white', alpha=0.75, edgecolor='none'))
 
-		ax.set_title(f"{label}")
+		if mode == 'diff':
+			ax.set_title(f"{label} (improvement)")
+			ax.set_xlabel('Improvement (HGM - BOM)')
+		else:
+			ax.set_title(f"{label}")
+			ax.set_xlabel('Control value')
 		ax.set_ylabel('Count')
-		ax.set_xlabel('Control value')
 		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
 
 		if neurons_dir is not None:
-			save_fname = os.path.join(neurons_dir,
-									  f"r2-{np.median(neuron_scores[label][1]).item():.2f}_r2i-{np.median(neuron_scores[label][1]).item() - np.median(neuron_scores[label][0]).item():.2f}_n-{label}.png")
+			if mode == 'diff':
+				save_fname = os.path.join(neurons_dir,
+					f"impr-{np.median(obs):.2f}_n-{label}.png")
+			else:
+				save_fname = os.path.join(neurons_dir,
+					f"r2-{np.median(neuron_scores[label][1]).item():.2f}_r2i-{np.median(neuron_scores[label][1]).item() - np.median(neuron_scores[label][0]).item():.2f}_n-{label}.png")
 			fig.tight_layout()
 			fig.savefig(save_fname, dpi=300)
 
@@ -336,12 +298,20 @@ def plot_control_histograms(
 
 		# observed
 		try:
-			obs_arr = neuron_scores[label][idx]
+			if mode == 'diff':
+				obs_arr = np.asarray(neuron_scores[label][1]) - np.asarray(neuron_scores[label][0])
+			elif isinstance(mode, int):
+				obs_arr = neuron_scores[label][mode]
+			else:
+				obs_arr = None
 		except Exception:
 			ax.text(0.5, 0.5, f"Missing observed for {label}", ha='center', va='center')
 			ax.set_title(label)
 			continue
-
+		if obs_arr is None:
+			ax.text(0.5, 0.5, f"Missing observed for {label}", ha='center', va='center')
+			ax.set_title(label)
+			continue
 		obs_a = np.asarray(obs_arr)
 		if obs_a.ndim == 0:
 			obs = float(obs_a)
@@ -357,19 +327,26 @@ def plot_control_histograms(
 			ax.text(0.5, 0.5, f"No control for {label}", ha='center', va='center')
 			ax.set_title(label)
 			continue
-
-		ctrl_arr = neuron_scores_shuffle[label][idx]
+		try:
+			if mode == 'diff':
+				ctrl_arr = np.asarray(neuron_scores_shuffle[label][1]) - np.asarray(neuron_scores_shuffle[label][0])
+			elif isinstance(mode, int):
+				ctrl_arr = neuron_scores_shuffle[label][mode]
+			else:
+				ctrl_arr = None
+		except Exception:
+			ax.text(0.5, 0.5, f"No control for {label}", ha='center', va='center')
+			ax.set_title(label)
+			continue
 		if ctrl_arr is None:
 			ax.text(0.5, 0.5, f"No control for {label}", ha='center', va='center')
 			ax.set_title(label)
 			continue
-
 		ctrl = np.asarray(ctrl_arr)
 		if ctrl.size == 0:
 			ax.text(0.5, 0.5, f"Empty control for {label}", ha='center', va='center')
 			ax.set_title(label)
 			continue
-
 		if ctrl.ndim != 1:
 			ctrl = ctrl.ravel()
 
@@ -396,9 +373,13 @@ def plot_control_histograms(
 		ax.text(0.98, 0.95, ax_text, transform=ax.transAxes, ha='right', va='top', fontsize=9,
 				bbox=dict(facecolor='white', alpha=0.75, edgecolor='none'))
 
-		ax.set_title(f"{label}")
+		if mode == 'diff':
+			ax.set_title(f"{label} (improvement)")
+			ax.set_xlabel('Improvement (HGM - BOM)')
+		else:
+			ax.set_title(f"{label}")
+			ax.set_xlabel('Control value')
 		ax.set_ylabel('Count')
-		ax.set_xlabel('Control value')
 		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
 		displayed.append(label)
 
@@ -769,6 +750,21 @@ def plot_performance_histogram(
 	plt.tight_layout()
 	plt.show()
 	return fig, ax
+
+
+
+def volcano_plot_proper(neuron_scores, neuron_p_values,
+						mode='improvement', n_label=None):
+	x_vals = None
+	match mode:
+		case 'improvement':
+			x_vals = np.array([(neuron_scores[key][1] - neuron_scores[key][0]).squeeze() for key in neuron_scores.keys()])
+			print(x_vals < 0)
+
+	y_vals = -np.log10(np.array([neuron_p_values[key] for key in neuron_scores.keys()]))
+
+	plt.scatter(x_vals, y_vals,
+				s=5)
 
 
 def volcano_plot(
