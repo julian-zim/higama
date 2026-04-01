@@ -6,7 +6,7 @@ def main():
 	mouse_sweep_parameters = {}
 	mouse_hyperparameters = {
 		'max_epochs': 4000,
-		'max_patience': 4000 / 1,
+		'max_patience': 4000 / 4,
 		'learning_rate': 1E-0,
 		'dimensions': 16,
 		'reg_lambdas': 'swept'
