@@ -52,6 +52,8 @@ class Robot(Organism):
 		 modes,
 		 traces_reconstructed,
 		 traces_residual,
+		 traces_concrete,
+		 traces_other,
 		 traces,
 		 params,
 		 params_manifold) = generate_utils.artificialize(self.weights, 'hgm',
@@ -59,6 +61,7 @@ class Robot(Organism):
 														 self.neuron_labels,
 														 eigenworms,
 														 discrete_states[self.states],
+														 read_utils.get_sampling_rate(read_utils.get_file_handle(path, file_id)),
 														 n_dimensions=len(self.states))
 
 		# # kill all information in behavior
@@ -66,4 +69,4 @@ class Robot(Organism):
 		# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
 		# return
-		return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, params, params_manifold)
+		return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, traces_concrete, traces_other, params, params_manifold)

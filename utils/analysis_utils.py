@@ -59,9 +59,14 @@ def get_model_folders(manual, model_variant, data_variant='gcamp', ll='ll00'):
 	return bom_folder, hgm_folder
 
 
-def get_significant_neurons(filename, model_variant):
-	significant_neurons = pd.read_pickle(f'../../out/data/significant_neurons/{filename}/{model_variant}_impr.pkl')
+def get_significant_neurons(filename, model_variant, mode='impr'):
+	significant_neurons = pd.read_pickle(f'../../out/data/significant_neurons/{filename}/{model_variant}_{mode}.pkl')
 	return significant_neurons
+
+
+def get_neuron_percentiles(filename, model_variant, mode='hgm'):
+	percentiles = pd.read_pickle(f'../../out/data/percentiles/{filename}/{model_variant}_{mode}.pkl')
+	return percentiles
 
 
 def assemble_scoress(boms_scores_per_neuron, hgms_scores_per_neuron):
@@ -151,6 +156,8 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			 modes,
 			 traces_reconstructed,
 			 traces_residual,
+			 traces_concrete,
+			 traces_other,
 			 traces,
 			 params,
 			 params_manifold) = generate_utils.artificialize(weights, 'hgm',
@@ -158,6 +165,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 															 neurons,
 															 eigenworms,
 															 discrete_states[states],
+															 read_utils.get_sampling_rate(read_utils.get_file_handle(path, file_id)),
 															 n_dimensions=len(states))
 
 			# # kill all information in behavior
@@ -165,7 +173,8 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
 			return filename, traces, eigenworms, discrete_states, timestamps, (modes, traces_reconstructed,
-																			   traces_residual, params, params_manifold)
+																			   traces_residual, traces_concrete, traces_other,
+																			   params, params_manifold)
 
 		case 'worm':
 			from utils_worm import read_utils
@@ -245,7 +254,7 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			# 				markers[marker_label].values[:-s], ((s, 0),))
 			# 	markers = pd.concat([markers, pd.DataFrame(markers_shifted, index=markers.index)], axis=1)
 
-			return filename, traces, markers, states, timestamps, None
+			return filename, traces, markers, states, timestamps, (None,)
 
 		case 'mouse':
 			from utils_mouse import read_utils
@@ -396,7 +405,8 @@ def read_filenames(organism, file_ids, data_variant='gcamp'):
 
 def read_datas(organism, file_ids, generate_data=None):
 	datas = [read_data(organism, file_id, generate_data=generate_data) for file_id in file_ids]
-	return list(zip(*datas))
+	filenamess, tracess, behaviorss, classess, timestampss, auxs = list(zip(*datas))
+	return filenamess, tracess, behaviorss, classess, timestampss, list(zip(*auxs))
 
 
 def read_modelss(filenames, model_path, model_variant, data_variant='gcamp', manual=False, full=True):

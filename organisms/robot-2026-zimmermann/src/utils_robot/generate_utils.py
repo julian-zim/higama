@@ -60,7 +60,7 @@ def generate_reconstructed_traces(N_man, cca_weights):
 	return N_man.values @ cca_weights
 
 
-def generate_residual_traces(model_name, B, N_man, WB, WM):
+def generate_concrete_traces(model_name, B, N_man, WB, WM):
 	prep_p = {
 		'mean': B.mean(axis=0),
 		'std': jnp.where((B_std := jnp.std(B, axis=0)) == 0.0, 1.0, B_std),
@@ -73,17 +73,45 @@ def generate_residual_traces(model_name, B, N_man, WB, WM):
 	return traces
 
 
+def generate_other_traces(concrete_traces, rate, dt, decay=None):
+	if decay is None:
+		decay = 2.0 * dt
+	shape = concrete_traces.values.shape
+
+	# poisson series
+	p = rate * dt
+	events = (np.random.rand(*shape) < p).astype(np.float32) * np.sign(np.random.rand(*shape) - 0.5) * concrete_traces.values.max(axis=0)
+
+	# two side exponential filtering
+	gamma = np.exp(-dt / decay)
+	trace_fwd = np.zeros(events.shape, dtype=np.float32)
+	for t in range(1, events.shape[0]):
+		trace_fwd[t, :] = gamma * trace_fwd[t - 1, :] + events[t, :]
+
+	trace_bwd = np.zeros(events.shape, dtype=np.float32)
+	for t in range(events.shape[0] - 2, -1, -1):
+		trace_bwd[t, :] = gamma * trace_bwd[t + 1, :] + events[t, :]
+
+	trace = 0.5 * (trace_fwd + trace_bwd)
+	return trace
+
+
+def generate_residual_traces(concrete_traces, other_traces):
+	return concrete_traces.values + other_traces.values
+
+
 def generate_traces(N_rec, N_res):
 	return N_rec.values + N_res.values
 
 
-def artificialize(weights, model_name, filename, neuron_labels, behavior, states, n_dimensions=2):
+def artificialize(weights, model_name, filename, neuron_labels, behavior, states, sampling_rate, n_dimensions=2):
 	assert n_dimensions <= states.values.shape[1]
 
 	behavior_scale, gating, manifold_scale = weights
 
 	cyber_name = filename.replace('worm', 'wyrm')
 	seeds = jax.random.PRNGKey(69), jax.random.PRNGKey(420), jax.random.PRNGKey(0)
+	np.random.seed(42)
 
 	n_neurons = len(neuron_labels)  # ~100
 	n_behaviors = behavior.values.shape[1]  # 5
@@ -93,7 +121,7 @@ def artificialize(weights, model_name, filename, neuron_labels, behavior, states
 
 	# (timepoints x dimensions)
 	cyber_manifold = pd.DataFrame(data=generate_manifold(states.values, n_dimensions),
-								  columns=[f'CV{i + 1}' for i in range(n_dimensions)])
+								  columns=[f'M{i + 1}' for i in range(n_dimensions)])
 
 	# (dimensions x neurons)
 	params_manifold = generate_manifold_params(manifold_scale, seeds, n_dimensions, n_neurons)
@@ -103,13 +131,26 @@ def artificialize(weights, model_name, filename, neuron_labels, behavior, states
 											  columns=neuron_labels)
 
 	# (timepoints x neurons)
-	cyber_traces_residual = pd.DataFrame(
-		data=generate_residual_traces(model_name, behavior.values, cyber_manifold.values, params['WB'],
+	cyber_traces_concrete = pd.DataFrame(
+		data=generate_concrete_traces(model_name, behavior.values, cyber_manifold.values, params['WB'],
 									  (params['WM'] if model_name == 'hgm' else None)),
+		columns=neuron_labels)
+
+	# (timepoints x neurons)
+	cyber_traces_other = pd.DataFrame(
+		data=generate_other_traces(cyber_traces_concrete, rate=0.01, dt=1.0 / sampling_rate, decay=None),
+		columns=neuron_labels)
+
+	# (timepoints x neurons)
+	cyber_traces_residual = pd.DataFrame(
+		data=generate_residual_traces(cyber_traces_concrete, cyber_traces_other),
 		columns=neuron_labels)
 
 	# (timepoints x neurons)
 	cyber_traces = pd.DataFrame(data=generate_traces(cyber_traces_reconstructed, cyber_traces_residual),
 								columns=neuron_labels)
 
-	return cyber_name, cyber_manifold, cyber_traces_reconstructed, cyber_traces_residual, cyber_traces, params, params_manifold
+	return (cyber_name,
+			cyber_manifold, cyber_traces_reconstructed,
+			cyber_traces_residual, cyber_traces_concrete, cyber_traces_other, cyber_traces,
+			params, params_manifold)

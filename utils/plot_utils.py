@@ -96,8 +96,10 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 
 	colormap = mplcolors.ListedColormap(
 		plt.get_cmap('plasma')(np.linspace(0, 1, plt.get_cmap('plasma').N))[:, :3] * 0.8, name='plasma_dark')
-	normalizer = plt.Normalize(np.stack([colors_.values for colors_ in coloring]).min(),
-							   np.stack([colors_.values for colors_ in coloring]).max())  # normalize globally
+	# normalizer = plt.Normalize(np.stack([colors_.values for colors_ in coloring]).min(),
+	# 						   np.stack([colors_.values for colors_ in coloring]).max())  # normalize globally
+	normalizer = plt.Normalize(np.concatenate([colors_.values for colors_ in coloring], axis=0).min(),
+							   np.concatenate([colors_.values for colors_ in coloring], axis=0).max())  # normalize globally
 	# fig.legend(
 	# 	handles=[(patches.Patch(color=colormap(i / len(coloring[0].columns)), alpha=0.3, label=coloring[0].columns[i])) for i in range(len(coloring[0].columns))],
 	# 	loc='center',
@@ -125,10 +127,10 @@ def plot_manifolds_gradient(filenames, modes, coloring, vars_expl=None, vars_exp
 					 (
 						 f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
-		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+		ax.set_xlabel('Mode 1' + (f' ({vars_expl[i][0] * 100:.1f}%)' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
 					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(
 			vars_expl_rs[i]) > 1 else ''), fontsize=9)
-		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+		ax.set_ylabel('Mode 2' + (f' ({vars_expl[i][1] * 100:.1f}%)' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
 					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(
 			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
@@ -207,7 +209,7 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 	#endregion
 
 	#region plot
-	# scale = [-1, 0, 2]
+	# scale = [-1, 0, 1]
 	scale = []
 	normalizer = plt.Normalize(0, len(states[0].columns))
 	for i, (modes_, states_) in enumerate(zip(modes[:n_plots], states[:n_plots])):
@@ -226,10 +228,10 @@ def plot_manifolds(filenames, modes, states=None, vars_expl=None, vars_expl_rs=N
 					 (
 						 f' ({sum(vars_expl_rs[i]) * 100:.1f}%)' if vars_expl is not None and vars_expl_rs is not None else ''),
 					 fontsize=10.5)
-		ax.set_xlabel((f' {vars_expl[i][0] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+		ax.set_xlabel('Mode 1' + (f' ({vars_expl[i][0] * 100:.1f}%)' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
 					  + (f' ({vars_expl_rs[i][0] * 100:.1f}%)' if vars_expl_rs is not None and len(
 			vars_expl_rs[i]) > 1 else ''), fontsize=9)
-		ax.set_ylabel((f' {vars_expl[i][1] * 100:.1f}%' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
+		ax.set_ylabel('Mode 2' + (f' ({vars_expl[i][1] * 100:.1f}%)' if vars_expl is not None and len(vars_expl[i]) > 1 else '')
 					  + (f' ({vars_expl_rs[i][1] * 100:.1f}%)' if vars_expl_rs is not None and len(
 			vars_expl_rs[i]) > 1 else ''), fontsize=9)
 
@@ -411,13 +413,22 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 	columns = [column for column in traces[0].columns if column != '']
 	if n_plots is None:
 		n_plots = len(columns)
-	if ylimits is None:
+	if ylimits == 'auto':
+		traces_i_all = [np.array(
+			[trace.iloc[:, i].values for trace in traces] +
+			([trace_ref.iloc[:, i].values for trace_ref in traces_reference] if traces_reference is not None else []) +
+			([traces_initial.iloc[:, i].values] if traces_initial is not None else [])
+		) for i in range(n_plots)]
+		ylimits = [(trace.min(), trace.max()) for trace in traces_i_all]
+	elif type(ylimits) is tuple:
+		ylimits = [ylimits] * n_plots
+	else:
 		traces_all = np.array(
 			[trace[columns].values for trace in traces] +
 			([trace_ref[columns].values for trace_ref in traces_reference] if traces_reference is not None else []) +
 			([traces_initial[columns].values] if traces_initial is not None else [])
 		)
-		ylimits = (traces_all.min(), traces_all.max())
+		ylimits = [(traces_all.min(), traces_all.max())] * n_plots
 
 	#region plot setup
 	fig_size = (15, 3)
@@ -434,8 +445,8 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 			spine.set_visible(False)
 	for i in range(n_plots):
 		ax = axes[i // plots_per_row, i % plots_per_row]
-		ax.set_ylim(ylimits)
-		ax.plot(np.zeros(traces[0].shape), color='gray', linewidth=0.25)
+		ax.set_ylim(ylimits[i])
+		ax.plot(np.zeros(traces[0].shape), color='black', linewidth=0.5)
 
 	top_space_rel = top_space / figheight
 	#fig.text(0.5, 1., 'TOP', c='white', ha='center', va='top')
@@ -462,13 +473,13 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 		if traces_initial is not None:
 			ax.plot(traces_initial[column], color='black', linewidth=1.0)
 		if traces_reference is not None:
-			ax.plot(traces_reference[0][column], color='C0', alpha=0.5, linewidth=1.0)
+			ax.plot(traces_reference[0][column], color='purple', alpha=0.5, linewidth=1.0)
 			ax.plot(traces_reference[1][column], color='green', alpha=0.5, linewidth=1.0)
-		ax.plot(traces[0][column], color='C0', linewidth=1.0)
+		ax.plot(traces[0][column], color='purple', linewidth=1.0)
 		ax.plot(traces[1][column], color='green', linewidth=1.0)
 		if timestamps is not None:
 			magnitude = int(math.log10(timestamps[-1]))
-			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 10  # TODO: // 10 for mice, // 1 for worms
 			conversion = len(timestamps) / timestamps[-1]
 			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
 			tick_positions = [tick * conversion for tick in ticks]
@@ -482,7 +493,7 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 					'middle_third',
 					plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))
 				),
-				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], *ylimits]
+				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], *ylimits[i]]
 			)
 
 		for spine in ax.spines.values():
@@ -503,20 +514,28 @@ Plots single trace in black and optional splits in cycling colors, with the firs
 """
 
 
-def plot_traces_splits(traces, traces_reference=None, traces_initial=None, states=None, timestamps=None, label='state',
-					   title='traces per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
+def plot_traces_splits(traces, traces_reference=None, traces_initial=None, states=None, timestamps=None, line_colors=None,
+					   label='state', title='traces per split', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
 					   save_path=None):
 	columns = [column for column in traces[0].columns if column != '']
 	if n_plots is None:
 		n_plots = len(columns)
-	if ylimits is None:
+	if ylimits == 'auto':
+		traces_i_all = [np.array(
+			[trace.iloc[:, i].values for trace in traces] +
+			([trace_ref.iloc[:, i].values for trace_ref in traces_reference] if traces_reference is not None else []) +
+			([traces_initial.iloc[:, i].values] if traces_initial is not None else [])
+		) for i in range(n_plots)]
+		ylimits = [(trace.min(), trace.max()) for trace in traces_i_all]
+	elif type(ylimits) is tuple:
+		ylimits = [ylimits] * n_plots
+	else:
 		traces_all = np.array(
 			[trace[columns].values for trace in traces] +
-			([trace_reference[columns].values for trace_reference in
-			  traces_reference] if traces_reference is not None else []) +
+			([trace_ref[columns].values for trace_ref in traces_reference] if traces_reference is not None else []) +
 			([traces_initial[columns].values] if traces_initial is not None else [])
 		)
-		ylimits = (traces_all.min(), traces_all.max())
+		ylimits = [(traces_all.min(), traces_all.max())] * n_plots
 
 	#region plot setup
 	fig_size = (15, 3)
@@ -533,7 +552,7 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 			spine.set_visible(False)
 	for i in range(n_plots):
 		ax = axes[i // plots_per_row, i % plots_per_row]
-		ax.set_ylim(ylimits)
+		ax.set_ylim(ylimits[i])
 		ax.plot(np.zeros(traces[0].shape), color='gray', linewidth=0.25)
 
 	top_space_rel = top_space / figheight
@@ -559,16 +578,20 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 		ax.set_title(f'{column}', fontsize=12)
 
 		if traces_initial is not None:
-			ax.plot(traces_initial[column], color='black', linewidth=1.0)
+			ax.plot(traces_initial[column], color='steelblue', linewidth=1.0)
 		colors = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+		if line_colors is not None:
+			colors = iter(line_colors)
 		for j in range(len(traces)):
 			color = next(colors)
 			if traces_reference is not None:
 				ax.plot(traces_reference[j][column], color=color, alpha=0.5, linewidth=1.0)
+				# ax.plot(traces_reference[j][column], color='red', alpha=0.5, linewidth=1.0)
 			ax.plot(traces[j][column], color=color, linewidth=1.0)
+			# ax.plot(traces[j][column], color='red', linewidth=1.0)
 		if timestamps is not None:
 			magnitude = int(math.log10(timestamps[-1]))
-			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 10  # TODO: // 10 for mice, // 1 for worms
 			conversion = len(timestamps) / timestamps[-1]
 			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
 			tick_positions = [tick * conversion for tick in ticks]
@@ -582,7 +605,7 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 					'middle_third',
 					plt.get_cmap('binary')(np.linspace(0, 1 / 2, 256))
 				),
-				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], *ylimits]
+				interpolation='nearest', alpha=0.3, extent=[0, heatmap.shape[0], *ylimits[i]]
 			)
 
 		for spine in ax.spines.values():
@@ -655,12 +678,13 @@ def plot_traces(traces, states=None, timestamps=None, label='state',
 		ax = axes[i // plots_per_row, i % plots_per_row]
 		ax.set_title(f'{column}', fontsize=12)
 
-		ax.plot(traces[0][column].values, color='black', linewidth=1.0)
-		for trace in traces[1:]:
-			ax.plot(trace[column].values, linewidth=1.0)
+		colors = ['steelblue', 'C1']
+		ax.plot(traces[0][column].values, color='gray', linewidth=1.0)
+		for i, trace in enumerate(traces[1:]):
+			ax.plot(trace[column].values, linewidth=1, color=colors[i])
 		if timestamps is not None:
 			magnitude = int(math.log10(timestamps[-1]))
-			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1)
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 10  # TODO: // 10 for mice, // 1 for worms
 			conversion = len(timestamps) / timestamps[-1]
 			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
 			tick_positions = [tick * conversion for tick in ticks]
@@ -731,6 +755,8 @@ def plot_losses_splits(filenames, losses, losses_reference=None,
 			ax = axes[i // plots_per_row, i % plots_per_row]
 			if type(ylimits) is tuple:
 				ax.set_ylim(ylimits)
+			elif type(ylimits) is list:
+				ax.set_ylim(ylimits[i])
 			else:
 				losses_min, losses_max = losses[i].min(), losses[i].max()
 				shift = ylimits * 0.1
@@ -787,17 +813,15 @@ def plot_loss(filename, loss, *args, **kwargs):
 
 
 #region score
-
-
-def plot_performance_plot(neuron_scores, neuron_scores_control=None,
-						  horizontal_bps=True, threshold=0.95, control_cutoff=True, force_medians=False, plot_size=30,
+def plot_performance_plot_gray(neuron_scores, neuron_scores_control=None, neuron_keys_significant=None,
+						  horizontal_bps=True, vertical_bps=True, threshold=0.95, control_cutoff=True, force_medians=False, plot_size=30,
 						  title='scores', limits=None,
-						  save_path=None):
+						  save_path=None, n_label=0):
 	#region setup
 	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
 	plt.title(title)
-	plt.xlabel('BOM r2 score', fontsize=plot_size * 25 / 60, labelpad=50)
-	plt.ylabel('HGM r2 score', fontsize=plot_size * 25 / 60)
+	plt.xlabel('MCM R²', fontsize=plot_size * 25 / 60, labelpad=50)
+	plt.ylabel('HGM R²', fontsize=plot_size * 25 / 60)
 	plt.grid(False)
 
 	if limits is None:
@@ -857,46 +881,215 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		plt.plot([x_min, x_max + x_step], [high_score_hgm_control, high_score_hgm_control], color='black',
 				 linestyle='--')
 
+	#region CONTROL ===========================================================================================================
+	if neuron_scores_control is not None:
+		boxplot_xticks_control, boxplot_xtick_labels_control = list(), list()
+
+		for key in neuron_scores_control.keys():
+			scores_bom, scores_hgm = neuron_scores_control[key]
+			if len(scores_hgm.shape) == 0:
+				scores_bom = scores_bom.reshape(1, 1)
+				scores_hgm = scores_hgm.reshape(1, 1)
+
+			x = np.median(scores_bom)
+			y = np.median(scores_hgm)
+
+			plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='tomato', edgecolor='black', linewidth=1.0,
+						alpha=0.25)
+
+			boxplot_xticks_control.append(x)
+			boxplot_xtick_labels_control.append(f'{key}')
+
+			if len(scores_hgm) > 1 or force_medians:
+				if vertical_bps:
+					boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
+										showfliers=False)
+				if horizontal_bps:
+					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+										showfliers=False, vert=False)
+			for box in ([boxplot_v] if vertical_bps else []) + ([boxplot_h] if horizontal_bps else []):
+					for patch in box['boxes']:
+						patch.set_facecolor('tomato')
+						patch.set_alpha(0.5)
+					for median in box['medians']:
+						median.set_color('lightsteelblue')
+						median.set_linewidth(1)
+
+		# for x, label in zip(boxplot_xticks_control, boxplot_xtick_labels_control):
+		# 	if x_min <= x <= x_max:
+		# 		plt.text(x, -0.035, label, color='red', ha='center', va='top', rotation=45,
+		# 				 fontsize=plot_size * 15 / 40,
+		# 				 transform=plt.gca().get_xaxis_transform())
+	#endregion ================================================================================================================
+
 	#region GCAMP =============================================================================================================
 	boxplot_xticks, boxplot_xtick_labels = list(), list()
-
+	if neuron_keys_significant is None:
+		neuron_keys_significant = []
 	for key in neuron_scores.keys():
 		scores_bom, scores_hgm = neuron_scores[key]
 		if len(scores_hgm.shape) == 0:
 			scores_bom = scores_bom.reshape(1, 1)
 			scores_hgm = scores_hgm.reshape(1, 1)
-
 		x = np.median(scores_bom)
 		y = np.median(scores_hgm)
 		# if neuron_scores_control is not None and control_cutoff and x <= high_score_bom_control:
-		# 	continue
+		#   continue
 		if neuron_scores_control is not None and threshold is not None and control_cutoff and y <= high_score_hgm_control:
 			continue
-
-		plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
-
+		color = 'limegreen' if key in neuron_keys_significant else 'gray'
+		plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c=color, edgecolor='black', linewidth=1.0, alpha=0.5)
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
-
 		if len(scores_hgm) > 1 or force_medians:
-			boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
+			if vertical_bps:
+				boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 									showfliers=False)
 			if horizontal_bps:
 				boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
 										showfliers=False, vert=False)
-			for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
+			for box in ([boxplot_v] if vertical_bps else []) + ([boxplot_h] if horizontal_bps else []):
 				for patch in box['boxes']:
-					patch.set_facecolor('skyblue')
+					patch.set_facecolor(color if key in neuron_keys_significant else 'gray')
 					patch.set_alpha(0.5)
 				for median in box['medians']:
 					median.set_color('darkorange')
 					median.set_linewidth(1)
-
-	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
-		if x_min <= x <= x_max:
-			plt.text(x, -0.035, label, color='blue', ha='center', va='top', rotation=45, fontsize=plot_size * 15 / 40,
-					 transform=plt.gca().get_xaxis_transform())
+	ax = plt.gca()
+	# Volcano-style labeling if p_values is provided
+	if n_label is None or n_label > 0:
+		# Gather median x/y for each key
+		valid_keys = []
+		x_vals = []
+		y_vals = []
+		for key in neuron_keys_significant:
+			scores_bom, scores_hgm = neuron_scores[key]
+			if len(scores_hgm.shape) == 0:
+				scores_bom = scores_bom.reshape(1, 1)
+				scores_hgm = scores_hgm.reshape(1, 1)
+			x = float(np.median(scores_bom))
+			y = float(np.median(scores_hgm))
+			valid_keys.append(key)
+			x_vals.append(x)
+			y_vals.append(y)
+		if len(valid_keys) > 0:
+			# Only label keys whose label does not start with a digit
+			non_digit_idxs = [i for i, k in enumerate(valid_keys) if not str(k)[0].isdigit()]
+			if len(non_digit_idxs) > 0:
+				# Sort by y_vals (neuron score, second tuple index), descending
+				idxs_sorted = sorted(non_digit_idxs, key=lambda i: y_vals[i], reverse=True)
+				if n_label is None:
+					idxs_top = idxs_sorted  # label all
+				else:
+					idxs_top = idxs_sorted[:n_label]
+				n_labels = len(idx_top := idxs_top)
+				if n_labels > 0:
+					xlim_plot = ax.get_xlim()
+					ylim_plot = ax.get_ylim()
+					x_label = xlim_plot[1] + 0.02 * (xlim_plot[1] - xlim_plot[0])
+					y_positions = np.linspace(ylim_plot[1], ylim_plot[0], n_labels)
+					for i, idx in enumerate(idx_top):
+						k = valid_keys[idx]
+						ax.annotate(
+							k,
+							xy=(x_vals[idx], y_vals[idx]),
+							xytext=(x_label, y_positions[i]),
+							textcoords='data',
+							fontsize=10,
+							color='black',
+							weight='bold',
+							ha='left',
+							va='center',
+							bbox=dict(boxstyle='round,pad=0.2', fc='yellow', alpha=0.3),
+							arrowprops=dict(arrowstyle='-', lw=1, color='gray', alpha=0.7, shrinkA=0, shrinkB=5)
+						)
+	else:
+		for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
+			# Only label significant neurons whose label does not start with a digit
+			if label in neuron_keys_significant and not str(label)[0].isdigit():
+				if x_min <= x <= x_max:
+					plt.text(x, -0.035, label, color='blue', ha='center', va='top', rotation=45, fontsize=plot_size * 15 / 40,
+							 transform=plt.gca().get_xaxis_transform())
 	#endregion =================================================================================================================
+
+	x_ticks_pos = np.arange(x_min, x_max, x_step)
+	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
+	y_ticks_pos = np.arange(y_min, y_max, y_step)
+	plt.yticks(y_ticks_pos, [f'{val:.2f}' for val in y_ticks_pos])
+
+	if save_path is not None:
+		os.makedirs(os.path.dirname(save_path), exist_ok=True)
+		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
+	plt.show()
+
+
+def plot_performance_plot(neuron_scores, neuron_scores_control=None,
+						  horizontal_bps=True, vertical_bps=True, threshold=0.95, control_cutoff=True, force_medians=False, plot_size=30,
+						  title='scores', limits=None,
+						  save_path=None):
+	#region setup
+	plt.figure(figsize=(plot_size * 1 / 3, plot_size * 1 / 3))
+	plt.title(title)
+	plt.xlabel('MCM R²', fontsize=plot_size * 25 / 60, labelpad=50)
+	plt.ylabel('HGM R²', fontsize=plot_size * 25 / 60)
+	plt.grid(False)
+
+	if limits is None:
+		x_all = np.array([score for scores_bom, scores_hgm in neuron_scores.values() for score in scores_bom])
+		y_all = np.array([score for scores_bom, scores_hgm in neuron_scores.values() for score in scores_hgm])
+
+		if neuron_scores_control is not None:
+			x_all = np.concatenate(
+				[x_all,
+				 np.array([score for scores_bom, scores_hgm in neuron_scores_control.values() for score in scores_bom])]
+			)
+			y_all = np.concatenate(
+				[y_all,
+				 np.array([score for scores_bom, scores_hgm in neuron_scores_control.values() for score in scores_hgm])]
+			)
+
+		x_min, x_max = x_all.min(), x_all.max()
+		y_min, y_max = y_all.min(), y_all.max()
+		x_step, y_step = (x_max - x_min) / 10, (y_max - y_min) / 10
+		x_min -= x_step
+		x_max += x_step
+		y_min -= y_step
+		y_max += y_step
+	else:
+		x_min, x_max, y_min, y_max = limits
+		x_step, y_step = (x_max - x_min) / 10, (y_max - y_min) / 10
+
+	plt.xlim(x_min, x_max)
+	plt.ylim(y_min, y_max)
+
+	bp_pxs = (
+		plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0)) + (plot_size, 0)
+		)[0]
+		- plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0))
+		)[0],
+		plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0)) + (0, plot_size)
+		)[1]
+		- plt.gca().transData.inverted().transform(
+			plt.gca().transData.transform((0, 0))
+		)[1]
+	)
+
+	plt.plot([x_min, x_max], [0, 0], color='gray', linewidth=1, linestyle='--')
+	plt.plot([0, 0], [y_min, y_max], color='gray', linewidth=1, linestyle='--')
+	plt.plot([min(x_min, y_min), (max(x_max, y_max))], [min(x_min, y_min), max(x_max, y_max)], color='black',
+			 linestyle='--')
+
+	#endregion
+
+	if neuron_scores_control is not None and threshold is not None:
+		# high_score_bom_control = np.quantile(np.concatenate([pair[0] for pair in neuron_scores_control.values()]), threshold)
+		high_score_hgm_control = np.quantile(np.concatenate([pair[1] for pair in neuron_scores_control.values()]),
+											 threshold)
+		plt.plot([x_min, x_max + x_step], [high_score_hgm_control, high_score_hgm_control], color='black',
+				 linestyle='--')
 
 	#region CONTROL ===========================================================================================================
 	if neuron_scores_control is not None:
@@ -918,12 +1111,13 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 			boxplot_xtick_labels_control.append(f'{key}')
 
 			if len(scores_hgm) > 1 or force_medians:
-				boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
+				if vertical_bps:
+					boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
 										showfliers=False)
 				if horizontal_bps:
 					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
-											showfliers=False, vert=False)
-				for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
+										showfliers=False, vert=False)
+			for box in ([boxplot_v] if vertical_bps else []) + ([boxplot_h] if horizontal_bps else []):
 					for patch in box['boxes']:
 						patch.set_facecolor('tomato')
 						patch.set_alpha(0.5)
@@ -937,6 +1131,47 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 						 fontsize=plot_size * 15 / 40,
 						 transform=plt.gca().get_xaxis_transform())
 	#endregion ================================================================================================================
+
+	#region GCAMP =============================================================================================================
+	boxplot_xticks, boxplot_xtick_labels = list(), list()
+	for key in neuron_scores.keys():
+		scores_bom, scores_hgm = neuron_scores[key]
+		if len(scores_hgm.shape) == 0:
+			scores_bom = scores_bom.reshape(1, 1)
+			scores_hgm = scores_hgm.reshape(1, 1)
+
+		x = np.median(scores_bom)
+		y = np.median(scores_hgm)
+		# if neuron_scores_control is not None and control_cutoff and x <= high_score_bom_control:
+		# 	continue
+		if neuron_scores_control is not None and threshold is not None and control_cutoff and y <= high_score_hgm_control:
+			continue
+
+		plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
+
+		boxplot_xticks.append(x)
+		boxplot_xtick_labels.append(f'{key}')
+
+		if len(scores_hgm) > 1 or force_medians:
+			if vertical_bps:
+				boxplot_v = plt.boxplot(scores_hgm, positions=[x], widths=bp_pxs[0], patch_artist=True,
+									showfliers=False)
+			if horizontal_bps:
+				boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
+										showfliers=False, vert=False)
+			for box in ([boxplot_v] if vertical_bps else []) + ([boxplot_h] if horizontal_bps else []):
+				for patch in box['boxes']:
+					patch.set_facecolor('skyblue')
+					patch.set_alpha(0.5)
+				for median in box['medians']:
+					median.set_color('darkorange')
+					median.set_linewidth(1)
+
+	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
+		if x_min <= x <= x_max:
+			plt.text(x, -0.035, label, color='blue', ha='center', va='top', rotation=45, fontsize=plot_size * 15 / 40,
+					 transform=plt.gca().get_xaxis_transform())
+	#endregion =================================================================================================================
 
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
 	plt.xticks(x_ticks_pos, [f'{val:.2f}' for val in x_ticks_pos])
@@ -960,6 +1195,8 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 	plt.ylabel('HGM-BOM r2 score improvement (median)', fontsize=plot_size * 25 / 60)
 	plt.grid(False)
 	plt.gca().grid(False)
+
+	plt.plot([-1, 1], [0.0125434045, 0.0125434045], color='black')
 
 	if limits is None:
 		x_all = np.array([score for scores_bom, scores_hgm in neuron_scores.values() for score in scores_bom])
@@ -1018,7 +1255,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		plt.plot([x_min, x_max + x_step], [high_score_hgm_impr_control, high_score_hgm_impr_control], color='black',
 				 linestyle='--')
 
-	#region GCAMP ===========================================================================================================
+	#region GCAMP =============================================================================================================
 	boxplot_yticks, boxplot_ytick_labels = list(), list()
 
 	for key in neuron_scores.keys():
@@ -1034,7 +1271,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		if neuron_scores_control is not None and threshold is not None and control_cutoff and y <= high_score_hgm_impr_control:
 			continue
 
-		plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0,
+		plt.scatter(scores_bom, scores_hgm - scores_bom, s=plot_size * 2, c='limegreen', edgecolor='black', linewidth=1.0,
 					alpha=0.5)
 
 		boxplot_yticks.append(y)
@@ -1048,7 +1285,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 										showfliers=False, vert=False)
 			for box in [boxplot_v] + ([boxplot_h] if horizontal_bps else []):
 				for patch in box['boxes']:
-					patch.set_facecolor('skyblue')
+					patch.set_facecolor('limegreen')
 					patch.set_alpha(0.5)
 				for median in box['medians']:
 					median.set_color('darkorange')
@@ -1056,7 +1293,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 
 	for y, label in zip(boxplot_yticks, boxplot_ytick_labels):
 		if y >= y_min:
-			plt.text(1.01, y, label, color='blue', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
+			plt.text(1.01, y, label, color='darkgreen', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
 					 transform=plt.gca().get_yaxis_transform())
 	ax2 = plt.gca().secondary_yaxis('right')
 	ax2.set_yticks(boxplot_yticks)
@@ -1084,7 +1321,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 
 			if len(scores_hgm) > 1 or force_medians:
 				boxplot_v = plt.boxplot(scores_hgm - scores_bom, positions=[x], widths=bp_pxs[0], patch_artist=True,
-										showfliers=False)
+									showfliers=False)
 				if horizontal_bps:
 					boxplot_h = plt.boxplot(scores_bom, positions=[y], widths=bp_pxs[1], patch_artist=True,
 											showfliers=False, vert=False)
@@ -1100,9 +1337,10 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 			if y >= y_min:
 				plt.text(1.01, y, label, color='red', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
 						 transform=plt.gca().get_yaxis_transform())
-		ax2 = plt.gca().secondary_yaxis('right')
+	ax2 = plt.gca().secondary_yaxis('right')
+	if neuron_scores_control is not None:
 		ax2.set_yticks(boxplot_yticks_control)
-		ax2.set_yticklabels([])
+	ax2.set_yticklabels([])
 	#endregion =================================================================================================================
 
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
@@ -1114,9 +1352,6 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		os.makedirs(os.path.dirname(save_path), exist_ok=True)
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
-
-
-#endregion
 
 
 def plot_heatmap_stack(traces, behavior=None, timestamps=None,
@@ -1230,7 +1465,8 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 	# region plot
 	plt.figure(figsize=(39, 13))
 
-	color_pool = [cm.get_cmap('rocket')(0.4), cm.get_cmap('rocket')(0.9), 'gray']
+	# color_pool = [cm.get_cmap('rocket')(0.4), cm.get_cmap('rocket')(0.9), 'gray']
+	color_pool = ['brown', 'seagreen', 'gray']
 	colors = [color_pool[idx] for idx in index_orders]
 
 	for idx in range(3):
@@ -1238,7 +1474,8 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 				edgecolor='none')
 
 	if normalized and bar_labels is not None:
-		bar_labels_color_pool = [cm.get_cmap('Greys')(v) for v in [0.1, 0.9, 0.1]]
+		# bar_labels_color_pool = [cm.get_cmap('Greys')(v) for v in [0.1, 0.9, 0.1]]
+		bar_labels_color_pool = ['whitesmoke', 'whitesmoke', 'whitesmoke']
 		bar_labels_colors = [bar_labels_color_pool[idx] for idx in index_orders]
 
 		bar_labels_positions = [
@@ -1254,7 +1491,7 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 					 fontsize=10)
 		idx = 1
 		for x, y, bar_label in zip(x_positions, bar_labels_positions[idx], bar_labels.loc[order[idx]]):
-			# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='center', fontsize=10)
+			# plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=tuple(1 - v for v in to_rgb(colors[i])), ha='center', va='top', fontsize=10)
 			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='top',
 					 fontsize=10)
 		idx = 2
@@ -1263,8 +1500,9 @@ def plot_mcos(bars, labels, bar_labels=None, order=('m', 'c', 'o'),
 			plt.text(x, y, f'±\n{bar_label * 100:.1f}%', color=bar_labels_colors[idx], ha='center', va='center',
 					 fontsize=10)
 
-	plt.yticks(np.arange(0, 1.05, 0.05) * max_y, labels=[f'{val:.1f}%' for val in np.arange(0, 105, 5) * max_y])
-	plt.xticks(x_positions, labels)
+	plt.yticks(np.arange(0, 1.05, 0.05) * max_y, labels=[f'{val:.1f}%' for val in np.arange(0, 105, 5) * max_y],
+			   fontsize=16)
+	plt.xticks(x_positions, labels, rotation=45, ha='right', fontsize=16)
 	plt.xlim(0, x_positions[-1] + bar_width / 2)
 	plt.ylim(0, max_y)
 
@@ -1311,19 +1549,19 @@ def plot_markers(markers, markers_reconstructed=None, join_topbot=False,
 		name = markers.columns[i * 4].split('-')[0]
 
 		ax = axes[0, i]
-		ax.scatter(markers[f'{name}-top_x'].values, markers[f'{name}-top_y'].values, color='blue', alpha=0.1, s=5)
+		ax.scatter(markers[f'{name}-top_x'].values, markers[f'{name}-top_y'].values, color='#6B7C8F', alpha=0.1, s=5)
 
 		if join_topbot:
 			# ax.set_xlim(0, max_x)
 			ax.set_ylim(0, max_y)
 			ax.invert_yaxis()
 			ax.set_title(name)
-			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='green', alpha=0.1, s=5)
+			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='#8A7F73', alpha=0.1, s=5)
 		else:
 			ax.invert_yaxis()
 			ax.set_title(name + '_top')
 			ax = axes[1, i]
-			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='green', alpha=0.1, s=5)
+			ax.scatter(markers[f'{name}-bot_x'].values, markers[f'{name}-bot_y'].values, color='#8A7F73', alpha=0.1, s=5)
 			ax.invert_yaxis()
 			ax.set_title(name + '_bot')
 

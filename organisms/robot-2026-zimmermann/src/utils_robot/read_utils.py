@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 import h5py
 import pynwb
@@ -48,6 +49,16 @@ def get_filename(file_handle):
 	if filename.endswith('_no_image_data'):
 		filename = filename[:-len('_no_image_data')]
 	return filename
+
+
+def get_timestamps(file_handle):
+	timestamps = file_handle['processing/Behavior/eigenworms/00/timestamps'][:]
+	return timestamps
+
+
+def get_sampling_rate(file_handle):
+	ts = get_timestamps(file_handle)
+	return 1 / np.mean(ts[1:] - ts[:-1])
 
 
 def get_discrete_states(file_handle):

@@ -131,7 +131,8 @@ def percentile_to_p_value_one_sided(
 		if pct is None or (isinstance(pct, float) and np.isnan(pct)):
 			pvals[label] = np.nan
 		else:
-			pvals[label] = 1.0 - (pct / 100.0)
+			# Add pseudocounts (+1) to numerator and denominator to avoid p=0
+			pvals[label] = (1.0 + (100.0 - pct)) / (1.0 + 100.0)
 	return pvals
 
 
@@ -237,14 +238,21 @@ def plot_control_histograms(
 			pass
 
 		# Control histogram: tomato
-		counts, edges, patches = ax.hist(ctrl, bins=bins, color='tomato', alpha=0.85, edgecolor='black', linewidth=0.4)
-		for p in patches:
+		counts, edges, patches = ax.hist(ctrl, bins=bins, color='tomato', alpha=0.85, edgecolor='black', linewidth=0.4, label='control')
+		# Ensure patches is always a list of Rectangle objects for legend
+		if hasattr(patches, 'patches'):
+			patch_handles = patches.patches
+		elif isinstance(patches, (list, tuple)):
+			patch_handles = list(patches)
+		else:
+			patch_handles = [patches]
+		for p in patch_handles:
 			p.set_linewidth(0.4)
 
 		median = float(np.nanmedian(ctrl))
 		mean = float(np.nanmean(ctrl))
 		# Observation line: blue
-		l_obs = ax.axvline(obs, color='blue', linewidth=2.0, label='observed')
+		l_obs = ax.axvline(obs, color='limegreen', linewidth=2.0, label='observed')
 		# Median/mean lines for control: red
 		l_med = ax.axvline(median, color='red', linestyle='--', linewidth=1.4, label='median')
 		l_mean = ax.axvline(mean, color='red', linestyle=':', linewidth=1.4, label='mean')
@@ -264,9 +272,11 @@ def plot_control_histograms(
 			ax.set_xlabel('Improvement (HGM - BOM)')
 		else:
 			ax.set_title(f"{label}")
-			ax.set_xlabel('Control value')
+			ax.set_xlabel('HGM R²')
 		ax.set_ylabel('Count')
-		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
+		# Add histogram handle to legend
+		handles = [patch_handles[0], l_obs, l_med, l_mean] if patch_handles else [l_obs, l_med, l_mean]
+		ax.legend(handles=handles, fontsize=8)
 
 		if neurons_dir is not None:
 			if mode == 'diff':
@@ -351,15 +361,22 @@ def plot_control_histograms(
 			ctrl = ctrl.ravel()
 
 		# Control histogram: tomato
-		counts, edges, patches = ax.hist(ctrl, bins=bins, color='tomato', alpha=0.85, edgecolor='black', linewidth=0.4)
-		for p in patches:
+		counts, edges, patches = ax.hist(ctrl, bins=bins, color='tomato', alpha=0.85, edgecolor='black', linewidth=0.4, label='control')
+		# Ensure patches is always a list of Rectangle objects for legend
+		if hasattr(patches, 'patches'):
+			patch_handles = patches.patches
+		elif isinstance(patches, (list, tuple)):
+			patch_handles = list(patches)
+		else:
+			patch_handles = [patches]
+		for p in patch_handles:
 			p.set_linewidth(0.4)
 
 		median = float(np.nanmedian(ctrl))
 		mean = float(np.nanmean(ctrl))
 
 		# Observation line: blue
-		l_obs = ax.axvline(obs, color='blue', linewidth=2.0, label='observed')
+		l_obs = ax.axvline(obs, color='limegreen', linewidth=2.0, label='observed')
 		# Median/mean lines for control: red
 		l_med = ax.axvline(median, color='red', linestyle='--', linewidth=1.4, label='median')
 		l_mean = ax.axvline(mean, color='red', linestyle=':', linewidth=1.4, label='mean')
@@ -380,7 +397,12 @@ def plot_control_histograms(
 			ax.set_title(f"{label}")
 			ax.set_xlabel('Control value')
 		ax.set_ylabel('Count')
-		ax.legend(handles=[l_obs, l_med, l_mean], fontsize=8)
+
+
+		ax.set_xlim(-0.3, 0.3)
+		# Add histogram handle to legend
+		handles = [patch_handles[0], l_obs, l_med, l_mean] if patch_handles else [l_obs, l_med, l_mean]
+		ax.legend(handles=handles, fontsize=8)
 		displayed.append(label)
 
 	# hide any empty subplots
@@ -651,12 +673,11 @@ def plot_performance_histogram(
 		else:
 			bins_use = bins
 		weights_obs = np.ones_like(obs_vals_plot, dtype=float) / float(obs_vals_plot.size)
-
 		counts_obs, edges_obs, patches_obs = ax.hist(
 			obs_vals_plot,
 			bins=bins_use,
 			weights=weights_obs,
-			color='skyblue',
+			color='limegreen',
 			alpha=0.6,
 			edgecolor='black',
 			linewidth=0.4,
@@ -665,64 +686,51 @@ def plot_performance_histogram(
 		for p in patches_obs:
 			p.set_linewidth(0.4)
 
-		# If threshold is set, interpret as percentile and plot vertical line at that value
-		if threshold is not None and ctrl_medians.size > 0:
-			# Compute threshold value using ALL neuron scores (not just string-ID)
-			all_ctrl_vals_for_thresh = []
-			for ctrl_tuple in neuron_scores_shuffle.values():
-				if isinstance(ctrl_tuple, (list, tuple)) and len(ctrl_tuple) > idx:
-					ctrl_elem = ctrl_tuple[idx]
-					if ctrl_elem is not None:
-						ctrl_arr = np.asarray(ctrl_elem)
-						if ctrl_arr.size > 0:
-							all_ctrl_vals_for_thresh.append(ctrl_arr.ravel())
-			if all_ctrl_vals_for_thresh:
-				all_ctrl_vals_for_thresh = np.concatenate(all_ctrl_vals_for_thresh)
-				perc_val = np.quantile(all_ctrl_vals_for_thresh, threshold)
-			else:
-				perc_val = np.nan
-			# Calculate bin width (assume uniform bins)
-			if bin_edges is not None and len(bin_edges) > 1:
-				bin_width = bin_edges[1] - bin_edges[0]
-			else:
-				bin_width = 0
-			line_position = perc_val #+ bin_width
-			ax.axvline(line_position, color='black', linestyle='-', linewidth=1.5,
-					   label=f'Threshold ({threshold * 100:.1f}%) = {perc_val:.2f}')
-			# Label logic: for each observed bin with left edge >= perc_val, plot neuron labels below the x-axis
-			if bin_edges is not None and len(bin_edges) > 1:
-				obs_vals_arr = np.array([val for _, val in obs_label_pairs_plot])
-				bin_idxs = np.digitize(obs_vals_arr, bin_edges) - 1
-				# Fix: assign values equal to the rightmost edge to the last bin
-				last_bin = len(bin_edges) - 2
-				bin_idxs[obs_vals_arr == bin_edges[-1]] = last_bin
-				for i in range(len(bin_edges) - 1):
-					left_edge = bin_edges[i]
-					right_edge = bin_edges[i+1]
-					if left_edge >= perc_val:
-						in_bin = [j for j, idx in enumerate(bin_idxs) if idx == i]
-						if not in_bin:
-							continue
-						labels_in_bin = [obs_label_pairs_plot[j][0] for j in in_bin]
-						label_text = ',\n'.join(labels_in_bin)
-						x_pos = (left_edge + right_edge) / 2
-						# Lower the label and annotation line further below the x-axis
-						y_offset = -0.18  # Lower than previous -0.12
-						ax.text(x_pos, y_offset, label_text, ha='right', va='top', fontsize=8, color='black', rotation=45, transform=ax.get_xaxis_transform())
-						ax.annotate(
-							'',
-							xy=(x_pos, 0), xycoords='data',
-							xytext=(x_pos, y_offset), textcoords=('data', 'axes fraction'),
-							arrowprops=dict(arrowstyle='-', color='gray', linewidth=0.8),
-							annotation_clip=False
-						)
+	# If threshold is set, interpret as percentile and plot vertical line at that value (only ONCE)
+	if threshold is not None and ctrl_medians.size > 0:
+		perc_val = np.quantile(ctrl_medians, threshold)
+		# Calculate bin width (assume uniform bins)
+		if bin_edges is not None and len(bin_edges) > 1:
+			bin_width = bin_edges[1] - bin_edges[0]
+		else:
+			bin_width = 0
+		line_position = perc_val + bin_width
+		ax.axvline(line_position, color='black', linestyle='-', linewidth=1.5,
+				   label=f'Threshold ({threshold * 100:.1f}%) = {perc_val:.2f}')
+		# Label logic: for each observed bin with left edge >= perc_val, plot neuron labels below the x-axis
+		if bin_edges is not None and len(bin_edges) > 1:
+			obs_vals_arr = np.array([val for _, val in obs_label_pairs_plot])
+			bin_idxs = np.digitize(obs_vals_arr, bin_edges) - 1
+			# Fix: assign values equal to the rightmost edge to the last bin
+			last_bin = len(bin_edges) - 2
+			bin_idxs[obs_vals_arr == bin_edges[-1]] = last_bin
+			for i in range(len(bin_edges) - 1):
+				left_edge = bin_edges[i]
+				right_edge = bin_edges[i+1]
+				if left_edge >= perc_val:
+					in_bin = [j for j, idx in enumerate(bin_idxs) if idx == i]
+					if not in_bin:
+						continue
+					labels_in_bin = [obs_label_pairs_plot[j][0] for j in in_bin]
+					label_text = ',\n'.join(labels_in_bin)
+					x_pos = (left_edge + right_edge) / 2
+					# Lower the label and annotation line further below the x-axis
+					y_offset = -0.18  # Lower than previous -0.12
+					ax.text(x_pos, y_offset, label_text, ha='right', va='top', fontsize=8, color='black', rotation=45, transform=ax.get_xaxis_transform())
+					ax.annotate(
+						'',
+						xy=(x_pos, 0), xycoords='data',
+						xytext=(x_pos, y_offset), textcoords=('data', 'axes fraction'),
+						arrowprops=dict(arrowstyle='-', color='gray', linewidth=0.8),
+						annotation_clip=False
+					)
 
-	# Draw mean/median lines for observed (blue) and control (red) using only letter-ID neurons
+	# Draw mean/median lines for observed (limegreen) and control (red) using only letter-ID neurons
 	if obs_vals.size > 0:
 		obs_mean = float(np.nanmean(obs_vals))
 		obs_med = float(np.nanmedian(obs_vals))
-		ax.axvline(obs_mean, color='blue', linestyle=':', linewidth=1.8, label=f'obs mean={obs_mean:.3g}')
-		ax.axvline(obs_med, color='blue', linestyle='--', linewidth=1.6, label=f'obs median={obs_med:.3g}')
+		ax.axvline(obs_mean, color='limegreen', linestyle=':', linewidth=1.8, label=f'obs mean={obs_mean:.3g}')
+		ax.axvline(obs_med, color='limegreen', linestyle='--', linewidth=1.6, label=f'obs median={obs_med:.3g}')
 
 	if ctrl_medians.size > 0:
 		ctrl_mean = float(np.nanmean(ctrl_medians))
@@ -776,7 +784,7 @@ def volcano_plot(
 		title: str = 'Volcano Plot',
 		figsize: tuple = (8, 6),
 		s: int = 18,
-		alpha: float = 0.7,
+		alpha: float = 0.5,
 		show: bool = True,
 		save_path: str = None,
 		xlim=None,
@@ -792,11 +800,21 @@ def volcano_plot(
 		n_label: number of neurons to label (with best p-value, highest x).
 		...other args as before...
 	"""
+	if p_thresh <= 0.0:
+		p_thresh = min(p_values.values())
 	model_lower = model.lower()
 	use_diff = model_lower in ('improvement', 'diff', 'difference')
+	bom_vs_hgm_mode = model_lower in ('bom_vs_hgm', 'bomvshgm', 'bom-hgm', 'hgm-bom')
 	idx = 1 if model_lower == 'hgm' else 0
-	keys = list(p_values.keys())
+	# Accept p_values as either a dict or a tuple of two dicts (bom_pvals, hgm_pvals)
+	if bom_vs_hgm_mode and isinstance(p_values, tuple) and len(p_values) == 2:
+		bom_pvals, hgm_pvals = p_values
+		keys = list(set(bom_pvals.keys()) & set(hgm_pvals.keys()) & set(neuron_scores.keys()))
+	else:
+		keys = list(p_values.keys())
 	x_vals, y_vals, pvals_valid, valid_keys = [], [], [], []
+	# For bom_vs_hgm mode, collect BOM and HGM x/y-values for each neuron
+	bom_x, hgm_x, bom_y, hgm_y, color_both, key_both = [], [], [], [], [], []
 	for k in keys:
 		try:
 			arr = neuron_scores[k]
@@ -810,6 +828,30 @@ def volcano_plot(
 					xval = float(arr1) - float(arr0)
 				else:
 					xval = np.nan
+			elif bom_vs_hgm_mode and isinstance(p_values, tuple) and len(p_values) == 2:
+				# For bom_vs_hgm, plot both BOM and HGM values and connect with a dash
+				if arr0.size == 1 and arr1.size == 1:
+					bom = float(arr0.ravel()[0])
+					hgm = float(arr1.ravel()[0])
+				elif arr0.ndim == 0 and arr1.ndim == 0:
+					bom = float(arr0)
+					hgm = float(arr1)
+				else:
+					bom = np.nan
+					hgm = np.nan
+				pval_bom = bom_pvals.get(k, np.nan)
+				pval_hgm = hgm_pvals.get(k, np.nan)
+				yval_bom = -math.log10(pval_bom) if (pval_bom is not None and pval_bom > 0) else np.nan
+				yval_hgm = -math.log10(pval_hgm) if (pval_hgm is not None and pval_hgm > 0) else np.nan
+				if not (np.isnan(bom) or np.isnan(hgm) or np.isnan(yval_bom) or np.isnan(yval_hgm)):
+					bom_x.append(bom)
+					hgm_x.append(hgm)
+					bom_y.append(yval_bom)
+					hgm_y.append(yval_hgm)
+					color_both.append('green' if (hgm - bom) > 0 else 'red')
+					key_both.append(k)
+				# For scatter, plot both points as well
+				xval = hgm
 			else:
 				arr_idx = np.asarray(arr[idx])
 				if arr_idx.ndim == 0:
@@ -820,24 +862,49 @@ def volcano_plot(
 					xval = np.nan
 		except Exception:
 			xval = np.nan
-		pval = p_values[k]
-		yval = -math.log10(pval) if (pval is not None and pval > 0) else np.nan
-		if not (np.isnan(xval) or np.isnan(yval)):
-			x_vals.append(xval)
-			y_vals.append(yval)
-			pvals_valid.append(pval)
-			valid_keys.append(k)
+		if not (bom_vs_hgm_mode and isinstance(p_values, tuple) and len(p_values) == 2):
+			pval = p_values[k]
+			yval = -math.log10(pval) if (pval is not None and pval > 0) else np.nan
+			if not (np.isnan(xval) or np.isnan(yval)):
+				x_vals.append(xval)
+				y_vals.append(yval)
+				pvals_valid.append(pval)
+				valid_keys.append(k)
+	if bom_vs_hgm_mode and isinstance(p_values, tuple) and len(p_values) == 2:
+		# Plot BOM and HGM points, connect with dash
+		fig, ax = plt.subplots(figsize=figsize)
+		for bx, by, hx, hy, col in zip(bom_x, bom_y, hgm_x, hgm_y, color_both):
+			ax.plot([bx, hx], [by, hy], linestyle='--', color=col, alpha=0.7, lw=2)
+		ax.scatter(bom_x, bom_y, s=s, alpha=alpha, c='blue', edgecolor='black', label='BOM')
+		ax.scatter(hgm_x, hgm_y, s=s, alpha=alpha, c='orange', edgecolor='black', label='HGM')
+		ax.axvline(0, color='black', linestyle=':', lw=1)
+		ax.set_xlabel('Neuron score (BOM, HGM)')
+		ax.set_ylabel('-log10(p-value)')
+		ax.set_title(title)
+		if xlim is not None:
+			ax.set_xlim(xlim)
+		if ylim is not None:
+			ax.set_ylim(ylim)
+		ax.grid(True, linestyle=':', alpha=0.5)
+		ax.legend()
+		plt.tight_layout()
+		if save_path:
+			plt.savefig(save_path, dpi=300)
+		if show:
+			plt.show()
+		plt.close()
+		return
 	x = np.array(x_vals)
 	y = np.array(y_vals)
 	pvals = np.array(pvals_valid)
-	sig = pvals < p_thresh
+	sig = pvals <= p_thresh
 	left = x < 0
 	right = x > 0
 	fig, ax = plt.subplots(figsize=figsize)
-	ax.scatter(x[~sig], y[~sig], s=s, alpha=alpha, c='gray', label=f'p ≥ {p_thresh}')
-	ax.scatter(x[sig & left], y[sig & left], s=s, alpha=alpha, c='royalblue', label=f'x < 0 & p < {p_thresh}')
-	ax.scatter(x[sig & right], y[sig & right], s=s, alpha=alpha, c='crimson', label=f'x > 0 & p < {p_thresh}')
-	ax.axhline(-math.log10(p_thresh), color='gray', linestyle='--', lw=1, label=f'p = {p_thresh}')
+	ax.scatter(x[~sig], y[~sig], s=s, alpha=alpha, c='gray', edgecolor='black', label=f'p ≥ {p_thresh}')
+	ax.scatter(x[sig & left], y[sig & left], s=s, alpha=alpha, c='royalblue', edgecolor='black', label=f'x < 0 & p < {p_thresh}')
+	ax.scatter(x[sig & right], y[sig & right], s=s, alpha=alpha, c='limegreen', edgecolor='black', label=f'x > 0 & p < {p_thresh}')
+	# ax.axhline(-math.log10(p_thresh), color='gray', linestyle='--', lw=1, label=f'p = {p_thresh}')
 	ax.axvline(0, color='black', linestyle=':', lw=1)
 	if use_diff:
 		xlab = f"HGM r2 score improvement"
