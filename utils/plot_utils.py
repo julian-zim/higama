@@ -479,7 +479,7 @@ def plot_traces_splits_pairs(traces, traces_reference=None, traces_initial=None,
 		ax.plot(traces[1][column], color='green', linewidth=1.0)
 		if timestamps is not None:
 			magnitude = int(math.log10(timestamps[-1]))
-			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 10  # TODO: // 10 for mice, // 1 for worms
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 1  # TODO: // 10 for mice, // 1 for worms
 			conversion = len(timestamps) / timestamps[-1]
 			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
 			tick_positions = [tick * conversion for tick in ticks]
@@ -591,7 +591,7 @@ def plot_traces_splits(traces, traces_reference=None, traces_initial=None, state
 			# ax.plot(traces[j][column], color='red', linewidth=1.0)
 		if timestamps is not None:
 			magnitude = int(math.log10(timestamps[-1]))
-			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 10  # TODO: // 10 for mice, // 1 for worms
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 1  # TODO: // 10 for mice, // 1 for worms
 			conversion = len(timestamps) / timestamps[-1]
 			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
 			tick_positions = [tick * conversion for tick in ticks]
@@ -684,7 +684,7 @@ def plot_traces(traces, states=None, timestamps=None, label='state',
 			ax.plot(trace[column].values, linewidth=1, color=colors[i])
 		if timestamps is not None:
 			magnitude = int(math.log10(timestamps[-1]))
-			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 10  # TODO: // 10 for mice, // 1 for worms
+			steps = int(timestamps[-1] // 10**magnitude) * 10**(magnitude-1) // 1  # TODO: // 10 for mice, // 1 for worms
 			conversion = len(timestamps) / timestamps[-1]
 			ticks = [steps * i for i in range(int(timestamps[-1] // steps)+1)]
 			tick_positions = [tick * conversion for tick in ticks]
