@@ -115,7 +115,7 @@ def loss_fn(params, N, B, S, lambdas):
 	# residuals loss ================================
 	WB, WM = params['model']['WB'], params['model']['WM']
 
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res - N_res_pred) ** p, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res - N_res_pred) ** p, axis=0) ** p)
 	wb_reg_loss, wm_reg_loss = jnp.linalg.norm(WB) ** 2, jnp.linalg.norm(WM) ** 2
 	res_loss = (mpe_loss
 				+ wb_reg_loss * wb_reg_lambda
@@ -154,7 +154,7 @@ update = jax.jit(update, static_argnums=(0, 6,))
 def predict_and_score(params, N, B):
 	N_man, N_rec, N_res, N_res_pred = predict(params, N, B)
 
-	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # ToDo: Use actual train residual mean!
+	_N_res_train_means = jnp.zeros((N_res.shape[1],))  # ToDo: Use actual train residual mean (is 0 anyway, but still)
 	score_per_neuron = jax.vmap(model_utils.r2_score, in_axes=(1, 1, 0))(N_res, N_res_pred, _N_res_train_means)
 
 	return score_per_neuron, N_man, N_rec, N_res, N_res_pred

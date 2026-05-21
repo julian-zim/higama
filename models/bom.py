@@ -111,7 +111,7 @@ def loss_fn(params, N, B, S, lambdas):
 	# residuals loss ================================
 	WB = params['model']['WB']
 
-	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res - N_res_pred) ** p, axis=0))
+	mpe_loss = jnp.mean(jnp.mean(jnp.abs(N_res - N_res_pred) ** p, axis=0) ** p)
 	wb_reg_loss = jnp.linalg.norm(WB) ** 2
 	res_loss = (mpe_loss
 				+ wb_reg_loss * wb_reg_lambda)
