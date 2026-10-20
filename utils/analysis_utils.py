@@ -128,7 +128,7 @@ def read_filename(organism, file_id, data_variant='gcamp'):
 			raise ValueError
 
 
-def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
+def read_data(organism, file_id, data_variant='gcamp', generate_data=None, model='hgm'):
 	match organism:
 		case 'robot':
 			from utils_robot import read_utils, generate_utils
@@ -148,6 +148,8 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 
 			# preprocess
 			pass
+			# eigenworms = eigenworms['00'].to_frame()
+			# eigenworms = pd.DataFrame(data=np.ones(eigenworms['00'].shape), columns=['00'])
 
 			# generate
 			weights, neurons, states = generate_data
@@ -156,11 +158,12 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 			 modes,
 			 traces_reconstructed,
 			 traces_residual,
+			 modulation_terms,
 			 traces_concrete,
 			 traces_other,
 			 traces,
 			 params,
-			 params_manifold) = generate_utils.artificialize(weights, 'hgm',
+			 params_manifold) = generate_utils.artificialize(weights, model,
 															 filename_gcamp,
 															 neurons,
 															 eigenworms,
@@ -168,12 +171,12 @@ def read_data(organism, file_id, data_variant='gcamp', generate_data=None):
 															 read_utils.get_sampling_rate(read_utils.get_file_handle(path, file_id)),
 															 n_dimensions=len(states))
 
-			# # kill all information in behavior
+			# kill all information in behavior
 			# eigenworms = pd.DataFrame(np.random.randn(*eigenworms.values.shape), columns=eigenworms.columns)
 			# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
 			return filename, traces, eigenworms, discrete_states, timestamps, (modes, traces_reconstructed,
-																			   traces_residual, traces_concrete, traces_other,
+																			   traces_residual, modulation_terms, traces_concrete, traces_other,
 																			   params, params_manifold)
 
 		case 'worm':

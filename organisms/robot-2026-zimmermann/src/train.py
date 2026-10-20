@@ -19,11 +19,9 @@ def main():
 	# file_ids = [19, 20, 21, 22, 23]
 	file_ids = [19]
 
-	weights = (0.25, -0.25, 1)
-
-	neuron_labels = [f'N{i}' for i in range(100)]
-	# states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN', 'PAUSE']
-	states = ['REV']
+	states = ['REV', 'VENTRAL_TURN', 'DORSAL_TURN']
+	neuron_labels = [f'N{i}' for i in range(50)]
+	weights = (0.25, [-0.1, -0.9, -0.95])
 
 	robot = Robot(weights, neuron_labels, states,
 				  file_ids, names, variants, robot_hyperparameters, robot_sweep_parameters, data_variant='gcamp')

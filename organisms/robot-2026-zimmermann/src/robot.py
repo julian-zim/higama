@@ -52,6 +52,7 @@ class Robot(Organism):
 		 modes,
 		 traces_reconstructed,
 		 traces_residual,
+		 modulation_terms,
 		 traces_concrete,
 		 traces_other,
 		 traces,
@@ -69,4 +70,4 @@ class Robot(Organism):
 		# eigenworms = pd.DataFrame(data=np.zeros(eigenworms.values.shape), columns=eigenworms.columns)
 
 		# return
-		return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, traces_concrete, traces_other, params, params_manifold)
+		return filename, traces, eigenworms, discrete_states, (modes, traces_reconstructed, traces_residual, modulation_terms, traces_concrete, traces_other, params, params_manifold)

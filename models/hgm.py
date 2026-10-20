@@ -48,8 +48,8 @@ def predict_res(prep_b, B, N_man, WB, WM):
 	B_mean, B_std = prep_b['mean'], prep_b['std']
 	B_zs = (B - B_mean) / B_std
 
-	N_man_zs = (N_man - N_man.mean(axis=0)) / jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
-
+	# N_man_zs = (N_man - N_man.mean(axis=0)) / jnp.where((N_std := N_man.std(axis=0)) == 0.0, 1.0, N_std)
+	N_man_zs = (N_man - N_man.min(axis=0)) / jnp.where((N_range := N_man.max(axis=0) - N_man.min(axis=0)) == 0.0, 1.0, N_range) * 2 - 1  # BUGFIX!
 	return B_zs @ WB * jax.nn.sigmoid(N_man_zs @ WM)
 
 

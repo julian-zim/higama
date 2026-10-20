@@ -2,6 +2,7 @@ import os
 import math
 import numpy as np
 import pandas as pd
+from PIL import Image
 from matplotlib import pyplot as plt, colors as mplcolors, patches, ticker, cm
 from matplotlib.ticker import MultipleLocator
 from matplotlib.collections import LineCollection
@@ -628,7 +629,7 @@ Plots traces cycling color according to pyplots policy, with the first one black
 
 def plot_traces(traces, states=None, timestamps=None, label='state',
 				title='traces', ylimits=None, n_plots=None, plots_per_row=1, top_space=1,
-				save_path=None):
+				init_color='black', save_path=None):
 	if type(traces) is not list:
 		traces = [traces]
 	columns = [column for column in traces[0].columns if column != '']
@@ -679,7 +680,7 @@ def plot_traces(traces, states=None, timestamps=None, label='state',
 		ax.set_title(f'{column}', fontsize=12)
 
 		colors = ['steelblue', 'C1']
-		ax.plot(traces[0][column].values, color='gray', linewidth=1.0)
+		ax.plot(traces[0][column].values, color=init_color, linewidth=1.0)
 		for i, trace in enumerate(traces[1:]):
 			ax.plot(trace[column].values, linewidth=1, color=colors[i])
 		if timestamps is not None:
@@ -712,6 +713,20 @@ def plot_traces(traces, states=None, timestamps=None, label='state',
 		os.makedirs(os.path.dirname(save_path), exist_ok=True)
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
+
+	# optional editing
+	# image = Image.open(f'{save_path}.png')
+	# left_axis = image.crop((30, 390, 123, 1106))
+	# # left_axis = image.crop((30, 390, 123, 1114))
+	# right_axis = image.crop((4438, 390, 4442, 1200))
+	# image.paste(left_axis, (1060, 390))
+	# image.paste(right_axis, (2399, 390))
+	# # with ticks
+	# # cropped_image = image.crop((1060, 390, 2403, 1200))
+	# # w/o ticks
+	# cropped_image = image.crop((1149, 403, 2403, 1106))
+	# # cropped_image = image.crop((1149, 403, 2403, 1114))
+	# cropped_image.save(f'{save_path}.png')
 
 
 """
@@ -1134,6 +1149,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 
 	#region GCAMP =============================================================================================================
 	boxplot_xticks, boxplot_xtick_labels = list(), list()
+	boxplot_yticks, boxplot_ytick_labels = list(), list()
 	for key in neuron_scores.keys():
 		scores_bom, scores_hgm = neuron_scores[key]
 		if len(scores_hgm.shape) == 0:
@@ -1147,10 +1163,12 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 		if neuron_scores_control is not None and threshold is not None and control_cutoff and y <= high_score_hgm_control:
 			continue
 
-		plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='skyblue', edgecolor='black', linewidth=1.0, alpha=0.5)
+		plt.scatter(scores_bom, scores_hgm, s=plot_size * 2, c='limegreen', edgecolor='black', linewidth=1.0, alpha=0.5)
 
 		boxplot_xticks.append(x)
 		boxplot_xtick_labels.append(f'{key}')
+		boxplot_yticks.append(y)
+		boxplot_ytick_labels.append(f'{key}')
 
 		if len(scores_hgm) > 1 or force_medians:
 			if vertical_bps:
@@ -1161,7 +1179,7 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 										showfliers=False, vert=False)
 			for box in ([boxplot_v] if vertical_bps else []) + ([boxplot_h] if horizontal_bps else []):
 				for patch in box['boxes']:
-					patch.set_facecolor('skyblue')
+					patch.set_facecolor('limegreen')
 					patch.set_alpha(0.5)
 				for median in box['medians']:
 					median.set_color('darkorange')
@@ -1169,8 +1187,22 @@ def plot_performance_plot(neuron_scores, neuron_scores_control=None,
 
 	for x, label in zip(boxplot_xticks, boxplot_xtick_labels):
 		if x_min <= x <= x_max:
-			plt.text(x, -0.035, label, color='blue', ha='center', va='top', rotation=45, fontsize=plot_size * 15 / 40,
+			plt.text(x, -0.035, label, color='green', ha='center', va='top', rotation=45, fontsize=plot_size * 15 / 40,
 					 transform=plt.gca().get_xaxis_transform())
+	# for y, label in zip(boxplot_yticks, boxplot_ytick_labels):
+	# 	# y -= 0.002
+	# 	# if y >= y_min:
+	# 	# 	if label == 'SMDDR':
+	# 	# 		y += 0.0025
+	# 	# 	if label == 'VB02':
+	# 	# 		y -= 0.0025
+	# 	# 	if label == 'RMDDR':
+	# 	# 		y -= 0.0025
+	# 		plt.text(1.01, y, label, color='darkgreen', ha='left', va='center', rotation=0, fontsize=plot_size * 15 / 40,
+	# 				 transform=plt.gca().get_yaxis_transform())
+	# ax2 = plt.gca().secondary_yaxis('right')
+	# ax2.set_yticks(boxplot_yticks)
+	# ax2.set_yticklabels([])
 	#endregion =================================================================================================================
 
 	x_ticks_pos = np.arange(x_min, x_max, x_step)
@@ -1352,6 +1384,7 @@ def plot_improvement_plot(neuron_scores, neuron_scores_control=None,
 		os.makedirs(os.path.dirname(save_path), exist_ok=True)
 		plt.savefig(f'{save_path}.png', dpi=300, bbox_inches='tight')
 	plt.show()
+#endregion
 
 
 def plot_heatmap_stack(traces, behavior=None, timestamps=None,
