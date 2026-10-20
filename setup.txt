@@ -5,4 +5,3 @@ source /lisc/home/user/zimmermann/.venv/hgm/bin/activate
 python -m pip install --upgrade pip
 python -m pip install jupyter matplotlib numpy scipy scipy-stubs pandas pandas-stubs seaborn scikit-learn fastcluster h5py pynwb dandi fsspec openpyxl ipywidgets wandb optax flax papermill pyarrow fastparquet
 python -m pip install -U "jax[cuda12]"
-
