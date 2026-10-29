@@ -67,6 +67,7 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+.mcp.json
 
 # ===============================
 # MISC PYTHON TOOLS
